@@ -30,9 +30,13 @@ import {
 } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
-import { DebuggerTypeName } from './debugger/constants';
-import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
-import { IDebugConfigurationProvider, IDebuggerBanner } from './debugger/extension/types';
+import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
+import { IDataScience } from './datascience/types';
+import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Common/Contracts';
+import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
+import { registerTypes as debugConfigurationRegisterTypes } from './debugger/configProviders/serviceRegistry';
+import { registerTypes as debuggerRegisterTypes } from './debugger/serviceRegistry';
+import { IDebugConfigurationProvider, IDebuggerBanner } from './debugger/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import { ICondaService, IInterpreterService, PythonInterpreter } from './interpreter/contracts';
@@ -100,6 +104,10 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     const jupyterExtension = extensions.getExtension('donjayamanne.jupyter');
     const lintingEngine = serviceManager.get<ILintingEngine>(ILintingEngine);
     lintingEngine.linkJupiterExtension(jupyterExtension).ignoreErrors();
+
+    // Activate data science features
+    const dataScience = serviceManager.get<IDataScience>(IDataScience);
+    dataScience.activate().ignoreErrors();
 
     context.subscriptions.push(new LinterCommands(serviceManager));
     const linterProvider = new LinterProvider(context, serviceManager);
@@ -177,6 +185,7 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     platformRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
+    dataScienceRegisterTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
     appRegisterTypes(serviceManager);
     providersRegisterTypes(serviceManager);
