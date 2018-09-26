@@ -222,6 +222,11 @@
                 "command": "python.runLinting",
                 "title": "%python.command.python.runLinting.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience",
+                "title": "%python.command.python.datascience.datascience.title%",
+                "category": "Python"
             }
         ],
         "menus": {
