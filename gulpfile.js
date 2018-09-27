@@ -74,7 +74,8 @@ const tslintFilter = [
     '!resources/**/*',
     '!snippets/**/*',
     '!syntaxes/**/*',
-    '!**/typings/**/*'
+    '!**/typings/**/*',
+    '!**/*.d.ts'
 ];
 
 const copyrightHeader = [
