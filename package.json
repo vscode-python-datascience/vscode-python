@@ -224,8 +224,8 @@
                 "category": "Python"
             },
             {
-                "command": "python.datascience",
-                "title": "%python.command.python.datascience.datascience.title%",
+                "command": "python.datascience.showhistorypane",
+                "title": "%python.command.python.datascience.showhistorypane.title%",
                 "category": "Python"
             }
         ],
@@ -1582,7 +1582,7 @@
         "vscode-languageclient": "4.4.0",
         "vscode-languageserver": "4.4.0",
         "vscode-languageserver-protocol": "3.10.3",
-        "vscode-nls": "4.0.0",
+        "vscode-nls": "^4.0.0",
         "winreg": "1.2.4",
         "xml2js": "0.4.19"
     },
@@ -1618,6 +1618,7 @@
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",
         "JSONStream": "^1.3.2",
+        "async-file": "^2.0.2",
         "babel-loader": "^8.0.3",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",

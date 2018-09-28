@@ -1,3 +1,5 @@
+import { ICommandManager } from "../common/application/types";
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -7,7 +9,11 @@
 export const IDataScience = Symbol('IDataScience');
 export interface IDataScience {
     activate(): Promise<void>;
-    executeDataScience(): Promise<void>;
+}
+
+export const IDataScienceCommandListener = Symbol('IDataScienceCommandListener');
+export interface IDataScienceCommandListener {
+    register(commandManager: ICommandManager);
 }
 
 // Factory for jupyter servers
@@ -19,17 +25,6 @@ export interface IJupyterServerProvider {
 // Talks to a jupyter kernel to retrieve data for cells
 export const IJupyterServer = Symbol('IJupyterServer');
 export interface IJupyterServer {
-}
-
-// Wraps the VS Code api for creating a web panel
-export const IWebPanelProvider = Symbol('IWebPanelProvider');
-export interface IWebPanelProvider {
-    create(): IWebPanel;
-}
-
-// Wraps the VS Code webview panel
-export const IWebPanel = Symbol('IWebPanel');
-export interface IWebPanel {
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview
