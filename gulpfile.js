@@ -156,7 +156,7 @@ gulp.task('compile-webviews', () => {
 });
 
 const webify = (file)  => {
-    
+
     // First check if we have an index.js. That's what we need to webify
     const split = path.parse(file.path);
     const js = path.join(split.dir, split.name + ".js");
@@ -216,8 +216,8 @@ const webify = (file)  => {
                 printBuildError(err);
                 process.exit(1);
               }
-        )  
-    }    
+        )
+    }
 }
 
 function hasNativeDependencies() {
