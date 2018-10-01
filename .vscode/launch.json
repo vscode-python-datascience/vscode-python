@@ -146,7 +146,7 @@
             "sourceMaps": true,
             "args": [
                 "timeout=60000",
-                "grep=localize"
+                "grep="
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
