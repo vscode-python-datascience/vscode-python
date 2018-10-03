@@ -28,19 +28,4 @@ suite('Data Science Tests', () => {
 
         dataScience = new DataScience(serviceContainer.object);
     });
-    test('Ensure command is registered on activation', async () => {
-        commandManager
-            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.DataScience), TypeMoq.It.isAny(), TypeMoq.It.isValue(dataScience)))
-            .verifiable(TypeMoq.Times.once());
-        await dataScience.activate();
-        commandManager.verifyAll();
-    });
-    test('Check message from datascience command', async () => {
-        shell
-            .setup(s => s.showInformationMessage(TypeMoq.It.isValue('Hello Data Science')))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.once());
-        await dataScience.executeDataScience();
-        shell.verifyAll();
-    });
 });

@@ -5,14 +5,16 @@
 import * as React from 'react';
 import './App.css';
 
+// commonJS mode for tsc produces JS that doesn't work well with the file loader. So just
+// embed sources directly. This is also better for translation to vscode webview
+export declare function resolvePath(relativePath: string): string;
+
 export class App extends React.Component {
   public render() {
-    // commonJS mode for tsc produces JS that doesn't work well with the file loader. So just
-    // embed sources directly. This is also better for translation to vscode webview
     return (
       <div className='App'>
         <header className='App-header'>
-          <img src='./logo.svg' className='App-logo' alt='logo' />
+          <img src={resolvePath ? resolvePath('./logo.svg') : './logo.svg'} className='App-logo' alt='logo' />
           <h1 className='App-title'>Welcome to React</h1>
         </header>
         <p className='App-intro'>

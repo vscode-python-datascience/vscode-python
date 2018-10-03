@@ -7,31 +7,29 @@ import { inject, injectable } from 'inversify';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { IDisposableRegistry } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { Commands } from './constants';
-import { IDataScience } from './types';
+import { IDataScience, IDataScienceCommandListener } from './types';
 
 @injectable()
 export class DataScience implements IDataScience {
     private readonly appShell: IApplicationShell;
     private readonly commandManager: ICommandManager;
     private readonly disposableRegistry: IDisposableRegistry;
+    private readonly commandListeners: IDataScienceCommandListener[];
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer)
     {
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         this.disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        this.commandListeners = this.serviceContainer.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
     }
 
     public async activate(): Promise<void> {
         this.registerCommands();
     }
 
-    public async executeDataScience(): Promise<void> {
-       await this.appShell.showInformationMessage('Hello Data Science');
-    }
-
     private registerCommands(): void {
-        const disposable = this.commandManager.registerCommand(Commands.DataScience, this.executeDataScience, this);
-        this.disposableRegistry.push(disposable);
+        this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
+            listener.register(this.commandManager);
+        })
     }
 }
