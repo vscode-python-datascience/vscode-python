@@ -3,14 +3,20 @@
 
 'use strict';
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
+import { IFileSystem } from '../common/platform/types';
 import { IJupyterServer, IJupyterServerProvider } from './types';
+import { JupyterServer } from './jupyterServer';
 
 @injectable()
 export class JupyterServerProvider implements IJupyterServerProvider {
-    public start(notebookFile: string | undefined): Promise<IJupyterServer> {
-        return new Promise<IJupyterServer>((resolve, reject) => {
-            resolve(undefined);
-        });
+
+    @inject(IFileSystem)
+    private fileSystem: IFileSystem;
+
+    public async start(notebookFile? : string): Promise<IJupyterServer> {
+        const server = new JupyterServer(this.fileSystem);
+        await server.start(notebookFile);
+        return server;
     }
 }

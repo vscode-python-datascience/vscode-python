@@ -19,12 +19,15 @@ export interface IDataScienceCommandListener {
 // Factory for jupyter servers
 export const IJupyterServerProvider = Symbol('IJupyterServerFactory');
 export interface IJupyterServerProvider {
-    start(...notebookFile: string[]): Promise<IJupyterServer>;
+    start(notebookFile? : string): Promise<IJupyterServer>;
 }
 
 // Talks to a jupyter kernel to retrieve data for cells
 export const IJupyterServer = Symbol('IJupyterServer');
 export interface IJupyterServer {
+    start(notebookFile? : string) : Promise<boolean>;
+    getCurrentState() : Promise<ICell[]>;
+    execute(code: string, file: string, line: number) : Promise<ICell>;
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview
@@ -40,5 +43,5 @@ export interface IPostOffice {
 export interface ICell {
     input: string;
     output: string;
-    id: number;
+    id: string;
 }
