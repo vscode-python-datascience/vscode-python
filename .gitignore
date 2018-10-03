@@ -1,6 +1,5 @@
 .DS_Store
 out
-!/i18n/**/*
 node_modules
 *.pyc
 **/.vscode/.ropeproject/**
