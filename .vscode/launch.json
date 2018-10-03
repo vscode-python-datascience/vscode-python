@@ -151,7 +151,7 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "Compile-nls"
+            "preLaunchTask": "Compile"
         }
     ],
     "compounds": [

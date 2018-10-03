@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ILocalizationService, LocalizationService } from '../../utils/localize';
 import { Random } from '../../utils/random';
 import { IHttpClient } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
@@ -79,5 +78,4 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
         ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, 'pyenv');
     serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
-    serviceManager.addSingleton<ILocalizationService>(ILocalizationService, LocalizationService);
 }

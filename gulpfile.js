@@ -74,12 +74,8 @@ const tslintFilter = [
     '!resources/**/*',
     '!snippets/**/*',
     '!syntaxes/**/*',
-<<<<<<< HEAD
     '!**/typings/**/*',
     '!**/*.d.ts'
-=======
-    '!**/typings/**/*'
->>>>>>> Implement build system for react web pages
 ];
 
 const copyrightHeader = [
@@ -160,11 +156,6 @@ gulp.task('compile-webviews', () => {
 });
 
 const webify = (file)  => {
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> Implement build system for react web pages
     // First check if we have an index.js. That's what we need to webify
     const split = path.parse(file.path);
     const js = path.join(split.dir, split.name + ".js");
@@ -224,13 +215,8 @@ const webify = (file)  => {
                 printBuildError(err);
                 process.exit(1);
               }
-<<<<<<< HEAD
         )
     }
-=======
-        )  
-    }    
->>>>>>> Implement build system for react web pages
 }
 
 function hasNativeDependencies() {

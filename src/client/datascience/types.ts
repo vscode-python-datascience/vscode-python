@@ -19,7 +19,7 @@ export interface IDataScienceCommandListener {
 // Factory for jupyter servers
 export const IJupyterServerProvider = Symbol('IJupyterServerFactory');
 export interface IJupyterServerProvider {
-    start(notebookFile: string | undefined): Promise<IJupyterServer>;
+    start(...notebookFile: string[]): Promise<IJupyterServer>;
 }
 
 // Talks to a jupyter kernel to retrieve data for cells

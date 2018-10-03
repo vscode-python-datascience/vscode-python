@@ -666,6 +666,11 @@ export interface IWebPanelMessageListener {
      * @return A IWebPanel that can be used to show html pages.
      */
     onMessage(message: string, payload: any): Promise<void>;
+
+    /**
+     * Called when the panel is closed/disposed
+     */
+    onDisposed(): void;
 }
 
 
@@ -677,6 +682,11 @@ export interface IWebPanel {
      * @return A Promise that can be waited on
      */
     show(): Promise<void>;
+
+    /**
+     * Indicates if this web panel is visible or not.
+     */
+    isVisible(): boolean;
 }
 
 // Wraps the VS Code api for creating a web panel

@@ -6,9 +6,11 @@
 import { IServiceManager } from '../ioc/types';
 import { DataScience } from './datascience';
 import { JupyterServerProvider } from './jupyterserverprovider';
-import { IDataScience, IJupyterServerProvider } from './types';
+import { IDataScience, IJupyterServerProvider, IDataScienceCommandListener } from './types';
+import { HistoryCommandListener } from './historycommandlistener';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, JupyterServerProvider);
+    serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, HistoryCommandListener);
 }
