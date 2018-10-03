@@ -2,19 +2,17 @@
 // Licensed under the MIT License.
 
 'use strict';
-import * as nls from 'vscode-nls';
+import * as path from 'path';
+import * as localize from '../../utils/localize';
+import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider } from '../common/application/types';
 import { IServiceContainer } from '../ioc/types';
 import { IJupyterServer, IJupyterServerProvider } from './types';
-import * as fs from "async-file";
-import * as path from "path";
-import { IExtensionContext } from '../common/types';
-import { IWebPanel, IWebPanelProvider, IWebPanelMessageListener } from '../common/application/types';
-import * as localize from '../../utils/localize';
 
 export class History implements IWebPanelMessageListener {
-    private static activeHistory: History = undefined;
-    private webPanel : IWebPanel;
-    private jupyterServer: IJupyterServer;
+    private static activeHistory: History;
+    private webPanel : IWebPanel | undefined;
+    // tslint:disable-next-line: no-unused-variable
+    private jupyterServer: IJupyterServer | undefined;
     private loadPromise: Promise<void>;
 
     constructor(serviceContainer: IServiceContainer) {
@@ -38,15 +36,17 @@ export class History implements IWebPanelMessageListener {
         await this.loadPromise;
 
         // Then show our web panel.
-        await this.webPanel.show();
+        if (this.webPanel) {
+            await this.webPanel.show();
+        }
     }
 
+    // tslint:disable-next-line: no-any no-empty
     public async onMessage(message: string, payload: any) {
-
     }
 
+    // tslint:disable-next-line: no-any no-empty
     public onDisposed() {
-
     }
 
     private async loadJupyterServer(serviceContainer: IServiceContainer) : Promise<void> {
@@ -58,14 +58,13 @@ export class History implements IWebPanelMessageListener {
     private async loadWebPanel(serviceContainer: IServiceContainer) : Promise<void> {
         // Create our web panel (it's the UI that shows up for the history)
         const provider = serviceContainer.get<IWebPanelProvider>(IWebPanelProvider);
-        const extensionContext = serviceContainer.get<IExtensionContext>(IExtensionContext);
 
-        // Figure out the name of our index.html. Should be in our output directory
-        const htmlFilePath = path.join(__dirname, "history-react", "index.html");
+        // Figure out the name of our main bundle. Should be in our output directory
+        const mainScriptPath = path.join(__dirname, 'history-react', 'index_bundle.js');
 
-        // Use this html file to create our web view panel. It should contain all of the necessary
+        // Use this script to create our web view panel. It should contain all of the necessary
         // script to communicate with this class.
-        this.webPanel = provider.create(this, localize.DataScience.historyTitle(), htmlFilePath);
+        this.webPanel = provider.create(this, localize.DataScience.historyTitle(), mainScriptPath);
     }
 
     private async load(serviceContainer: IServiceContainer) : Promise<void> {

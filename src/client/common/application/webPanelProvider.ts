@@ -3,21 +3,17 @@
 
 'use strict';
 
-import { injectable, inject } from 'inversify';
-import { WebPanel } from './webpanel';
-import { IWebPanelMessageListener, IWebPanelProvider } from './types';
+import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
+import { IWebPanelMessageListener, IWebPanelProvider } from './types';
+import { WebPanel } from './webpanel';
 
 @injectable()
 export class WebPanelProvider implements IWebPanelProvider {
-    private serviceContainer: IServiceContainer;
-
-    constructor(@inject(IServiceContainer) private svc: IServiceContainer) {
-        this.serviceContainer = svc;
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
     }
 
-
-    public create(listener: IWebPanelMessageListener, title:string, htmlPath:string) {
-        return new WebPanel(this.serviceContainer, listener, title, htmlPath);
+    public create(listener: IWebPanelMessageListener, title: string, mainScriptPath: string) {
+        return new WebPanel(this.serviceContainer, listener, title, mainScriptPath);
     }
 }

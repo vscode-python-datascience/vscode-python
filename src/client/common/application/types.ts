@@ -673,7 +673,6 @@ export interface IWebPanelMessageListener {
     onDisposed(): void;
 }
 
-
 // Wraps the VS Code webview panel
 export const IWebPanel = Symbol('IWebPanel');
 export interface IWebPanel {
@@ -696,8 +695,8 @@ export interface IWebPanelProvider {
      * Creates a new webpanel
      * @param listener for messages from the panel
      * @param title: title of the panel when it shows
-     * @param: htmlPath: relative path in the output folder to the html for the panel
+     * @param: mainScriptPath: full path in the output folder to the script
      * @return A IWebPanel that can be used to show html pages.
      */
-    create(listener: IWebPanelMessageListener, title:string, htmlPath:string): IWebPanel;
+    create(listener: IWebPanelMessageListener, title: string, mainScriptPath: string): IWebPanel;
 }
