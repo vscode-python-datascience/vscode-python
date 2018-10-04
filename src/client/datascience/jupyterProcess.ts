@@ -3,11 +3,12 @@
 
 'use strict';
 
-import { spawn, ChildProcess, execSync, exec } from 'child_process';
-import { URL } from 'url';
 import { IDisposable } from '@phosphor/disposable';
-import { createDeferred, Deferred } from '../../utils/async';
+import { ChildProcess, spawn } from 'child_process';
 import * as tk from 'tree-kill';
+import { URL } from 'url';
+import { createDeferred, Deferred } from '../../utils/async';
+import { ILogger } from '../common/types';
 
 export interface IConnectionInfo {
     baseUrl: string;
@@ -17,15 +18,19 @@ export interface IConnectionInfo {
 // This class communicates with an instance of jupyter that's running in the background
 export class JupyterProcess implements IDisposable {
 
-    private startPromise: Deferred<IConnectionInfo> | undefined;
-    private process: ChildProcess | undefined;
     private static urlPattern = /http:\/\/localhost:[0-9]+\/\?token=[a-z0-9]+/g;
 
     public isDisposed: boolean = false;
 
-    public start(notebookdir: string) {
+    private startPromise: Deferred<IConnectionInfo> | undefined;
+    private process: ChildProcess | undefined;
+    private logger: ILogger | undefined;
+
+    public start(notebookdir: string, logger: ILogger) {
+        this.logger = logger;
+
         // Compute args based on if inside a workspace or not
-        let args: string [] = ['notebook', '--no-browser', `--notebook-dir=${notebookdir}`];
+        const args: string [] = ['notebook', '--no-browser', `--notebook-dir=${notebookdir}`];
 
         // Setup our start promise
         this.startPromise = createDeferred<IConnectionInfo>();
@@ -34,17 +39,19 @@ export class JupyterProcess implements IDisposable {
         this.process = spawn('jupyter', args, {detached: false, cwd: notebookdir});
 
         // Listen on stderr for its connection information
+        // tslint:disable-next-line:no-any
         this.process.stderr.on('data', (data: any) => this.extractConnectionInformation(data));
+        // tslint:disable-next-line:no-any
         this.process.stdout.on('data', (data: any) => this.output(data));
     }
 
     // Returns the information necessary to talk to this instance
-    public async getConnectionInformation() : Promise<IConnectionInfo> {
+    public getConnectionInformation() : Promise<IConnectionInfo> {
         if (this.startPromise) {
-            return await this.startPromise!.promise;
+            return this.startPromise!.promise;
         }
 
-        return { baseUrl: '', token: ''};
+        return Promise.resolve({ baseUrl: '', token: ''});
     }
 
     public dispose() {
@@ -56,18 +63,23 @@ export class JupyterProcess implements IDisposable {
         }
     }
 
+    // tslint:disable-next-line:no-any
     private output(data: any) {
-        console.log(data.toString('utf8'));
+        if (this.logger) {
+            this.logger.logInformation(data.toString('utf8'));
+        }
     }
 
+    // tslint:disable-next-line:no-any
     private extractConnectionInformation(data: any) {
-        console.log(data.toString('utf8'));
-        // Look for a Jupyter Notebook url in the string received.
-        let urlMatch = JupyterProcess.urlPattern.exec(data);
+        this.output(data);
 
-        if(urlMatch && this.startPromise) {
+        // Look for a Jupyter Notebook url in the string received.
+        const urlMatch = JupyterProcess.urlPattern.exec(data);
+
+        if (urlMatch && this.startPromise) {
             const url = new URL(urlMatch[0]);
-            this.startPromise.resolve({ baseUrl: `${url.protocol}//${url.host}/`, token: `${url.searchParams.get("token")}` });
+            this.startPromise.resolve({ baseUrl: `${url.protocol}//${url.host}/`, token: `${url.searchParams.get('token')}` });
         }
 
         // Do we need to worry about this not working? Timeout?

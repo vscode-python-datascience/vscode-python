@@ -1,9 +1,10 @@
-import { ICommandManager } from "../common/application/types";
-
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 'use strict';
+
+import { Event } from 'vscode';
+import { ICommandManager } from '../common/application/types';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -25,6 +26,7 @@ export interface IJupyterServerProvider {
 // Talks to a jupyter kernel to retrieve data for cells
 export const IJupyterServer = Symbol('IJupyterServer');
 export interface IJupyterServer {
+    onStatusChanged: Event<boolean>;
     getCurrentState() : Promise<ICell[]>;
     execute(code: string, file: string, line: number) : Promise<ICell>;
 }

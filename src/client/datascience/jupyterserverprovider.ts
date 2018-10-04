@@ -5,24 +5,26 @@
 
 import { inject, injectable } from 'inversify';
 import { IFileSystem } from '../common/platform/types';
-import { IJupyterServer, IJupyterServerProvider } from './types';
-import { JupyterServer } from './jupyterServer';
-import { IDisposableRegistry } from '../common/types';
+import { IDisposableRegistry, ILogger } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { JupyterServer } from './jupyterServer';
+import { IJupyterServer, IJupyterServerProvider } from './types';
 
 @injectable()
 export class JupyterServerProvider implements IJupyterServerProvider {
 
     private fileSystem: IFileSystem;
     private disposableRegistry: IDisposableRegistry;
+    private logger: ILogger;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-        this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
-        this.disposableRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        this.disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        this.logger = this.serviceContainer.get<ILogger>(ILogger);
     }
 
     public async start(notebookFile? : string): Promise<IJupyterServer> {
-        const server = new JupyterServer(this.fileSystem);
+        const server = new JupyterServer(this.fileSystem, this.logger);
         this.disposableRegistry.push(server);
         await server.start(notebookFile);
         return server;

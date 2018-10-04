@@ -17,6 +17,7 @@ export namespace LanguageServiceSurveyBanner {
 export namespace DataScience {
     export const historyTitle = localize('DataScience.historyTitle', 'History');
     export const badWebPanelFormatString = localize('DataScience.badWebPanelFormatString', '<html><body><h1>{0} is not a valid file name</h1></body></html>');
+    export const sessionDisposed = localize('DataScience.sessionDisposed', 'Cannot execute code, session has been disposed.');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
