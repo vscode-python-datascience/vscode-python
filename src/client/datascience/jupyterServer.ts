@@ -4,39 +4,74 @@
 'use strict';
 
 import * as fs from 'async-file';
-import * as temp from 'temp';
+import * as fssync from 'fs';
 import * as path from 'path';
-import { ContentsManager, Session, Kernel, KernelMessage } from '@jupyterlab/services';
+import * as temp from 'temp';
+import * as tp from 'typed-promisify';
+import * as vscode from 'vscode';
+import { ContentsManager, Session, Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import { IJupyterServer, ICell } from './types';
 import { IFileSystem } from '../common/platform/types';
+import { JupyterProcess } from './jupyterProcess';
+import { IDisposable } from '@phosphor/disposable';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
 
-export class JupyterServer implements IJupyterServer {
+export class JupyterServer implements IJupyterServer, IDisposable {
     private session: Session.ISession;
     private static trackingTemps: boolean = false;
     private tempFile: temp.OpenFile;
     private fileSystem: IFileSystem;
+    private process: JupyterProcess;
+    public isDisposed: boolean = false;
 
     constructor(fileSystem: IFileSystem) {
         this.fileSystem = fileSystem;
+        this.process = new JupyterProcess();
     }
 
     public async start(notebookFile? : string) : Promise<boolean> {
-        // First generate a temporary notebook. We need this as input to the session
-        this.tempFile = await this.generateTempFile(notebookFile)
 
-        // Create our session options using this temporary notebook
-        let options: Session.IOptions = {
-            path: this.tempFile.path,
-            kernelName: "python"
+        try {
+            // First generate a temporary notebook. We need this as input to the session
+            this.tempFile = await this.generateTempFile(notebookFile)
+
+            // start our process in the same directory as our ipynb file.
+            this.process.start(path.dirname(this.tempFile.path));
+
+            // Wait for connection information. We'll stick that into the options
+            const connInfo = await this.process.getConnectionInformation();
+
+            // Create our session options using this temporary notebook and our connection info
+            let options: Session.IOptions = {
+                path: this.tempFile.path,
+                kernelName: "python",
+                serverSettings: ServerConnection.makeSettings(
+                    {
+                        baseUrl: connInfo.baseUrl,
+                        token: connInfo.token,
+                        pageUrl: '',
+                        // A web socket is required to allow token authentication
+                        wsUrl: connInfo.baseUrl.replace('http', 'ws'),
+                        init: { cache: "no-store", credentials: "same-origin" }
+                    })
+            }
+
+            // Start a new session
+            this.session = await Session.startNew(options);
+
+            return true;
+        } catch (err) {
+
+            // For now just put up a message
+            if (vscode.window) {
+                vscode.window.showErrorMessage(err);
+            }
+
+            return false;
         }
 
-        // Start a new session
-        this.session = await Session.startNew(options);
-
-        return true;
     }
 
     public async getCurrentState() : Promise<ICell[]> {
@@ -56,9 +91,23 @@ export class JupyterServer implements IJupyterServer {
                 }
             );
 
-            return await this.awaitExecuteResponse(id, request);
+            return await this.awaitExecuteResponse(code, id, request);
         }
     }
+
+    public async dispose() {
+        if (!this.isDisposed) {
+            this.isDisposed = true;
+            if (this.session) {
+                await this.session.shutdown();
+                this.session.dispose();
+            }
+            if (this.process) {
+                this.process.dispose();
+            }
+        }
+    }
+
 
     private async makeId(file: string, line: number) {
         let hash = await this.fileSystem.getFileHash(file);
@@ -72,17 +121,19 @@ export class JupyterServer implements IJupyterServer {
         return [];
     }
 
-    private async awaitExecuteResponse(id: string, request: Kernel.IFuture) : Promise<ICell> {
+    private async awaitExecuteResponse(code: string, id: string, request: Kernel.IFuture) : Promise<ICell> {
 
         // Start out empty;
         let cell: ICell = {
-            input: "",
+            input: code,
             output: "",
             id: id
         }
         request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+            console.log(msg.content);
             if (KernelMessage.isExecuteResultMsg(msg)) {
-                console.log("is execution result")
+                const resultMsg: KernelMessage.IExecuteResultMsg = msg;
+                console.log("is execution result for " + resultMsg.content.data);
             }
         }
 
@@ -100,39 +151,17 @@ export class JupyterServer implements IJupyterServer {
             temp.track();
         }
 
-        let file: temp.OpenFile;
-        // Create a temp file on disk named .ipynb
-        temp.open({ suffix: '.ipynb'}, (err: any, result:temp.OpenFile) => {
-            if (!err) {
-                file = result;
-            }
-        });
+        // Create a temp file on disk
+        const asyncOpen = tp.promisify(temp.open);
+        const file: temp.OpenFile = await asyncOpen({ suffix: '.ipynb'});
 
         // Copy the notebook file into it if necessary
         if (notebookFile && file) {
             if (await fs.exists(notebookFile)) {
-                await this.copyFileAsync(notebookFile, file.path);
+                await fssync.copyFile(notebookFile, file.path, () => {});
             }
         }
 
         return file;
     }
-
-    private async copyFileAsync(source: string, target: string) {
-        var rd = fs.createReadStream(source);
-        var wr = fs.createWriteStream(target);
-        try {
-            return await new Promise(function(resolve, reject) {
-                rd.on('error', reject);
-                wr.on('error', reject);
-                wr.on('finish', resolve);
-                rd.pipe(wr);
-            });
-        } catch (error) {
-            rd.destroy();
-            wr.end();
-            throw error;
-        }
-    }
-
 }

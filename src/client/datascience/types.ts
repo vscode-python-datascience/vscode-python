@@ -25,7 +25,6 @@ export interface IJupyterServerProvider {
 // Talks to a jupyter kernel to retrieve data for cells
 export const IJupyterServer = Symbol('IJupyterServer');
 export interface IJupyterServer {
-    start(notebookFile? : string) : Promise<boolean>;
     getCurrentState() : Promise<ICell[]>;
     execute(code: string, file: string, line: number) : Promise<ICell>;
 }
