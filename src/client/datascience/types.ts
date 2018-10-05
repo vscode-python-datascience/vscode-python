@@ -21,6 +21,7 @@ export interface IDataScienceCommandListener {
 export const IJupyterServerProvider = Symbol('IJupyterServerFactory');
 export interface IJupyterServerProvider {
     start(notebookFile? : string): Promise<IJupyterServer>;
+    isSupported() : Promise<boolean>;
 }
 
 // Talks to a jupyter kernel to retrieve data for cells

@@ -8,6 +8,7 @@ import { ChildProcess, spawn } from 'child_process';
 import * as tk from 'tree-kill';
 import { URL } from 'url';
 import { createDeferred, Deferred } from '../../utils/async';
+import { IPlatformService } from '../common/platform/types';
 import { ILogger } from '../common/types';
 
 export interface IConnectionInfo {
@@ -25,6 +26,28 @@ export class JupyterProcess implements IDisposable {
     private startPromise: Deferred<IConnectionInfo> | undefined;
     private process: ChildProcess | undefined;
     private logger: ILogger | undefined;
+
+    public static exists(platformService: IPlatformService) : Promise<boolean> {
+        return new Promise(resolve => {
+            // Look using where or which depending upon the platform for the jupyter executable somewhere on the
+            // the binary path
+            const command = platformService.isWindows ? 'where.exe' : 'which';
+            const args = platformService.isWindows ? ['jupyter.exe'] : ['jupyter'];
+            const process = spawn(command, args);
+
+            // If it's found, the path should end up in the output at some point.
+            // tslint:disable-next-line:no-any
+            process.stdout.on('data', (data: any) => {
+                resolve(data.toString('utf8').indexOf(args[0]) >= 0);
+            });
+
+            // Otherwise if there's an error, then we didn't find it.
+            // tslint:disable-next-line:no-any
+            process.stderr.on('data', (data: any) => {
+                resolve(false);
+            });
+        });
+    }
 
     public start(notebookdir: string, logger: ILogger) {
         this.logger = logger;
