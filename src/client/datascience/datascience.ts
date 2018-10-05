@@ -33,7 +33,7 @@ export class DataScience implements IDataScience {
     public async activate(): Promise<void> {
         this.registerCommands();
 
-        // IANHU CHECKIN TODO: Check if we need a dispose here. Seems like no, per jedi registration
+        // IANHU: Check if we need a dispose here. Seems like no, per jedi registration
         this.extensionContext.subscriptions.push(
             vscode.languages.registerCodeLensProvider(
                 PYTHON, this.dataScienceCodeLensProvider

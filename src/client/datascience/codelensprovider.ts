@@ -22,7 +22,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             const index = this.activeCodeWatchers.findIndex(item => item.fileName === document.fileName);
             if (index >= 0) {
                 const item = this.activeCodeWatchers[index];
-                if(item.documentVersion === document.version) {
+                if (item.documentVersion === document.version) {
                     return Promise.resolve(item.getCodeLenses());
                 }
                 // If the version is different remove it from the active list
@@ -30,9 +30,8 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             }
 
             // Get cells here
-            
             // Create a new watcher for this file
-            // IANHU TODO: Can the get here handle constructor parameters so we don't need the init call?
+            // IANHU: Can the get here handle constructor parameters so we don't need the init call?
             const newCodeWatcher = this.serviceContainer.get<ICodeWatcher>(ICodeWatcher);
             newCodeWatcher.addFile(document.fileName, document.version);
             this.activeCodeWatchers.push(newCodeWatcher);
@@ -44,9 +43,4 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             // Need to hook up our command here
             return codeLens;
     }
-
-    // IANHU TODO: Move this out to CellHelper?
-    //public static getCells(document: TextDocument): Cell[] {
-    
-    //}
 }
