@@ -227,6 +227,11 @@
                 "command": "python.datascience",
                 "title": "%python.command.python.datascience.datascience.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.runcell",
+                "title": "%python.command.python.datascience.runcell.title%",
+                "category": "Python"
             }
         ],
         "menus": {

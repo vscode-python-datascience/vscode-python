@@ -43,8 +43,15 @@ export class DataScience implements IDataScience {
        await this.appShell.showInformationMessage('Hello Data Science');
     }
 
+    public async runCell(): Promise<void> {
+        let x: number = 1;
+        x += 5;
+    }
+
     private registerCommands(): void {
-        const disposable = this.commandManager.registerCommand(Commands.DataScience, this.executeDataScience, this);
+        let disposable = this.commandManager.registerCommand(Commands.DataScience, this.executeDataScience, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.RunCell, this.runCell, this);
         this.disposableRegistry.push(disposable);
     }
 }

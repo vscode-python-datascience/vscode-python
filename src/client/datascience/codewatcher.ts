@@ -4,24 +4,28 @@
 'use strict';
 
 import { injectable } from 'inversify';
+import { CodeLens } from 'vscode';
 import { ICodeWatcher } from './types';
 
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
     public fileName: string = ''; // IANHU Don't init here
     public documentVersion: number = 0;
+    private codeLenses: CodeLens[] = [];
     //constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
     //}
 
     public getCodeLenses() {
-        //const lenses: CodeLens[] = [];
-        //return lenses;
-        return [];
+        return this.codeLenses;
     }
 
     public addFile(fileName: string, documentVersion: number) {
         // IANHU: can we do this in the constructor instead?
         this.fileName = fileName;
         this.documentVersion = documentVersion;
+    }
+
+    public addCodeLenses(newLenses: CodeLens[]) {
+        this.codeLenses = newLenses;
     }
 }

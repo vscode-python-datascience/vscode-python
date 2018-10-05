@@ -5,4 +5,5 @@
 
 export namespace Commands {
     export const DataScience = 'python.datascience';
+    export const RunCell = 'python.datascience.runcell';
 }
