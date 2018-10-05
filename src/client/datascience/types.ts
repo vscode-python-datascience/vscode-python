@@ -53,6 +53,7 @@ export interface ICodeWatcher {
     documentVersion: number;
     getCodeLenses() : CodeLens[];
     addFile(fileName: string, documentVersion: number);
+    addCodeLenses(newLenses: CodeLens[]);
 }
 
 // Basic structure for a cell from a notebook

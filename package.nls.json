@@ -24,6 +24,8 @@
     "python.command.python.enableLinting.title": "Enable Linting",
     "python.command.python.runLinting.title": "Run Linting",
     "python.command.python.datascience.showhistorypane.title": "Show History Pane",
+    "python.command.python.datascience.datascience.title": "Data Science Test Command",
+    "python.command.python.datascience.runcell.title": "Run Cell",
     "python.snippet.launch.standard.label": "Python: Current File",
     "python.snippet.launch.standard.description": "Debug a Python Program with Standard Output",
     "python.snippet.launch.pyspark.label": "Python: PySpark",

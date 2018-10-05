@@ -4,6 +4,8 @@
 'use strict';
 
 export namespace Commands {
+    export const DataScience = 'python.datascience';
+    export const RunCell = 'python.datascience.runcell';
     export const ShowHistoryPane = 'python.datascience.showhistorypane';
 }
 

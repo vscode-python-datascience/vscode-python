@@ -41,7 +41,20 @@ export class DataScience implements IDataScience {
         );
     }
 
+    public async executeDataScience(): Promise<void> {
+       await this.appShell.showInformationMessage('Hello Data Science');
+    }
+
+    public async runCell(): Promise<void> {
+        let x: number = 1;
+        x += 5;
+    }
+
     private registerCommands(): void {
+        let disposable = this.commandManager.registerCommand(Commands.DataScience, this.executeDataScience, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.RunCell, this.runCell, this);
+        this.disposableRegistry.push(disposable);
         this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
             listener.register(this.commandManager);
         })
