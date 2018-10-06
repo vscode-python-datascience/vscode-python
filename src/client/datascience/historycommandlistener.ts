@@ -26,12 +26,20 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     }
 
     public register(commandManager: ICommandManager): void {
-        const disposable = commandManager.registerCommand(Commands.ShowHistoryPane, this.showHistoryPane.bind(this));
+        let disposable = commandManager.registerCommand(Commands.ShowHistoryPane, this.showHistoryPane.bind(this));
         this.disposableRegistry.push(disposable);
+        disposable = commandManager.registerCommand(Commands.TestHistoryPane, this.testHistoryPane.bind(this));
     }
 
-    private showHistoryPane() : void {
+    private showHistoryPane() : Promise<void> {
         const active = History.getOrCreateActive(this.serviceContainer);
-        active.show().ignoreErrors();
+        return active.show();
+    }
+
+    private async testHistoryPane() : Promise<void> {
+        await this.showHistoryPane();
+
+        const active = History.getOrCreateActive(this.serviceContainer);
+        await active.addCell('a=1\r\na', 'foo', 2);
     }
 }

@@ -5,7 +5,7 @@
 
 import { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import { IDisposable } from '@phosphor/disposable';
-import * as fs from 'async-file';
+import * as fs from 'fs-extra';
 import * as fssync from 'fs';
 import * as path from 'path';
 import * as temp from 'temp';
@@ -195,7 +195,7 @@ export class JupyterServer implements IJupyterServer, IDisposable {
 
         // Copy the notebook file into it if necessary
         if (notebookFile && file) {
-            if (await fs.exists(notebookFile)) {
+            if (await fs.pathExists(notebookFile)) {
                 fssync.copyFileSync(notebookFile, file.path);
             }
         }

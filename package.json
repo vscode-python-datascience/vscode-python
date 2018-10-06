@@ -227,6 +227,11 @@
                 "command": "python.datascience.showhistorypane",
                 "title": "%python.command.python.datascience.showhistorypane.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.testhistorypane",
+                "title": "%python.command.python.datascience.testhistorypane.title%",
+                "category": "Python"
             }
         ],
         "menus": {
@@ -1526,6 +1531,7 @@
     "scripts": {
         "vscode:prepublish": "gulp checkNativeDependencies && tsc -p ./ && npm run compile-webviews",
         "compile": "tsc -watch -p ./",
+        "compile-webviews-watch": "gulp compile-webviews-watch",
         "compile-webviews": "gulp compile-webviews",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
@@ -1624,7 +1630,6 @@
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",
         "JSONStream": "^1.3.2",
-        "async-file": "^2.0.2",
         "babel-loader": "^8.0.3",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
@@ -1676,7 +1681,8 @@
         "uuid": "^3.2.1",
         "vscode": "^1.1.21",
         "vscode-debugadapter-testsupport": "^1.27.0",
-        "webpack": "^4.20.2"
+        "webpack": "^4.20.2",
+        "yargs": "^12.0.2"
     },
     "__metadata": {
         "id": "f1f59ae4-9318-4f3c-a9b5-81b2eaa5f8a5",

@@ -1,0 +1,17 @@
+.cell-outer {
+    margin: 5px;
+    padding: 2px;
+    border-radius: 1px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: black;
+    display: inline-block;
+  }
+
+  .cell-input {
+      margin: 0;
+      background-color: lavender;
+  }
+
+  .cell-output {
+  }
