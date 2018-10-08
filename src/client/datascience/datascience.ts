@@ -10,7 +10,7 @@ import { PYTHON } from '../common/constants';
 import { IDisposableRegistry, IExtensionContext } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Commands } from './constants';
-import { IDataScience, IDataScienceCodeLensProvider } from './types';
+import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider } from './types';
 
 @injectable()
 export class DataScience implements IDataScience {
@@ -31,7 +31,6 @@ export class DataScience implements IDataScience {
     public async activate(): Promise<void> {
         this.registerCommands();
 
-        // IANHU: Check if we need a dispose here. Seems like no, per jedi registration
         this.extensionContext.subscriptions.push(
             vscode.languages.registerCodeLensProvider(
                 PYTHON, this.dataScienceCodeLensProvider
@@ -43,9 +42,9 @@ export class DataScience implements IDataScience {
        await this.appShell.showInformationMessage('Hello Data Science');
     }
 
-    public async runCell(): Promise<void> {
-        let x: number = 1;
-        x += 5;
+    public async runCell(codeWatcher: ICodeWatcher, range: vscode.Range): Promise<void> {
+        // Pass down to the code watcher to handle
+        codeWatcher.runCell(range);
     }
 
     private registerCommands(): void {
