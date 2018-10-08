@@ -17,14 +17,14 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
     // CodeLensProvider interface
     // Some implementation based on DonJayamanne's jupyter extension work
-    public async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken):
-        Promise<vscode.CodeLens[]> {
+    public provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken):
+        vscode.CodeLens[] {
             // First check to see if we already have a watcher here
             const index = this.activeCodeWatchers.findIndex(item => item.getFileName() === document.fileName);
             if (index >= 0) {
                 const item = this.activeCodeWatchers[index];
                 if (item.getVersion() === document.version) {
-                    return Promise.resolve(item.getCodeLenses());
+                    return item.getCodeLenses();
                 }
                 // If the version is different remove it from the active list
                 this.activeCodeWatchers.splice(index, 1);
@@ -34,6 +34,6 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             const newCodeWatcher = this.serviceContainer.get<ICodeWatcher>(ICodeWatcher);
             newCodeWatcher.addFile(document);
             this.activeCodeWatchers.push(newCodeWatcher);
-            return Promise.resolve(newCodeWatcher.getCodeLenses());
+            return newCodeWatcher.getCodeLenses();
     }
 }
