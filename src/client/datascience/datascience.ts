@@ -10,8 +10,7 @@ import { PYTHON } from '../common/constants';
 import { IDisposableRegistry, IExtensionContext } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Commands } from './constants';
-import { ICodeWatcher, IDataScience, , IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
-
+import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
 
 @injectable()
 export class DataScience implements IDataScience {
@@ -57,6 +56,6 @@ export class DataScience implements IDataScience {
         this.disposableRegistry.push(disposable);
         this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
             listener.register(this.commandManager);
-        })
+        });
     }
 }

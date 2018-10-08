@@ -3,7 +3,6 @@
 
 'use strict';
 
-
 import { CodeLens, CodeLensProvider, Event, Range, TextDocument } from 'vscode';
 import { ICommandManager } from '../common/application/types';
 
