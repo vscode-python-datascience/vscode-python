@@ -227,6 +227,11 @@
                 "command": "python.datascience.showhistorypane",
                 "title": "%python.command.python.datascience.showhistorypane.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.runcell",
+                "title": "%python.command.python.datascience.runcell.title%",
+                "category": "Python"
             }
         ],
         "menus": {

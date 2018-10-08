@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { Event } from 'vscode';
+import { CodeLens, CodeLensProvider, Event, Range, TextDocument } from 'vscode';
 import { ICommandManager } from '../common/application/types';
 
 // Main interface
@@ -39,6 +39,21 @@ export interface IPostOffice {
     post(message: string, params: any[] | undefined);
     // tslint:disable-next-line:no-any
     listen(message: string, listener: (args: any[] | undefined) => void);
+}
+
+// Wraps the vscode CodeLensProvider base class
+export const IDataScienceCodeLensProvider = Symbol('IDataScienceCodeLensProvider');
+export interface IDataScienceCodeLensProvider extends CodeLensProvider {
+}
+
+// Wraps the Code Watcher API
+export const ICodeWatcher = Symbol('ICodeWatcher');
+export interface ICodeWatcher {
+    getFileName() : string;
+    getVersion() : number;
+    getCodeLenses() : CodeLens[];
+    addFile(document: TextDocument);
+    runCell(range: Range);
 }
 
 // Basic structure for a cell from a notebook
