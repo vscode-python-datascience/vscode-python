@@ -5,7 +5,7 @@ var path = require('path');
 module.exports = {
   entry: '<unknown>',
   mode: 'development', // Maybe change this to production? Do we care if users see errors?
-  devtool: 'cheap-module-source-map',
+  devtool: 'eval',
   output: {
     path: path.resolve(__dirname, './out'),
     filename: 'index_bundle.js',

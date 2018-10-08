@@ -17,6 +17,7 @@ import { ILogger } from '../common/types';
 import { parseExecuteMessage } from './jupyterExecuteParser';
 import { JupyterProcess } from './jupyterProcess';
 import { ICell, IJupyterServer } from './types';
+import { nbformat } from '@jupyterlab/coreutils';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -66,6 +67,15 @@ export class JupyterServer implements IJupyterServer, IDisposable {
 
             // Start a new session
             this.session = await Session.startNew(options);
+
+            // Setup the default imports (this should be configurable in the future)
+            this.execute(`
+import pandas as pd
+import numpy
+%matplotlib inline
+import matplotlib.pyplot as plt
+`,
+            'foo.py', -1).ignoreErrors();
 
             return true;
         } catch (err) {
@@ -142,7 +152,7 @@ export class JupyterServer implements IJupyterServer, IDisposable {
         // Start out empty;
         const cell: ICell = {
             input: code,
-            output: '',
+            output: {},
             id: id
         };
 

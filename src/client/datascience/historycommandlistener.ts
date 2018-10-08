@@ -6,21 +6,20 @@
 import { inject, injectable } from 'inversify';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { IDisposableRegistry } from '../common/types';
-import { IDataScienceCommandListener } from './types';
+import { IDataScienceCommandListener, IHistoryProvider } from './types';
 import { IServiceContainer } from '../ioc/types';
 import { Commands } from './constants';
-import { History } from './history';
 
 @injectable()
 export class HistoryCommandListener implements IDataScienceCommandListener {
     private readonly appShell: IApplicationShell;
     private readonly disposableRegistry: IDisposableRegistry;
-    private readonly serviceContainer: IServiceContainer;
+    private readonly historyProvider : IHistoryProvider;
 
-    constructor(@inject(IServiceContainer) private svcContainer: IServiceContainer)
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer)
     {
-        this.serviceContainer = svcContainer;
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        this.historyProvider = this.serviceContainer.get<IHistoryProvider>(IHistoryProvider);
         this.disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.showHistoryPane = this.showHistoryPane.bind(this);
     }
@@ -31,15 +30,15 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         disposable = commandManager.registerCommand(Commands.TestHistoryPane, this.testHistoryPane.bind(this));
     }
 
-    private showHistoryPane() : Promise<void> {
-        const active = History.getOrCreateActive(this.serviceContainer);
+    private async showHistoryPane() : Promise<void> {
+        const active = await this.historyProvider.getOrCreateHistory();
         return active.show();
     }
 
     private async testHistoryPane() : Promise<void> {
         await this.showHistoryPane();
 
-        const active = History.getOrCreateActive(this.serviceContainer);
-        await active.addCell('a=1\r\na', 'foo', 2);
+        const active = await this.historyProvider.getOrCreateHistory();
+        await active.addCode('a=1\r\na', 'foo', 2);
     }
 }
