@@ -13,3 +13,7 @@ export namespace HistoryMessages {
     export const AddCell = 'add_cell';
     export const AddCells = 'add_cells';
 }
+
+export namespace RegExpValues {
+    export const PythonCellMarker = new RegExp('^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])(.*)');
+}

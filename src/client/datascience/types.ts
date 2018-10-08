@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CodeLens, CodeLensProvider, Event } from 'vscode';
+import { CodeLens, CodeLensProvider, Event, Range, TextDocument } from 'vscode';
 import { ICommandManager } from '../common/application/types';
 
 // Main interface
@@ -49,11 +49,11 @@ export interface IDataScienceCodeLensProvider extends CodeLensProvider {
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
 export interface ICodeWatcher {
-    fileName: string;
-    documentVersion: number;
+    getFileName() : string;
+    getVersion() : number;
     getCodeLenses() : CodeLens[];
-    addFile(fileName: string, documentVersion: number);
-    addCodeLenses(newLenses: CodeLens[]);
+    addFile(document: TextDocument);
+    runCell(range: Range);
 }
 
 // Basic structure for a cell from a notebook
