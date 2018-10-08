@@ -56,6 +56,6 @@ export class DataScience implements IDataScience {
         this.disposableRegistry.push(disposable);
         this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
             listener.register(this.commandManager);
-        })
+        });
     }
 }
