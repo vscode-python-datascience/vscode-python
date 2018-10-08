@@ -10,7 +10,8 @@ import { PYTHON } from '../common/constants';
 import { IDisposableRegistry, IExtensionContext } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Commands } from './constants';
-import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider } from './types';
+import { ICodeWatcher, IDataScience, , IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
+
 
 @injectable()
 export class DataScience implements IDataScience {
@@ -19,6 +20,7 @@ export class DataScience implements IDataScience {
     private readonly disposableRegistry: IDisposableRegistry;
     private readonly extensionContext: IExtensionContext;
     private readonly dataScienceCodeLensProvider: IDataScienceCodeLensProvider;
+    private readonly commandListeners: IDataScienceCommandListener[];
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer)
     {
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -26,6 +28,7 @@ export class DataScience implements IDataScience {
         this.disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.extensionContext = this.serviceContainer.get<IExtensionContext>(IExtensionContext);
         this.dataScienceCodeLensProvider = this.serviceContainer.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
+        this.commandListeners = this.serviceContainer.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
     }
 
     public async activate(): Promise<void> {
@@ -52,5 +55,8 @@ export class DataScience implements IDataScience {
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.RunCell, this.runCell, this);
         this.disposableRegistry.push(disposable);
+        this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
+            listener.register(this.commandManager);
+        })
     }
 }

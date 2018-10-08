@@ -66,7 +66,7 @@
             }
         },
         {
-            "name": "Tests (Sigle Workspace, VS Code, *.test.ts)",
+            "name": "Tests (Single Workspace, VS Code, *.test.ts)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -138,15 +138,15 @@
             ]
         },
         {
-            "name": "Unit Tests (without VS Ccode, *.unit.test.ts)",
+            "name": "Unit Tests (without VS Code, *.unit.test.ts)",
             "type": "node",
             "request": "launch",
             "program": "${workspaceFolder}/out/test/unittests.js",
             "stopOnEntry": false,
             "sourceMaps": true,
             "args": [
-                "timeout=60000",
-                "grep="
+                "timeout=300000",
+                "grep=Jupyter"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
