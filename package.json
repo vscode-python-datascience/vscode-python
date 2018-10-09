@@ -1567,7 +1567,6 @@
         "getos": "3.1.0",
         "glob": "7.1.2",
         "iconv-lite": "0.4.21",
-        "immutable": "^3.8.2",
         "inversify": "4.11.1",
         "line-by-line": "0.1.6",
         "lodash": "4.17.5",
