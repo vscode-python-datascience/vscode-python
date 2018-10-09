@@ -5,19 +5,19 @@
 
 import { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import { IDisposable } from '@phosphor/disposable';
-import * as fs from 'fs-extra';
 import * as fssync from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as temp from 'temp';
 import * as tp from 'typed-promisify';
 import * as vscode from 'vscode';
 import * as localize from '../../utils/localize';
+import '../common/extensions';
 import { IFileSystem } from '../common/platform/types';
 import { ILogger } from '../common/types';
 import { parseExecuteMessage } from './jupyterExecuteParser';
 import { JupyterProcess } from './jupyterProcess';
 import { ICell, IJupyterServer } from './types';
-import { nbformat } from '@jupyterlab/coreutils';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -69,13 +69,10 @@ export class JupyterServer implements IJupyterServer, IDisposable {
             this.session = await Session.startNew(options);
 
             // Setup the default imports (this should be configurable in the future)
-            this.execute(`
-import pandas as pd
-import numpy
-%matplotlib inline
-import matplotlib.pyplot as plt
-`,
-            'foo.py', -1).ignoreErrors();
+            this.execute(
+                'import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt',
+                'foo.py',
+                -1).ignoreErrors();
 
             return true;
         } catch (err) {
@@ -164,8 +161,12 @@ import matplotlib.pyplot as plt
                 this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
             } else if (KernelMessage.isStatusMsg(msg)) {
                 this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
+            } else if (KernelMessage.isStreamMsg(msg)) {
+                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
+            } else if (KernelMessage.isDisplayDataMsg(msg)) {
+                this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
             } else {
-                this.logger.logWarning(`Unknown message ${msg}`);
+                this.logger.logWarning(`Unknown message ${typeof msg}`);
             }
         };
 
@@ -190,6 +191,21 @@ import matplotlib.pyplot as plt
         } else {
             this.onStatusChangedEvent.fire(false);
         }
+    }
+
+    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, cell: ICell) {
+        const mimeType = 'text/plain';
+
+        // Stream/concat the text together
+        if (cell.output.hasOwnProperty(mimeType)) {
+            cell.output[mimeType] = `${cell.output[mimeType].toString()}\n${msg.content.text}`;
+        } else {
+            cell.output[mimeType] = msg.content.text;
+        }
+    }
+
+    private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, cell: ICell) {
+        cell.output = msg.content.data;
     }
 
     private async generateTempFile(notebookFile?: string) : Promise<temp.OpenFile> {
