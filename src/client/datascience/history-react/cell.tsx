@@ -56,7 +56,7 @@ export class Cell extends React.Component<ICell> {
           style['backgroundColor'] = 'white';
         }
         if (mimetype === 'text/plain') {
-          style['white-space'] = 'pre';
+          style['whiteSpace'] = 'pre';
         }
         try {
           return <div style={style}><Transform data={cell.output[mimetype]} /></div>;

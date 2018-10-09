@@ -44,6 +44,9 @@ export class History implements IWebPanelMessageListener {
     }
 
     public async addCode(code: string, file: string, line: number) : Promise<void> {
+        // Make sure we're loaded first.
+        await this.loadPromise;
+
         if (this.jupyterServer) {
             // First attempt to evaluate this cell in the jupyter notebook
             const newCell = await this.jupyterServer.execute(code, file, line);

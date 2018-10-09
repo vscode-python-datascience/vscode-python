@@ -13,12 +13,16 @@ export interface IState {
     cells: ICell[];
 }
 
-export class MainPanel extends React.Component<{}, IState> {
+export interface IMainPanelProps {
+    skipDefault?: boolean;
+}
+
+export class MainPanel extends React.Component<IMainPanelProps, IState> {
 
     private messageHandlers: { [index: string]: (msg?: any) => void } = {
     };
 
-    constructor(props: {}, state: IState) {
+    constructor(props: IMainPanelProps, state: IState) {
         super(props)
         this.state = { cells: [] };
         this.updateState.bind(this);
@@ -26,7 +30,7 @@ export class MainPanel extends React.Component<{}, IState> {
 
         // Setup up some dummy cells for debugging when not running in vscode
         // This should show a gray rectangle in the cell.
-        if (!PostOffice.canSendMessages()) {
+        if (!PostOffice.canSendMessages() && !this.props.skipDefault) {
             this.state = {cells: [
                 {
                     input: 'get_ipython().run_line_magic("matplotlib", "inline")',
