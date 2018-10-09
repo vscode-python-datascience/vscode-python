@@ -496,10 +496,15 @@ const hygiene = (options) => {
         .pipe(sourcemaps.init())
         .pipe(tsc())
         .pipe(sourcemaps.mapSources(function (sourcePath, file) {
-            const tsFileName = path.basename(file.path).replace(/js$/, 'ts');
+            let tsFileName = path.basename(file.path).replace(/js$/, 'ts');
             const qualifiedSourcePath = path.dirname(file.path).replace('out/', 'src/').replace('out\\', 'src\\');
             if (!fs.existsSync(path.join(qualifiedSourcePath, tsFileName))) {
-                console.error(`ERROR: (source-maps) ${file.path}[1,1]: Source file not found`);
+                const tsxFileName = path.basename(file.path).replace(/js$/, 'tsx');
+                if (!fs.existsSync(path.join(qualifiedSourcePath, tsxFileName))) {
+                    console.error(`ERROR: (source-maps) ${file.path}[1,1]: Source file not found`);
+                } else {
+                    tsFileName = tsxFileName;
+                }
             }
             return path.join(path.relative(path.dirname(file.path), qualifiedSourcePath), tsFileName);
         }))
