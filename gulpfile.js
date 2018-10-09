@@ -99,9 +99,13 @@ gulp.task('debugger-coverage', () => buildDebugAdapterCoverage());
 
 gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
 
+gulp.task('hygiene-watch-branch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'diffMaster', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
+
 gulp.task('hygiene-all', () => run({ mode: 'all' }));
 
 gulp.task('hygiene-modified', ['compile'], () => run({ mode: 'changes' }));
+
+gulp.task('hygiene-branch', ['compile'], () => run({ mode: 'diffMaster' }));
 
 gulp.task('clean', ['output:clean', 'cover:clean'], () => { });
 
@@ -266,7 +270,7 @@ function buildDebugAdapterCoverage() {
 
 /**
 * @typedef {Object} hygieneOptions - creates a new type named 'SpecialType'
-* @property {'changes'|'staged'|'all'|'compile'} [mode=] - Mode.
+* @property {'changes'|'staged'|'all'|'compile'|'diffMaster'} [mode=] - Mode.
 * @property {boolean=} skipIndentationCheck - Skip indentation checks.
 * @property {boolean=} skipFormatCheck - Skip format checks.
 * @property {boolean=} skipCopyrightCheck - Skip copyright checks.
@@ -590,6 +594,13 @@ function getModifiedFilesSync() {
         .filter(l => _.intersection(['M', 'A', 'R', 'C', 'U', '?'], l.substring(0, 2).trim().split('')).length > 0)
         .map(l => path.join(__dirname, l.substring(2).trim()));
 }
+function getDifferentFromMasterFilesSync() {
+    const out = cp.execSync('git diff --name-status master', { encoding: 'utf8' });
+    return out
+        .split(/\r?\n/)
+        .filter(l => !!l)
+        .map(l => path.join(__dirname, l.substring(2).trim()));
+}
 
 /**
 * @param {hygieneOptions} options
@@ -613,6 +624,10 @@ function getFileListToProcess(options) {
 
     if (options && options.mode === 'staged') {
         return getStagedFilesSync();
+    }
+
+    if (options && options.mode === 'diffMaster') {
+        return getDifferentFromMasterFilesSync();
     }
 
     return all;
