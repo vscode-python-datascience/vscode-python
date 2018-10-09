@@ -11,6 +11,7 @@ import { Cell } from './cell';
 
 export interface IState {
     cells: ICell[];
+    busy: boolean;
 }
 
 export interface IMainPanelProps {
@@ -22,18 +23,21 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> {
     // tslint:disable-next-line:no-any
     private messageHandlers: { [index: string]: (msg?: any) => void } = {
     };
+    private bottom: HTMLDivElement | undefined;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, state: IState) {
         super(props);
-        this.state = { cells: [] };
+        this.state = { cells: [], busy: false };
         this.updateState.bind(this);
         this.messageHandlers[HistoryMessages.UpdateState] = this.updateState;
 
         // Setup up some dummy cells for debugging when not running in vscode
         // This should show a gray rectangle in the cell.
         if (!PostOffice.canSendMessages() && !this.props.skipDefault) {
-            this.state = {cells: [
+            this.state = {
+                busy: false,
+                cells: [
                 {
                     input: 'get_ipython().run_line_magic("matplotlib", "inline")',
                     output: {
@@ -168,11 +172,20 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> {
         }
     }
 
+    public componentDidMount() {
+        this.scrollToBottom();
+    }
+
+    public componentDidUpdate(prevProps, prevState) {
+        this.scrollToBottom();
+    }
+
     public render() {
         return (
             <div className='main-panel'>
                 <PostOffice messageHandlers={this.messageHandlers} />
                 {this.renderCells()}
+                <div ref={this.updateBottom} />
             </div>
         );
     }
@@ -183,6 +196,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> {
                 <Cell input={cell.input} output={cell.output} id={cell.id} />
             </ErrorBoundary>
         );
+    }
+
+    private scrollToBottom = () => {
+        if (this.bottom) {
+            this.bottom.scrollIntoView({behavior: 'smooth'});
+        }
+    }
+
+    private updateBottom = (newBottom: HTMLDivElement) => {
+        this.bottom = newBottom;
     }
 
     // tslint:disable-next-line:no-any
