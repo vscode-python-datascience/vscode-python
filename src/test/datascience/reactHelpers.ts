@@ -88,7 +88,7 @@ function waitForRender<P, S, C>(component: React.Component<P, S, C>) : Promise<v
                 return result;
             };
         } else {
-            reject('Cannot find the component for waitForComponentDidUpdate');
+            reject('Cannot find the component for waitForRender');
         }
     });
 }
