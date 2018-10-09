@@ -5,6 +5,7 @@
 
 import { CodeLens, CodeLensProvider, Event, Range, TextDocument } from 'vscode';
 import { ICommandManager } from '../common/application/types';
+import { nbformat } from '@jupyterlab/coreutils';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -30,6 +31,17 @@ export interface IJupyterServer {
     onStatusChanged: Event<boolean>;
     getCurrentState() : Promise<ICell[]>;
     execute(code: string, file: string, line: number) : Promise<ICell>;
+}
+
+export const IHistoryProvider = Symbol('IHistoryProvider');
+export interface IHistoryProvider {
+    getOrCreateHistory() : Promise<IHistory>;
+}
+
+export const IHistory = Symbol('IHistory');
+export interface IHistory {
+    show() : Promise<void>;
+    addCode(code: string, file: string, line: number) : Promise<void>;
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview
@@ -59,6 +71,6 @@ export interface ICodeWatcher {
 // Basic structure for a cell from a notebook
 export interface ICell {
     input: string;
-    output: string;
+    output: nbformat.IMimeBundle;
     id: string;
 }

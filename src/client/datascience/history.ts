@@ -6,7 +6,8 @@ import * as path from 'path';
 import * as localize from '../../utils/localize';
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider } from '../common/application/types';
 import { IServiceContainer } from '../ioc/types';
-import { IJupyterServer, IJupyterServerProvider } from './types';
+import { IJupyterServer, IJupyterServerProvider, ICell } from './types';
+import { HistoryMessages } from './constants';
 
 export class History implements IWebPanelMessageListener {
     private static activeHistory: History;
@@ -14,6 +15,7 @@ export class History implements IWebPanelMessageListener {
     // tslint:disable-next-line: no-unused-variable
     private jupyterServer: IJupyterServer | undefined;
     private loadPromise: Promise<void>;
+    private cells: ICell[] = [];
 
     constructor(serviceContainer: IServiceContainer) {
         // Load on a background thread.
@@ -38,6 +40,24 @@ export class History implements IWebPanelMessageListener {
         // Then show our web panel.
         if (this.webPanel) {
             await this.webPanel.show();
+        }
+    }
+
+    public async addCode(code: string, file: string, line: number) : Promise<void> {
+        // Make sure we're loaded first.
+        await this.loadPromise;
+
+        if (this.jupyterServer) {
+            // First attempt to evaluate this cell in the jupyter notebook
+            const newCell = await this.jupyterServer.execute(code, file, line);
+
+            // Save the new cell in our current state
+            this.cells.push(newCell);
+
+            // Send our new state to our panel
+            if (this.webPanel) {
+                this.webPanel.postMessage({type: HistoryMessages.UpdateState, payload: this.cells});
+            }
         }
     }
 

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as fs from 'async-file';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 import '../../common/extensions';
@@ -11,7 +11,7 @@ import '../../common/extensions';
 import * as localize from '../../../utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { IDisposableRegistry } from '../types';
-import { IWebPanel, IWebPanelMessageListener  } from './types';
+import { IWebPanel, IWebPanelMessageListener, IWebPanelMessage  } from './types';
 
 export class WebPanel implements IWebPanel {
 
@@ -48,9 +48,15 @@ export class WebPanel implements IWebPanel {
         return this.panel ? this.panel.visible : false;
     }
 
+    public postMessage(message: IWebPanelMessage) {
+        if (this.panel && this.panel.webview) {
+            this.panel.webview.postMessage(message);
+        }
+    }
+
     private async load(mainScriptPath: string) {
         if (this.panel) {
-            if (await fs.exists(mainScriptPath)) {
+            if (await fs.pathExists(mainScriptPath)) {
 
                 // Call our special function that sticks this script inside of an html page
                 // and translates all of the paths to vscode-resource URIs
