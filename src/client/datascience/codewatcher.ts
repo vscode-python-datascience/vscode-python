@@ -3,10 +3,10 @@
 
 'use strict';
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { CodeLens, Command, Range, TextDocument } from 'vscode';
 import { Commands, RegExpValues } from './constants';
-import { ICodeWatcher } from './types';
+import { ICodeWatcher, IHistoryProvider } from './types';
 
 export interface ICell {
     range: Range;
@@ -17,6 +17,8 @@ export interface ICell {
 export class CodeWatcher implements ICodeWatcher {
     private document?: TextDocument;
     private codeLenses: CodeLens[] = [];
+    constructor(@inject(IHistoryProvider) private historyProvider: IHistoryProvider) {
+    }
 
     // Implmentation of getCells here based on Don's Jupyter extension work
     // Note, there is code here for setting editor context on which files have cells or not in Don's code
@@ -90,7 +92,11 @@ export class CodeWatcher implements ICodeWatcher {
         });
     }
 
-    public runCell(range: Range) {
-        // Run cell command
+    public async runCell(range: Range) {
+        const activeHistory = await this.historyProvider.getOrCreateHistory();
+        if (this.document) {
+            const code = this.document.getText(range);
+            await activeHistory.addCode(code, this.getFileName(), range.start.line);
+        }
     }
 }
