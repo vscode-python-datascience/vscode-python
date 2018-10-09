@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 'use strict';
-// Dummy comment
 
 import { ComponentClass, ReactWrapper  } from 'enzyme';
 import { JSDOM } from 'jsdom';

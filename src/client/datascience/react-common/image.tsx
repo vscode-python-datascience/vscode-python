@@ -8,7 +8,6 @@ import * as React from 'react';
 // This special function finds relative paths when loading inside of vscode. It's not defined
 // when loading outside, so the Image component should still work.
 export declare function resolvePath(relativePath: string): string;
-// Dummy comment
 
 interface IImageProps {
     class: string;

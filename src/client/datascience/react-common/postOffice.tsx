@@ -5,7 +5,6 @@
 
 import * as React from 'react';
 import { IWebPanelMessage } from '../../common/application/types';
-// Dummy comment
 
 interface IVsCodeApi {
     // tslint:disable-next-line:no-any

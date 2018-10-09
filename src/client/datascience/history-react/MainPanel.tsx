@@ -9,8 +9,6 @@ import { PostOffice } from '../react-common/postOffice';
 import { ICell } from '../types';
 import { Cell } from './cell';
 
-// Dummy comment
-
 export interface IState {
     cells: ICell[];
 }

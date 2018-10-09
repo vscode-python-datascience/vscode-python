@@ -11,8 +11,6 @@ import JSONTree from 'react-json-tree';
 import { ICell } from '../types';
 import './cell.css';
 
-// Dummy comment
-
 export class Cell extends React.Component<ICell> {
     constructor(prop: ICell) {
         super(prop);
