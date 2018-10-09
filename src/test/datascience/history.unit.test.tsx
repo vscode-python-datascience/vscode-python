@@ -24,7 +24,6 @@ var Module = require('module');
 
 import * as React from 'react';
 import * as assert from 'assert';
-import * as sinon from 'sinon'
 import { mount } from 'enzyme';
 import { JSDOM } from 'jsdom';
 import * as TypeMoq from 'typemoq';
@@ -40,6 +39,7 @@ import { MainPanel } from '../../client/datascience/history-react/MainPanel';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
 import { Cell } from '../../client/datascience/history-react/cell'
 import { createDeferred, Deferred } from '../../utils/async';
+import { waitForUpdate } from './reactHelpers'
 
 declare var window : any;
 
@@ -122,27 +122,16 @@ suite('History output tests', () => {
         if (await serverProvider.isSupported()) {
             // Create our main panel and tie it into the JSDOM
             const wrapper = mount(<MainPanel skipDefault={true} />);
-            const mainPanel = wrapper.find(MainPanel).instance();
 
-            // Listen to the MainPanel render so we can tell when it updates
-            const updatePromise : Deferred<boolean> = createDeferred<boolean>();
-            const originalRender = MainPanel.prototype.render.bind(mainPanel);
-            const stub = sinon.stub(MainPanel.prototype, 'render').callsFake(() => {
-                const result = originalRender();
-                updatePromise.resolve();
-                return result;
-            });
+            // Get an update promise so we can wait for the add code
+            const updatePromise = waitForUpdate(wrapper, MainPanel);
 
             // Send some code to the history and make sure it ends up in the html returned from our render
             const history = await historyProvider.getOrCreateHistory();
             await history.addCode('a=1\na', 'foo.py', 2);
 
             // Wait for the render to go through
-            await updatePromise.promise;
-
-            // Render one more time to get the mounted wrapper to be up to date.
-            stub.restore();
-            wrapper.update();
+            await updatePromise;
 
             const foundResult = wrapper.find('Cell');
             assert.equal(foundResult.length, 1, "Didn't find any cells being rendered");
