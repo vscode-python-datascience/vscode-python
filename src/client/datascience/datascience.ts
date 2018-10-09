@@ -44,9 +44,9 @@ export class DataScience implements IDataScience {
        await this.appShell.showInformationMessage('Hello Data Science');
     }
 
-    public async runCell(codeWatcher: ICodeWatcher, range: vscode.Range): Promise<void> {
+    public runCell(codeWatcher: ICodeWatcher, range: vscode.Range): Promise<void> {
         // Pass down to the code watcher to handle
-        codeWatcher.runCell(range);
+        return codeWatcher.runCell(range);
     }
 
     private registerCommands(): void {
