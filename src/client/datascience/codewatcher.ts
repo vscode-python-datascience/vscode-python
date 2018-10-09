@@ -16,6 +16,8 @@ export interface ICell {
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
     private document?: TextDocument;
+    private version: number = -1;
+    private fileName: string = '';
     private codeLenses: CodeLens[] = [];
     constructor(@inject(IHistoryProvider) private historyProvider: IHistoryProvider) {
     }
@@ -56,19 +58,11 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     public getFileName() {
-        if (!this.document) {
-            return '';
-        }
-
-        return this.document.fileName;
+        return this.fileName;
     }
 
     public getVersion() {
-        if (!this.document) {
-            return -1;
-        }
-
-        return this.document.version;
+        return this.version;
     }
 
     public getCodeLenses() {
@@ -77,6 +71,10 @@ export class CodeWatcher implements ICodeWatcher {
 
     public addFile(document: TextDocument) {
         this.document = document;
+
+        // Cache these, we don't want to pull an old version if the document is updated
+        this.fileName = document.fileName;
+        this.version = document.version;
 
         // Get document cells here
         const cells = CodeWatcher.getCells(document);
