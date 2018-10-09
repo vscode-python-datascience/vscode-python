@@ -62,9 +62,9 @@
             "problemMatcher": []
         },
         {
-            "label": "Hygiene All",
+            "label": "Hygiene Watch Branch",
             "type": "gulp",
-            "task": "hygiene",
+            "task": "hygiene-watch-branch",
             "isBackground": true,
             "presentation": {
                 "echo": true,
