@@ -4,21 +4,19 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IApplicationShell, ICommandManager } from '../common/application/types';
+import { ICommandManager } from '../common/application/types';
 import { IDisposableRegistry } from '../common/types';
-import { IDataScienceCommandListener, IHistoryProvider } from './types';
 import { IServiceContainer } from '../ioc/types';
 import { Commands } from './constants';
+import { IDataScienceCommandListener, IHistoryProvider } from './types';
 
 @injectable()
 export class HistoryCommandListener implements IDataScienceCommandListener {
-    private readonly appShell: IApplicationShell;
     private readonly disposableRegistry: IDisposableRegistry;
     private readonly historyProvider : IHistoryProvider;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer)
     {
-        this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.historyProvider = this.serviceContainer.get<IHistoryProvider>(IHistoryProvider);
         this.disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.showHistoryPane = this.showHistoryPane.bind(this);
@@ -28,6 +26,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         let disposable = commandManager.registerCommand(Commands.ShowHistoryPane, this.showHistoryPane.bind(this));
         this.disposableRegistry.push(disposable);
         disposable = commandManager.registerCommand(Commands.TestHistoryPane, this.testHistoryPane.bind(this));
+        this.disposableRegistry.push(disposable);
     }
 
     private async showHistoryPane() : Promise<void> {
