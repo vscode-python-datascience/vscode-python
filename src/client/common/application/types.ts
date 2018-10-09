@@ -673,6 +673,18 @@ export interface IWebPanelMessageListener {
     onDisposed(): void;
 }
 
+export interface IWebPanelMessage {
+    /**
+     * Message type
+     */
+    type: string;
+
+    /**
+     * Payload
+     */
+    payload?: any;
+}
+
 // Wraps the VS Code webview panel
 export const IWebPanel = Symbol('IWebPanel');
 export interface IWebPanel {
@@ -686,6 +698,11 @@ export interface IWebPanel {
      * Indicates if this web panel is visible or not.
      */
     isVisible(): boolean;
+
+    /**
+     * Sends a message to the hosted html page
+     */
+    postMessage(message: IWebPanelMessage);
 }
 
 // Wraps the VS Code api for creating a web panel

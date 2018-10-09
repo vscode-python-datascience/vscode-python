@@ -7,6 +7,7 @@ export namespace Commands {
     export const DataScience = 'python.datascience';
     export const RunCell = 'python.datascience.runcell';
     export const ShowHistoryPane = 'python.datascience.showhistorypane';
+    export const TestHistoryPane = 'python.datascience.testhistorypane';
 }
 
 export namespace RegExpValues {
@@ -14,6 +15,5 @@ export namespace RegExpValues {
 }
 
 export namespace HistoryMessages {
-    export const AddCell = 'add_cell';
-    export const AddCells = 'add_cells';
+    export const UpdateState = 'update_state';
 }
