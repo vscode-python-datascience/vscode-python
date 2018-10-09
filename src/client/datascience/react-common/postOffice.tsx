@@ -4,36 +4,34 @@
 'use strict';
 
 import * as React from 'react';
-import { IWebPanelMessage } from "../../common/application/types";
+import { IWebPanelMessage } from '../../common/application/types';
+// Dummy comment
 
 interface IVsCodeApi {
+    // tslint:disable-next-line:no-any
     postMessage(msg: any) : void;
+    // tslint:disable-next-line:no-any
     setState(state: any) : void;
+    // tslint:disable-next-line:no-any
     getState() : any;
 }
 
 interface IPostOfficeProps {
+    // tslint:disable-next-line:no-any
     messageHandlers: {[index: string]: (msg?: any) => void};
 }
 
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
 
-
 export class PostOffice extends React.Component<IPostOfficeProps> {
+
     constructor(props: IPostOfficeProps) {
         super(props);
     }
 
-    public componentDidMount() {
-        window.addEventListener('message', this.handleMessages);
-    }
-
-    public componentWillUnmount() {
-        window.removeEventListener('message', this.handleMessages);
-    }
-
     public static canSendMessages() {
+        // tslint:disable-next-line:no-typeof-undefined
         if (typeof acquireVsCodeApi !== 'undefined') {
             return true;
         }
@@ -44,6 +42,14 @@ export class PostOffice extends React.Component<IPostOfficeProps> {
         if (PostOffice.canSendMessages()) {
             acquireVsCodeApi().postMessage(message);
         }
+    }
+
+    public componentDidMount() {
+        window.addEventListener('message', this.handleMessages);
+    }
+
+    public componentWillUnmount() {
+        window.removeEventListener('message', this.handleMessages);
     }
 
     public render() {

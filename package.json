@@ -230,7 +230,7 @@
             },
             {
                 "command": "python.datascience.testhistorypane",
-                "title": "%python.command.python.datascience.testhistorypane.title%",
+                "title": "%python.command.python.datascience.testhistorypane.title%"
             },
             {
                 "command": "python.datascience.runcell",

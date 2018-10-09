@@ -62,6 +62,23 @@
             "problemMatcher": []
         },
         {
+            "label": "Hygiene All",
+            "type": "gulp",
+            "task": "hygiene",
+            "isBackground": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "never",
+                "focus": false,
+                "panel": "dedicated"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "Hygiene (Problems Window)",
             "type": "gulp",
             "task": "watchProblems",

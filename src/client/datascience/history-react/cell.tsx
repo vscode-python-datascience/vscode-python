@@ -2,13 +2,16 @@
 // Licensed under the MIT License.
 
 'use strict';
-import * as React from 'react';
+
 import { richestMimetype, standardDisplayOrder, standardTransforms } from '@nteract/transforms';
+import * as React from 'react';
+// tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
-import { Map } from 'immutable';
 
 import { ICell } from '../types';
 import './cell.css';
+
+// Dummy comment
 
 export class Cell extends React.Component<ICell> {
     constructor(prop: ICell) {
@@ -27,7 +30,7 @@ export class Cell extends React.Component<ICell> {
     private renderOutput() {
 
         // Borrowed this from Don's Jupyter extension
-        let cell = this.props;
+        const cell = this.props;
 
         // First make sure we have the mime data
         if (!cell || !cell.output) {
@@ -45,25 +48,24 @@ export class Cell extends React.Component<ICell> {
         const mimetype: string = richestMimetype(cell.output, standardDisplayOrder, standardTransforms);
 
         // Get the matching React.Component for that mimetype
-        let Transform = standardTransforms[mimetype];
+        const Transform = standardTransforms[mimetype];
 
         if (typeof mimetype !== 'string') {
           return <div>Unknown Mime Type</div>;
         }
         // If dealing with images, set the background color to white
-        let style = {};
+        const style: React.CSSProperties = {};
         if (mimetype.startsWith('image')) {
-          style['backgroundColor'] = 'white';
+          style.backgroundColor = 'white';
         }
         if (mimetype === 'text/plain') {
-          style['whiteSpace'] = 'pre';
+          style.whiteSpace = 'pre';
         }
         try {
           return <div style={style}><Transform data={cell.output[mimetype]} /></div>;
-        }
-        catch (ex) {
-          console.log('Error in rendering');
-          console.log(ex);
+        } catch (ex) {
+          window.console.log('Error in rendering');
+          window.console.log(ex);
           return <div></div>;
         }
 

@@ -4,44 +4,40 @@
 'use strict';
 
 // Custom module loader so we skip .css files that break non webpack wrapped compiles
-var Module = require('module');
+// tslint:disable-next-line:no-var-requires no-require-imports
+const Module = require('module');
 
+// tslint:disable-next-line:no-function-expression
 (function() {
-    var origRequire = Module.prototype.require;
-    var _require = function(context, path) {
+    const origRequire = Module.prototype.require;
+    const _require = (context, path) => {
         return origRequire.call(context, path);
     };
-
-    var main = require.main;
 
     Module.prototype.require = function(path) {
         if (path.endsWith('.css')) {
             return '';
         }
+        // tslint:disable-next-line:no-invalid-this
         return _require(this, path);
     };
 })();
 
-import * as React from 'react';
 import * as assert from 'assert';
 import { mount } from 'enzyme';
-import { JSDOM } from 'jsdom';
+import * as React from 'react';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
+import { IWebPanel, IWebPanelMessage, IWebPanelProvider  } from '../../client/common/application/types';
 import { PlatformService } from '../../client/common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IDisposableRegistry, ILogger } from '../../client/common/types';
-import { JupyterServerProvider } from '../../client/datascience/jupyterServerProvider';
-import { IJupyterServerProvider, IHistoryProvider } from '../../client/datascience/types';
-import { IServiceContainer } from '../../client/ioc/types';
-import { IWebPanel, IWebPanelProvider, IWebPanelMessageListener, IWebPanelMessage } from '../../client/common/application/types';
 import { MainPanel } from '../../client/datascience/history-react/MainPanel';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
-import { Cell } from '../../client/datascience/history-react/cell'
-import { createDeferred, Deferred } from '../../utils/async';
-import { waitForUpdate } from './reactHelpers'
-
-declare var window : any;
+import { JupyterServerProvider } from '../../client/datascience/jupyterServerProvider';
+import { IHistoryProvider, IJupyterServerProvider  } from '../../client/datascience/types';
+import { IServiceContainer } from '../../client/ioc/types';
+import { setUpDomEnvironment, waitForUpdate } from './reactHelpers';
 
 suite('History output tests', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
@@ -53,32 +49,6 @@ suite('History output tests', () => {
     let webPanelProvider : TypeMoq.IMock<IWebPanelProvider>;
     let webPanel : TypeMoq.IMock<IWebPanel>;
     let historyProvider : IHistoryProvider;
-
-    function setUpDomEnvironment() {
-        const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'http://localhost'});
-        const { window } = dom;
-
-        global['window'] = window;
-        global['document'] = window.document;
-        global['navigator'] = {
-            userAgent: 'node.js',
-        };
-        copyProps(window, global);
-
-        // Special case. Transform needs createRange
-        global['document'].createRange = () => ({
-            createContextualFragment: str => JSDOM.fragment(str)
-          });
-
-    }
-
-    function copyProps(src, target) {
-        const props = Object.getOwnPropertyNames(src)
-            .filter(prop => typeof target[prop] === 'undefined');
-        props.forEach((p : string) => {
-            target[p] = src[p];
-        });
-    }
 
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -134,7 +104,7 @@ suite('History output tests', () => {
             await updatePromise;
 
             const foundResult = wrapper.find('Cell');
-            assert.equal(foundResult.length, 1, "Didn't find any cells being rendered");
+            assert.equal(foundResult.length, 1, 'Didn\'t find any cells being rendered');
         } else {
             // tslint:disable-next-line:no-console
             console.log('History test skipped, no Jupyter installed');
