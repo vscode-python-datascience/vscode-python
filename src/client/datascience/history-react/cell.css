@@ -9,10 +9,27 @@
     white-space: pre;
   }
 
+  .content-div {
+      float: left;
+  }
+
+  .controls-div {
+      float: left;
+  }
+
   .cell-input {
       margin: 0;
       background-color: lavender;
+      display: block;
+  }
+
+  .cell-input-hide {
+      display: none;
   }
 
   .cell-output {
+  }
+
+  .clear-floats {
+      clear: both;
   }

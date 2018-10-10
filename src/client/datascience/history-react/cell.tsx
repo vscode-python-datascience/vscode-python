@@ -11,18 +11,35 @@ import JSONTree from 'react-json-tree';
 import { ICell } from '../types';
 import './cell.css';
 
-export class Cell extends React.Component<ICell> {
+export class Cell extends React.Component<ICell, {inputBlockOpen: boolean}> {
     constructor(prop: ICell) {
         super(prop);
+
+        // Initial state of our cell toggle
+        this.state = { inputBlockOpen: false };
     }
 
     public render() {
         return (
             <div className='cell-outer'>
-                <div className='cell-input'>{this.props.input}</div>
+              <div className='controls-div'>
+                <button className='collapse-button' onClick={this.toggleInputBlock}>B</button>
+              </div>
+              <div className='content-div'>
+                <div className={'cell-input' + (this.state.inputBlockOpen ? '-hide' : '')}>
+                  <div className='cell-input-text'>{this.props.input}</div>
+                </div>
                 <div className='cell-output'>{this.renderOutput()}</div>
+              </div>
+              <div className='clear-floats'></div>
             </div>
         );
+    }
+
+    private toggleInputBlock = () => {
+      this.setState({
+        inputBlockOpen: !this.state.inputBlockOpen
+      });
     }
 
     private renderOutput() {
