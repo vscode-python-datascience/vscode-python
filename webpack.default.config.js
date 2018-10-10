@@ -1,5 +1,6 @@
 // Default configuration for webpacking react scripts
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 var path = require('path');
 
 module.exports = {
@@ -11,11 +12,10 @@ module.exports = {
     filename: 'index_bundle.js',
     publicPath: './'
   },
-  plugins: [new HtmlWebpackPlugin(
-      {
-          template: '<unknown>'
-      }
-  )],
+  plugins: [
+      new HtmlWebpackPlugin({ template: '<unknown>' }),
+      new FixDefaultImportPlugin(),
+    ],
   module: {
     rules: [
         {
