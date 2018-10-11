@@ -33,7 +33,7 @@ export class JupyterProcess implements IDisposable {
     public static async exists(pythonService: IPythonExecutionService) : Promise<boolean> {
         // Spawn jupyter --version and see if it returns something
         try {
-            const result = await pythonService.execModule('jupyter', ['--version'], { throwOnStdErr: true, encoding: 'utf8' });
+            const result = await pythonService.execModule('jupyter', ['notebook', '--version'], { throwOnStdErr: true, encoding: 'utf8' });
             return (!result.stderr);
         } catch {
             return false;
