@@ -146,7 +146,7 @@
             "sourceMaps": true,
             "args": [
                 "timeout=300000",
-                "grep=Loc.*React"
+                "grep=Jupyter"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
