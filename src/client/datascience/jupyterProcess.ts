@@ -4,11 +4,10 @@
 'use strict';
 
 import { IDisposable } from '@phosphor/disposable';
-import { ChildProcess, spawn } from 'child_process';
 import * as tk from 'tree-kill';
 import { URL } from 'url';
 import { createDeferred, Deferred } from '../../utils/async';
-import { IPlatformService } from '../common/platform/types';
+import { IPythonExecutionService, ObservableExecutionResult, Output } from '../common/process/types';
 import { ILogger } from '../common/types';
 
 export interface IConnectionInfo {
@@ -24,29 +23,21 @@ export class JupyterProcess implements IDisposable {
     public isDisposed: boolean = false;
 
     private startPromise: Deferred<IConnectionInfo> | undefined;
-    private process: ChildProcess | undefined;
+    private startObservable: ObservableExecutionResult<string> | undefined;
     private logger: ILogger | undefined;
 
-    public static exists(platformService: IPlatformService) : Promise<boolean> {
-        return new Promise(resolve => {
-            // Look using where or which depending upon the platform for the jupyter executable somewhere on the
-            // the binary path
-            const command = platformService.isWindows ? 'where.exe' : 'which';
-            const args = platformService.isWindows ? ['jupyter.exe'] : ['jupyter'];
-            const process = spawn(command, args);
+    constructor(private pythonService: IPythonExecutionService) {
 
-            // If it's found, the path should end up in the output at some point.
-            // tslint:disable-next-line:no-any
-            process.stdout.on('data', (data: any) => {
-                resolve(data.toString('utf8').indexOf(args[0]) >= 0);
-            });
+    }
 
-            // Otherwise if there's an error, then we didn't find it.
-            // tslint:disable-next-line:no-any
-            process.stderr.on('data', (data: any) => {
-                resolve(false);
-            });
-        });
+    public static async exists(pythonService: IPythonExecutionService) : Promise<boolean> {
+        // Spawn jupyter --version and see if it returns something
+        try {
+            const result = await pythonService.execModule('jupyter', ['notebook', '--version'], { throwOnStdErr: true, encoding: 'utf8' });
+            return (!result.stderr);
+        } catch {
+            return false;
+        }
     }
 
     public start(notebookdir: string, logger: ILogger) {
@@ -58,14 +49,17 @@ export class JupyterProcess implements IDisposable {
         // Setup our start promise
         this.startPromise = createDeferred<IConnectionInfo>();
 
-        // Spawn a jupyter process in the same directory as our notebook
-        this.process = spawn('jupyter', args, {detached: false, cwd: notebookdir});
+        // Use the IPythonExecutionService to find Jupyter
+        this.startObservable = this.pythonService.execModuleObservable('jupyter', args, {throwOnStdErr: false, encoding: 'utf8'});
 
         // Listen on stderr for its connection information
-        // tslint:disable-next-line:no-any
-        this.process.stderr.on('data', (data: any) => this.extractConnectionInformation(data));
-        // tslint:disable-next-line:no-any
-        this.process.stdout.on('data', (data: any) => this.output(data));
+        this.startObservable.out.subscribe((output : Output<string>) => {
+            if (output.source === 'stderr') {
+                this.extractConnectionInformation(output.out);
+            } else {
+                this.output(output.out);
+            }
+        });
     }
 
     // Returns the information necessary to talk to this instance
@@ -78,10 +72,10 @@ export class JupyterProcess implements IDisposable {
     }
 
     public dispose() {
-        if (!this.isDisposed && this.process) {
+        if (!this.isDisposed && this.startObservable && this.startObservable.proc) {
             this.isDisposed = true;
-            if (!this.process.killed) {
-                tk(this.process.pid);
+            if (!this.startObservable.proc.killed) {
+                tk(this.startObservable.proc.pid);
             }
         }
     }

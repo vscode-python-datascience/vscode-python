@@ -14,6 +14,7 @@ import * as vscode from 'vscode';
 import * as localize from '../../utils/localize';
 import '../common/extensions';
 import { IFileSystem } from '../common/platform/types';
+import { IPythonExecutionService } from '../common/process/types';
 import { ILogger } from '../common/types';
 import { parseExecuteMessage } from './jupyterExecuteParser';
 import { JupyterProcess } from './jupyterProcess';
@@ -33,10 +34,10 @@ export class JupyterServer implements IJupyterServer, IDisposable {
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
     private logger: ILogger;
 
-    constructor(fileSystem: IFileSystem, logger: ILogger) {
+    constructor(fileSystem: IFileSystem, logger: ILogger, pythonService: IPythonExecutionService) {
         this.fileSystem = fileSystem;
         this.logger = logger;
-        this.process = new JupyterProcess();
+        this.process = new JupyterProcess(pythonService);
     }
 
     public async start(notebookFile? : string) : Promise<boolean> {

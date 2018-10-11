@@ -11,7 +11,7 @@ export namespace Commands {
 }
 
 export namespace RegExpValues {
-    export const PythonCellMarker = new RegExp('^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])(.*)'); 
+    export const PythonCellMarker = new RegExp('^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])(.*)');
 }
 
 export namespace HistoryMessages {
