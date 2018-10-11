@@ -170,7 +170,7 @@ const webify = (file) => {
 
     // Replace the entry with our actual file
     let config = Object.assign({}, webpack_config);
-    config.entry = file.path;
+    config.entry = [...config.entry, file.path];
 
     // Update the output path to be next to our bundle.js
     const split = path.parse(file.path);
@@ -446,17 +446,18 @@ const hygiene = (options) => {
     const tsc = function () {
         function customReporter() {
             return {
-                error: function (error) {
+                error: function (error, typescript) {
+                    console.error(`Error: ${error.message}`);
                     const fullFilename = error.fullFilename || '';
                     const relativeFilename = error.relativeFilename || '';
                     if (tsFiles.findIndex(file => fullFilename === file || relativeFilename === file) === -1) {
                         return;
                     }
                     errorCount += 1;
-                    console.error(error.message);
                 },
                 finish: function () {
                     // forget the summary.
+                    console.log('Finished compilation');
                 }
             };
         }
@@ -577,14 +578,20 @@ function run(options) {
 
     return hygiene(options);
 }
+
+function git(args) {
+    let result = cp.spawnSync('git', args, { encoding: 'utf-8' });
+    return result.output.join('\n');
+}
+
 function getStagedFilesSync() {
-    const out = cp.execSync('git diff --cached --name-only', { encoding: 'utf8' });
+    const out = git(['diff','--cached','--name-only']);
     return out
         .split(/\r?\n/)
         .filter(l => !!l);
 }
 function getAddedFilesSync() {
-    const out = cp.execSync('git status -u -s', { encoding: 'utf8' });
+    const out = git(['status','-u','-s']);
     return out
         .split(/\r?\n/)
         .filter(l => !!l)
@@ -592,7 +599,7 @@ function getAddedFilesSync() {
         .map(l => path.join(__dirname, l.substring(2).trim()));
 }
 function getModifiedFilesSync() {
-    const out = cp.execSync('git status -u -s', { encoding: 'utf8' });
+    const out = git(['status','-u','-s']);
     return out
         .split(/\r?\n/)
         .filter(l => !!l)
@@ -600,7 +607,7 @@ function getModifiedFilesSync() {
         .map(l => path.join(__dirname, l.substring(2).trim()));
 }
 function getDifferentFromMasterFilesSync() {
-    const out = cp.execSync('git diff --name-status master', { encoding: 'utf8' });
+    const out = git(['diff','--name-status','master']);
     return out
         .split(/\r?\n/)
         .filter(l => !!l)

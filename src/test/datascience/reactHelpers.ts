@@ -18,15 +18,30 @@ export function setUpDomEnvironment() {
     global['document'] = window.document;
     // tslint:disable-next-line:no-string-literal
     global['navigator'] = {
-        userAgent: 'node.js'
+        userAgent: 'node.js',
+        platform: 'node'
     };
+    // tslint:disable-next-line:no-string-literal
+    global['self'] = window;
     copyProps(window, global);
 
     // Special case. Transform needs createRange
     // tslint:disable-next-line:no-string-literal
     global['document'].createRange = () => ({
         createContextualFragment: str => JSDOM.fragment(str)
-      });
+    });
+
+    // For Jupyter server to load correctly. It expects the window object to not be defined
+    // tslint:disable-next-line:no-eval
+    const fetchMod = eval('require')('node-fetch');
+    // tslint:disable-next-line:no-string-literal
+    global['fetch'] = fetchMod;
+    // tslint:disable-next-line:no-string-literal
+    global['Request'] = fetchMod.Request;
+    // tslint:disable-next-line:no-string-literal
+    global['Headers'] = fetchMod.Headers;
+    // tslint:disable-next-line:no-string-literal no-eval
+    global['WebSocket'] = eval('require')('ws');
 
 }
 

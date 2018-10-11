@@ -27,7 +27,7 @@ let loadedCollection: { [index: string]: string } | undefined ;
 let defaultCollection: { [index: string]: string } | undefined ;
 let loadedLocale: string;
 
-function localize(key: string, defValue: string) {
+export function localize(key: string, defValue: string) {
     // Return a pointer to function so that we refetch it on each call.
     return () => {
         return getString(key, defValue);
@@ -79,7 +79,7 @@ function load() {
         const defaultNlsFile = path.join(EXTENSION_ROOT_DIR, 'package.nls.json');
         if (fs.existsSync(defaultNlsFile)) {
             const contents = fs.readFileSync(defaultNlsFile, 'utf8');
-            return JSON.parse(contents);
+            defaultCollection = JSON.parse(contents);
         } else {
             defaultCollection = {};
         }

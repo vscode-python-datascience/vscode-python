@@ -6,8 +6,9 @@ import * as path from 'path';
 import * as localize from '../../utils/localize';
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider } from '../common/application/types';
 import { IServiceContainer } from '../ioc/types';
-import { IJupyterServer, IJupyterServerProvider, ICell } from './types';
 import { HistoryMessages } from './constants';
+import { LocVsCodePostOffice } from './react-common/locVsCodeSide';
+import { ICell, IJupyterServer, IJupyterServerProvider  } from './types';
 
 export class History implements IWebPanelMessageListener {
     private static activeHistory: History;
@@ -16,6 +17,7 @@ export class History implements IWebPanelMessageListener {
     private jupyterServer: IJupyterServer | undefined;
     private loadPromise: Promise<void>;
     private cells: ICell[] = [];
+    private locHandler : LocVsCodePostOffice | undefined;
 
     constructor(serviceContainer: IServiceContainer) {
         // Load on a background thread.
@@ -61,8 +63,12 @@ export class History implements IWebPanelMessageListener {
         }
     }
 
-    // tslint:disable-next-line: no-any no-empty
-    public async onMessage(message: string, payload: any) {
+    // tslint:disable-next-line: no-any
+    public onMessage = (message: string, payload: any) => {
+        // Send loc messages if necessary
+        if (this.locHandler) {
+            this.locHandler.onMessage(message, payload);
+        }
     }
 
     // tslint:disable-next-line: no-any no-empty
@@ -85,6 +91,9 @@ export class History implements IWebPanelMessageListener {
         // Use this script to create our web view panel. It should contain all of the necessary
         // script to communicate with this class.
         this.webPanel = provider.create(this, localize.DataScience.historyTitle(), mainScriptPath);
+
+        // Create our localization handler
+        this.locHandler = new LocVsCodePostOffice(this.webPanel);
     }
 
     private async load(serviceContainer: IServiceContainer) : Promise<void> {
