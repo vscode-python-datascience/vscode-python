@@ -1,21 +1,24 @@
 // Default configuration for webpacking react scripts
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 var path = require('path');
 
 module.exports = {
-  entry: '<unknown>',
+  entry: ['babel-polyfill'],
   mode: 'development', // Maybe change this to production? Do we care if users see errors?
   devtool: 'eval',
+  node : {
+      fs: 'empty'
+  },
   output: {
     path: path.resolve(__dirname, './out'),
     filename: 'index_bundle.js',
     publicPath: './'
   },
-  plugins: [new HtmlWebpackPlugin(
-      {
-          template: '<unknown>'
-      }
-  )],
+  plugins: [
+      new HtmlWebpackPlugin({ template: '<unknown>' }),
+      new FixDefaultImportPlugin(),
+    ],
   module: {
     rules: [
         {
@@ -24,7 +27,7 @@ module.exports = {
             use: {
                 loader: "babel-loader",
                 options: {
-                    presets: ['@babel/preset-env', '@babel/preset-react']
+                    presets: [ '@babel/preset-env', '@babel/preset-react']
                 }
             }
         },

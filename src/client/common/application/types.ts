@@ -665,7 +665,7 @@ export interface IWebPanelMessageListener {
      * @param payload: extra data that came with the message
      * @return A IWebPanel that can be used to show html pages.
      */
-    onMessage(message: string, payload: any): Promise<void>;
+    onMessage(message: string, payload: any): void;
 
     /**
      * Called when the panel is closed/disposed

@@ -1581,8 +1581,12 @@
         "cover:inlinesource": "gulp inlinesource"
     },
     "dependencies": {
-        "@jupyterlab/services": "^3.1.4",
-        "@nteract/transforms": "^4.4.4",
+        "@jupyterlab/services": "3.1.4",
+        "@nteract/transform-dataresource": "^4.3.5",
+        "@nteract/transform-geojson": "^3.2.3",
+        "@nteract/transform-model-debug": "^3.2.3",
+        "@nteract/transform-plotly": "^3.2.3",
+        "@nteract/transforms": "4.4.4",
         "arch": "2.1.0",
         "azure-storage": "2.10.1",
         "diff-match-patch": "1.0.0",
@@ -1609,6 +1613,7 @@
         "request-progress": "3.0.0",
         "rxjs": "5.5.9",
         "semver": "5.5.0",
+        "styled-jsx": "3.1.0",
         "sudo-prompt": "8.2.0",
         "temp": "^0.8.3",
         "tmp": "0.0.29",
@@ -1667,6 +1672,8 @@
         "@types/xml2js": "^0.4.2",
         "JSONStream": "^1.3.2",
         "babel-loader": "^8.0.3",
+        "babel-plugin-transform-runtime": "^6.23.0",
+        "babel-polyfill": "^6.26.0",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
@@ -1721,6 +1728,7 @@
         "vscode": "^1.1.21",
         "vscode-debugadapter-testsupport": "^1.27.0",
         "webpack": "^4.20.2",
+        "webpack-fix-default-import-plugin": "^1.0.3",
         "yargs": "^12.0.2"
     },
     "__metadata": {

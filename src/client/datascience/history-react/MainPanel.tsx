@@ -5,7 +5,8 @@
 import * as React from 'react';
 import { HistoryMessages } from '../constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
-import { PostOffice } from '../react-common/postOffice';
+import { LocReactPostOffice } from '../react-common/locReactSide';
+import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { ICell } from '../types';
 import { Cell } from './cell';
 
@@ -18,19 +19,15 @@ export interface IMainPanelProps {
     skipDefault?: boolean;
 }
 
-export class MainPanel extends React.Component<IMainPanelProps, IState> {
+export class MainPanel extends React.Component<IMainPanelProps, IState> implements IMessageHandler {
 
-    // tslint:disable-next-line:no-any
-    private messageHandlers: { [index: string]: (msg?: any) => void } = {
-    };
     private bottom: HTMLDivElement | undefined;
+    private locPostOffice : LocReactPostOffice = new LocReactPostOffice();
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, state: IState) {
         super(props);
         this.state = { cells: [], busy: false };
-        this.updateState.bind(this);
-        this.messageHandlers[HistoryMessages.UpdateState] = this.updateState;
 
         // Setup up some dummy cells for debugging when not running in vscode
         // This should show a gray rectangle in the cell.
@@ -183,23 +180,33 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> {
     public render() {
         return (
             <div className='main-panel'>
-                <PostOffice messageHandlers={this.messageHandlers} />
+                <PostOffice messageHandlers={[this, this.locPostOffice]} />
                 {this.renderCells()}
                 <div ref={this.updateBottom} />
             </div>
         );
     }
 
+    // tslint:disable-next-line:no-any
+    public handleMessage = (msg: string, payload?: any) => {
+        if (msg === HistoryMessages.UpdateState) {
+            this.updateState(payload);
+            return true;
+        }
+
+        return false;
+    }
+
     private renderCells = () => {
         return this.state.cells.map((cell: ICell, index: number) =>
             <ErrorBoundary key={index}>
-                <Cell input={cell.input} output={cell.output} id={cell.id} />
+                <Cell cell={cell} getLocalized={this.locPostOffice.getLocalizedString} />
             </ErrorBoundary>
         );
     }
 
     private scrollToBottom = () => {
-        if (this.bottom) {
+        if (this.bottom && this.bottom.scrollIntoView) {
             this.bottom.scrollIntoView({behavior: 'smooth'});
         }
     }

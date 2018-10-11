@@ -55,5 +55,6 @@
     "python.snippet.launch.scrapy.description": "Scrapy with Integrated Terminal/Console",
     "LanguageServiceSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Python Language Server is working for you?",
     "LanguageServiceSurveyBanner.bannerLabelYes": "Yes, take survey now",
-    "LanguageServiceSurveyBanner.bannerLabelNo": "No, thanks"
+    "LanguageServiceSurveyBanner.bannerLabelNo": "No, thanks",
+    "DataScience.unknownMimeType" : "Unknown mime type for data"
 }
