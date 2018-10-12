@@ -128,7 +128,7 @@ suite('History output tests', () => {
     test('Simple text', async () => {
         if (await serverProvider.isSupported()) {
             // Create our main panel and tie it into the JSDOM
-            const wrapper = mount(<MainPanel skipDefault={true} />);
+            const wrapper = mount(<MainPanel theme='vscode-light' skipDefault={true} />);
 
             // Get an update promise so we can wait for the add code
             const updatePromise = waitForUpdate(wrapper, MainPanel);
@@ -151,7 +151,7 @@ suite('History output tests', () => {
     test('Loc React test', async () => {
         if (await serverProvider.isSupported()) {
             // Create our main panel and tie it into the JSDOM
-            const wrapper = mount(<MainPanel skipDefault={true} />);
+            const wrapper = mount(<MainPanel theme='vscode-light' skipDefault={true} />);
 
             // Create a history object and have him listen. We have to show him
             // so he creates the loc post office

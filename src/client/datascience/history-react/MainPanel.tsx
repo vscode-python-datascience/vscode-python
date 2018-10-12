@@ -13,10 +13,12 @@ import { Cell } from './cell';
 export interface IState {
     cells: ICell[];
     busy: boolean;
+    skipNextScroll? : boolean;
 }
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
+    theme: string;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IState> implements IMessageHandler {
@@ -47,27 +49,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                           '<IPython.core.display.SVG object>'
                          ]
                         },
+                    executionCount: 12,
                     id: '1'
                 },
                 {
                     input: 'df.head()',
                     id: '2',
+                    executionCount: 11,
                     output: {
                         'text/html': [
                          '<div>\n',
-                         '<style>\n',
-                         '    .dataframe thead tr:only-child th {\n',
-                         '        text-align: right;\n',
-                         '    }\n',
-                         '\n',
-                         '    .dataframe thead th {\n',
-                         '        text-align: left;\n',
-                         '    }\n',
-                         '\n',
-                         '    .dataframe tbody tr th {\n',
-                         '        vertical-align: top;\n',
-                         '    }\n',
-                         '</style>\n',
                          '<table border=\'1\' class=\'dataframe\'>\n',
                          '  <thead>\n',
                          '    <tr style=\'text-align: right;\'>\n',
@@ -200,13 +191,36 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
     private renderCells = () => {
         return this.state.cells.map((cell: ICell, index: number) =>
             <ErrorBoundary key={index}>
-                <Cell cell={cell} getLocalized={this.locPostOffice.getLocalizedString} />
+                <Cell
+                    cell={cell}
+                    theme={this.props.theme}
+                    getLocalized={this.locPostOffice.getLocalizedString}
+                    gotoCode={() => this.gotoCellCode(index)}
+                    delete={() => this.deleteCell(index)}/>
             </ErrorBoundary>
         );
     }
 
+    private gotoCellCode = (index: number) => {
+        // Send a message to the other side to jump to a particular cell
+        PostOffice.sendMessage({ type: HistoryMessages.GotoCodeCell, payload: index});
+    }
+
+    private deleteCell = (index: number) => {
+        // Send a message to the other side to delete a particular cell.
+        PostOffice.sendMessage({ type: HistoryMessages.DeleteCell, payload: index});
+
+        // Do the same thing on this side
+        this.setState({
+            cells: this.state.cells.filter((c : ICell, i: number) => {
+                return i !== index;
+            }),
+            skipNextScroll: true,
+            busy: false});
+    }
+
     private scrollToBottom = () => {
-        if (this.bottom && this.bottom.scrollIntoView) {
+        if (this.bottom && this.bottom.scrollIntoView && !this.state.skipNextScroll) {
             this.bottom.scrollIntoView({behavior: 'smooth'});
         }
     }
