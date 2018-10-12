@@ -4,12 +4,15 @@
 'use strict';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { MainPanel } from './MainPanel';
+import { detectTheme } from '../react-common/themeDetector';
 import './index.css';
+import { MainPanel } from './MainPanel';
 import { registerServiceWorker } from './registerServiceWorker';
 
+const theme = detectTheme();
+
 ReactDOM.render(
-  <MainPanel />,
+  <MainPanel theme={theme} />,
   document.getElementById('root') as HTMLElement
 );
 registerServiceWorker();

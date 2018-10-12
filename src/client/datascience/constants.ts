@@ -12,6 +12,8 @@ export namespace Commands {
 
 export namespace HistoryMessages {
     export const UpdateState = 'update_state';
+    export const DeleteCell = 'delete_cell';
+    export const GotoCodeCell = 'gotocell_code';
 }
 
 export namespace RegExpValues {

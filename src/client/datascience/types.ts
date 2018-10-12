@@ -3,9 +3,9 @@
 
 'use strict';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { CodeLens, CodeLensProvider, Event, Range, TextDocument } from 'vscode';
 import { ICommandManager } from '../common/application/types';
-import { nbformat } from '@jupyterlab/coreutils';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -72,5 +72,6 @@ export interface ICodeWatcher {
 export interface ICell {
     input: string;
     output: nbformat.IMimeBundle;
+    executionCount: number;
     id: string;
 }

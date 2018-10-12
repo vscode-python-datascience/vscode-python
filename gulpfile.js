@@ -161,8 +161,9 @@ gulp.task('compile-webviews', () => {
 
 gulp.task('compile-webviews-watch', () => {
     // Watch all files that are written by the compile task, except for the bundle generated
-    // by compile-webviews
-    gulp.watch(['./out/**/*react*/*.js', '!./out/**/*react*/*_bundle.js'], ['compile-webviews']);
+    // by compile-webviews. Watch the css files too, but in the src directory because webpack
+    // will modify the output ones.
+    gulp.watch(['./out/**/*react*/*.js', './src/**/*react*/*.css', './out/**/react*/*.js', '!./out/**/*react*/*_bundle.js'], ['compile-webviews']);
 });
 
 const webify = (file) => {
