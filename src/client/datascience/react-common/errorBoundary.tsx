@@ -26,7 +26,8 @@ export class ErrorBoundary extends React.Component<{}, IErrorState> {
         if (this.state.hasError) {
             // Render our error message;
             const style = {};
-            style['white-space'] = 'pre';
+            // tslint:disable-next-line:no-string-literal
+            style['whiteSpace'] = 'pre';
 
             return <h1 style={style}>{this.state.errorMessage}</h1>;
         }

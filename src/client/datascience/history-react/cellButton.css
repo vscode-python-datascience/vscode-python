@@ -1,0 +1,40 @@
+.cell-button {
+    border-width: 1px;
+    border-style: solid;
+    cursor: pointer;
+    text-align: center;
+    line-height: 16px;
+    overflow: hidden;
+    width: 16px;
+    height: 16px;
+    margin-left: 2px;
+    padding: 1px;
+}
+
+.cell-button-child {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.cell-button-child img{
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.cell-button-vscode-light {
+    border-color: black;
+}
+
+.cell-button-vscode-light:hover {
+    background-color:black;
+    color: white;
+}
+
+.cell-button-vscode-dark {
+    border-color: white;
+}
+
+.cell-button-vscode-dark:hover {
+    background-color:white;
+    color: black;
+}

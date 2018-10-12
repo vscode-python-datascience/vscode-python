@@ -10,11 +10,17 @@ import * as React from 'react';
 import JSONTree from 'react-json-tree';
 
 import { ILocalizableProps } from '../react-common/locReactSide';
+import { RelativeImage } from '../react-common/relativeImage';
 import { ICell } from '../types';
 import './cell.css';
+import { CellButton } from './cellButton';
+import { MenuBar } from './menuBar';
 
 interface ICellProps extends ILocalizableProps {
     cell : ICell;
+    theme: string;
+    gotoCode() : void;
+    delete() : void;
 }
 
 interface ICellState {
@@ -22,6 +28,7 @@ interface ICellState {
 }
 
 export class Cell extends React.Component<ICellProps, ICellState> {
+    private static unknownMimeType : string | undefined;
 
     constructor(prop: ICellProps) {
         super(prop);
@@ -29,17 +36,30 @@ export class Cell extends React.Component<ICellProps, ICellState> {
     }
 
     public componentDidMount() {
-        // Call async function when we get our props and we know we're loaded
-        this.props.getLocalized('DataScience.unknownMimeType').then((v : string) => {
-            this.setState({unknownMimeType : v});
-        }).catch((e) => this.setState({unknownMimeType : e}));
+        if (!Cell.unknownMimeType) {
+            this.props.getLocalized('DataScience.unknownMimeType').then((v : string) => {
+                Cell.unknownMimeType = v;
+                this.forceUpdate();
+            }).catch((e) => { Cell.unknownMimeType = e; });
+        }
     }
 
     public render() {
+        const outputClassNames = `cell-output cell-output-${this.props.theme}`;
+
         return (
-            <div className='cell-outer'>
-                <div className='cell-input'>{this.props.cell.input}</div>
-                <div className='cell-output'>{this.renderOutput()}</div>
+            <div className='cell-wrapper'>
+                <MenuBar theme={this.props.theme}>
+                    <CellButton theme={this.props.theme} onClick={this.props.delete} tooltip='Delete'>X</CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip='Goto Code'><RelativeImage class='cell-button-image' path='./images/gotoCode.png' /></CellButton>
+                </MenuBar>
+                <div className='cell-outer'>
+                    <div className='cell-execution-count'>{`[${this.props.cell.executionCount}]:`}</div>
+                    <div className='cell-result-container'>
+                        <div className='cell-input'>{this.props.cell.input}</div>
+                        <div className={outputClassNames}>{this.renderOutput()}</div>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -55,16 +75,9 @@ export class Cell extends React.Component<ICellProps, ICellState> {
             if (typeof mimetype !== 'string') {
                 return <div>{this.getUnknownMimeTypeString()}</div>;
             }
-            // If dealing with images, set the background color to white
-            const style: React.CSSProperties = {};
-            if (mimetype.startsWith('image')) {
-                style.backgroundColor = 'white';
-            }
-            if (mimetype === 'text/plain') {
-                style.whiteSpace = 'pre';
-            }
+
             try {
-                return <div style={style}><Transform data={cell.output[mimetype]} /></div>;
+                return <Transform data={cell.output[mimetype]}/>;
             } catch (ex) {
                 window.console.log('Error in rendering');
                 window.console.log(ex);

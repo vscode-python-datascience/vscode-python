@@ -152,10 +152,11 @@ export class JupyterServer implements IJupyterServer, IDisposable {
         const cell: ICell = {
             input: code,
             output: {},
-            id: id
+            id: id,
+            executionCount: 0
         };
 
-        // Listen to the request messages
+        // Listen to the reponse messages
         request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
             if (KernelMessage.isExecuteResultMsg(msg)) {
                 this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
@@ -171,6 +172,11 @@ export class JupyterServer implements IJupyterServer, IDisposable {
                 this.handleError(msg as KernelMessage.IErrorMsg, cell);
             } else {
                 this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+            }
+
+            // Set execution count, all messages should have it
+            if (msg.content.executionCount) {
+                cell.executionCount = msg.content.executionCount as number;
             }
         };
 
