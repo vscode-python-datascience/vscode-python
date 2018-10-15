@@ -5,7 +5,6 @@
 import * as React from 'react';
 import { HistoryMessages } from '../constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
-import { LocReactPostOffice } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { ICell } from '../types';
 import { Cell } from './cell';
@@ -19,12 +18,13 @@ export interface IState {
 export interface IMainPanelProps {
     skipDefault?: boolean;
     theme: string;
+
+    localizedStrings? : { [index: string] : string };
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IState> implements IMessageHandler {
 
     private bottom: HTMLDivElement | undefined;
-    private locPostOffice : LocReactPostOffice = new LocReactPostOffice();
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, state: IState) {
@@ -33,7 +33,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
 
         // Setup up some dummy cells for debugging when not running in vscode
         // This should show a gray rectangle in the cell.
-        if (!PostOffice.canSendMessages() && !this.props.skipDefault) {
+        if (!this.props.skipDefault) {
             this.state = {
                 busy: false,
                 cells: [
@@ -50,12 +50,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                          ]
                         },
                     executionCount: 12,
-                    id: '1'
+                    id: '1',
+                    file: 'foo.py',
+                    line: 1
                 },
                 {
                     input: 'df.head()',
                     id: '2',
                     executionCount: 11,
+                    file: 'foo.py',
+                    line: 1,
                     output: {
                         'text/html': [
                          '<div>\n',
@@ -171,7 +175,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
     public render() {
         return (
             <div className='main-panel'>
-                <PostOffice messageHandlers={[this, this.locPostOffice]} />
+                <PostOffice messageHandlers={[this]} />
                 {this.renderCells()}
                 <div ref={this.updateBottom} />
             </div>
@@ -194,7 +198,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                 <Cell
                     cell={cell}
                     theme={this.props.theme}
-                    getLocalized={this.locPostOffice.getLocalizedString}
                     gotoCode={() => this.gotoCellCode(index)}
                     delete={() => this.deleteCell(index)}/>
             </ErrorBoundary>
@@ -203,12 +206,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
 
     private gotoCellCode = (index: number) => {
         // Send a message to the other side to jump to a particular cell
-        PostOffice.sendMessage({ type: HistoryMessages.GotoCodeCell, payload: index});
+        PostOffice.sendMessage({ type: HistoryMessages.GotoCodeCell, payload: { index : index }});
     }
 
     private deleteCell = (index: number) => {
         // Send a message to the other side to delete a particular cell.
-        PostOffice.sendMessage({ type: HistoryMessages.DeleteCell, payload: index});
+        PostOffice.sendMessage({ type: HistoryMessages.DeleteCell, payload:  { index : index }});
 
         // Do the same thing on this side
         this.setState({

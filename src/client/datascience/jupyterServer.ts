@@ -109,7 +109,7 @@ export class JupyterServer implements IJupyterServer, IDisposable {
                     true
                 );
 
-                return this.awaitExecuteResponse(code, id, request);
+                return this.awaitExecuteResponse(code, id, file, line, request);
             }
         }
 
@@ -146,14 +146,16 @@ export class JupyterServer implements IJupyterServer, IDisposable {
     //     return [];
     // }
 
-    private async awaitExecuteResponse(code: string, id: string, request: Kernel.IFuture) : Promise<ICell> {
+    private async awaitExecuteResponse(code: string, id: string, file: string, line: number, request: Kernel.IFuture) : Promise<ICell> {
 
         // Start out empty;
         const cell: ICell = {
             input: code,
             output: {},
             id: id,
-            executionCount: 0
+            executionCount: 0,
+            file: file,
+            line: line
         };
 
         // Listen to the reponse messages
@@ -175,8 +177,8 @@ export class JupyterServer implements IJupyterServer, IDisposable {
             }
 
             // Set execution count, all messages should have it
-            if (msg.content.executionCount) {
-                cell.executionCount = msg.content.executionCount as number;
+            if (msg.content.execution_count) {
+                cell.executionCount = msg.content.execution_count as number;
             }
         };
 

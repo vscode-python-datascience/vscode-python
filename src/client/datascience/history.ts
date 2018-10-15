@@ -3,11 +3,11 @@
 
 'use strict';
 import * as path from 'path';
-import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider } from '../common/application/types';
+import { Range, TextEditor, Uri, ViewColumn } from 'vscode';
+import { IDocumentManager, IWebPanel, IWebPanelMessageListener, IWebPanelProvider } from '../common/application/types';
 import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
 import { HistoryMessages } from './constants';
-import { LocVsCodePostOffice } from './react-common/locVsCodeSide';
 import { ICell, IJupyterServer, IJupyterServerProvider  } from './types';
 
 export class History implements IWebPanelMessageListener {
@@ -17,11 +17,14 @@ export class History implements IWebPanelMessageListener {
     private jupyterServer: IJupyterServer | undefined;
     private loadPromise: Promise<void>;
     private cells: ICell[] = [];
-    private locHandler : LocVsCodePostOffice | undefined;
+    private documentManager : IDocumentManager;
 
     constructor(serviceContainer: IServiceContainer) {
         // Load on a background thread.
         this.loadPromise = this.load(serviceContainer);
+
+        // Save our document manager
+        this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
     }
 
     public static getOrCreateActive(serviceContainer: IServiceContainer) {
@@ -63,16 +66,41 @@ export class History implements IWebPanelMessageListener {
         }
     }
 
-    // tslint:disable-next-line: no-any
+    // tslint:disable-next-line: no-any no-empty
     public onMessage = (message: string, payload: any) => {
-        // Send loc messages if necessary
-        if (this.locHandler) {
-            this.locHandler.onMessage(message, payload);
+        switch (message) {
+            case HistoryMessages.GotoCodeCell:
+                this.gotoCode(payload.index);
+                break;
+
+            case HistoryMessages.DeleteCell:
+                this.deleteCell(payload.index);
+                break;
+
+            default:
+                break;
         }
     }
 
     // tslint:disable-next-line: no-any no-empty
     public onDisposed() {
+    }
+
+    private gotoCode = (index: number) => {
+        if (index >= 0 && index <= this.cells.length) {
+            const cell = this.cells[index];
+            this.documentManager.showTextDocument(Uri.file(cell.file), { viewColumn: ViewColumn.One }).then((editor : TextEditor) => {
+                editor.revealRange(new Range(cell.line, 0, cell.line, 0));
+            });
+        }
+    }
+
+    private deleteCell = (index: number) => {
+        if (index >= 0 && index <= this.cells.length) {
+            this.cells = this.cells.filter((c : ICell, i: number) => {
+                return i !== index;
+            });
+        }
     }
 
     private async loadJupyterServer(serviceContainer: IServiceContainer) : Promise<void> {
@@ -91,9 +119,6 @@ export class History implements IWebPanelMessageListener {
         // Use this script to create our web view panel. It should contain all of the necessary
         // script to communicate with this class.
         this.webPanel = provider.create(this, localize.DataScience.historyTitle(), mainScriptPath);
-
-        // Create our localization handler
-        this.locHandler = new LocVsCodePostOffice(this.webPanel);
     }
 
     private async load(serviceContainer: IServiceContainer) : Promise<void> {

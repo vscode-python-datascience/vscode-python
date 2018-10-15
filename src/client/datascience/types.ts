@@ -74,4 +74,6 @@ export interface ICell {
     output: nbformat.IMimeBundle;
     executionCount: number;
     id: string;
+    file: string;
+    line: number;
 }

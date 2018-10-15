@@ -70,7 +70,7 @@ export class WebPanel implements IWebPanel {
 
                 this.disposableRegistry.push(this.panel.webview.onDidReceiveMessage(message => {
                     // Pass the message onto our listener
-                    this.listener.onMessage(message.command, message);
+                    this.listener.onMessage(message.type, message.payload);
                 }));
             } else {
                 // Indicate that we can't load the file path
@@ -85,6 +85,7 @@ export class WebPanel implements IWebPanel {
         const uriPath = Uri.file(mainScriptPath);
         const uriBase = uriBasePath.with({ scheme: 'vscode-resource'});
         const uri = uriPath.with({ scheme: 'vscode-resource' });
+        const locDatabase = localize.getCollection();
 
         return `<!doctype html>
         <html lang="en">
@@ -105,6 +106,9 @@ export class WebPanel implements IWebPanel {
                         }
 
                         return "${uriBase}" + relativePath;
+                    }
+                    function getLocStrings() {
+                        return ${locDatabase};
                     }
                 </script>
             <script type="text/javascript" src="${uri}"></script></body>

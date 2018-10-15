@@ -14,13 +14,8 @@ import * as path from 'path';
 import { MochaSetupOptions } from 'vscode/lib/testrunner';
 import { MOCHA_CI_REPORTER_ID, MOCHA_CI_REPORTFILE,
     MOCHA_REPORTER_JUNIT } from './ciConstants';
-import * as vscodeMoscks from './vscode-mock';
-
-// Setup the enzyme global state
-import { configure } from 'enzyme';
-import * as Adapter from 'enzyme-adapter-react-16';
 import { setUpDomEnvironment } from './datascience/reactHelpers';
-configure({ adapter: new Adapter() });
+import * as vscodeMoscks from './vscode-mock';
 
 process.env.VSC_PYTHON_CI_TEST = '1';
 
