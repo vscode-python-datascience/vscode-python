@@ -23,10 +23,13 @@ export class Cell extends React.Component<ICell, {inputBlockOpen: boolean}> {
         return (
             <div className='cell-outer'>
               <div className='controls-div'>
-                <button className='collapse-button' onClick={this.toggleInputBlock}>B</button>
+                <button className='remove-style' onClick={this.toggleInputBlock}>
+                  <img className={(this.state.inputBlockOpen ? ' hide' : 'center-img')} src='expandArrowRotate.svg' />
+                  <img className={(this.state.inputBlockOpen ? 'center-img' : ' hide')} src='expandArrow.svg' />
+                </button>
               </div>
               <div className='content-div'>
-                <div className={'cell-input' + (this.state.inputBlockOpen ? '-hide' : '')}>
+                <div className={'cell-input' + (this.state.inputBlockOpen ? ' hide' : '')}>
                   <div className='cell-input-text'>{this.props.input}</div>
                 </div>
                 <div className='cell-output'>{this.renderOutput()}</div>

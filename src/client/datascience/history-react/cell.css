@@ -7,29 +7,39 @@
     border-color: black;
     display: block;
     white-space: pre;
-  }
+}
 
-  .content-div {
-      float: left;
-  }
+.content-div {
+    float: left;
+}
 
-  .controls-div {
-      float: left;
-  }
+.controls-div {
+    float: left;
+}
 
-  .cell-input {
-      margin: 0;
-      background-color: lavender;
-      display: block;
-  }
+.cell-input {
+    margin: 0;
+    background-color: lavender;
+    display: block;
+}
 
-  .cell-input-hide {
-      display: none;
-  }
+.hide {
+    display: none;
+}
 
-  .cell-output {
-  }
+.cell-output {
+}
 
-  .clear-floats {
-      clear: both;
-  }
+.clear-floats {
+    clear: both;
+}
+
+.remove-style {
+    background-color:transparent;
+    border:transparent;
+}
+
+.center-img {
+    display: block;
+    margin: 0 auto;
+}
