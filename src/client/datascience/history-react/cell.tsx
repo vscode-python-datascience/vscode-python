@@ -11,12 +11,13 @@ import JSONTree from 'react-json-tree';
 import { ICell } from '../types';
 import './cell.css';
 
-export class Cell extends React.Component<ICell, {inputBlockOpen: boolean}> {
+export class Cell extends React.Component<ICell, {inputBlockOpen: boolean, inputBlockText: string}> {
     constructor(prop: ICell) {
         super(prop);
 
         // Initial state of our cell toggle
-        this.state = { inputBlockOpen: false };
+        this.state = { inputBlockOpen: true,
+                       inputBlockText: prop.input };
     }
 
     public render() {
@@ -24,13 +25,13 @@ export class Cell extends React.Component<ICell, {inputBlockOpen: boolean}> {
             <div className='cell-outer'>
               <div className='controls-div'>
                 <button className='remove-style' onClick={this.toggleInputBlock}>
-                  <img className={(this.state.inputBlockOpen ? ' hide' : 'center-img')} src='expandArrowRotate.svg' />
-                  <img className={(this.state.inputBlockOpen ? 'center-img' : ' hide')} src='expandArrow.svg' />
+                  <img className={(this.state.inputBlockOpen ? ' hide' : 'center-img')} src='expandArrow.svg' />
+                  <img className={(this.state.inputBlockOpen ? 'center-img' : ' hide')} src='expandArrowRotate.svg' />
                 </button>
               </div>
               <div className='content-div'>
-                <div className={'cell-input' + (this.state.inputBlockOpen ? ' hide' : '')}>
-                  <div className='cell-input-text'>{this.props.input}</div>
+                <div className='cell-input'>
+                  <div className='cell-input-text'>{this.state.inputBlockText}</div>
                 </div>
                 <div className='cell-output'>{this.renderOutput()}</div>
               </div>
@@ -40,8 +41,22 @@ export class Cell extends React.Component<ICell, {inputBlockOpen: boolean}> {
     }
 
     private toggleInputBlock = () => {
+      var newState = !this.state.inputBlockOpen;
+      var newText = '';
+      // Set our input text based on the new state
+      if(newState) {
+        newText = this.props.input;
+      }
+      else {
+        if(this.props.input.length > 0) {
+          newText = this.props.input.split('\n',1)[0];
+          newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
+          newText = newText.concat("...");
+        }
+      }
       this.setState({
-        inputBlockOpen: !this.state.inputBlockOpen
+        inputBlockOpen: newState,
+        inputBlockText: newText
       });
     }
 
