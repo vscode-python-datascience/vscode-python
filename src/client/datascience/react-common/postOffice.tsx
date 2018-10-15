@@ -43,8 +43,11 @@ export class PostOffice extends React.Component<IPostOfficeProps> {
     }
 
     public static sendMessage(message: IWebPanelMessage) {
-        if (this) {
-            PostOffice.acquireApi().postMessage(message);
+        if (PostOffice.canSendMessages()) {
+            const api = PostOffice.acquireApi();
+            if (api) {
+                api.postMessage(message);
+            }
         }
     }
 
