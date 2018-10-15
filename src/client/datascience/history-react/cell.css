@@ -1,12 +1,20 @@
-.cell-outer {
+.cell-wrapper {
     margin: 5px;
     padding: 2px;
-    border-radius: 1px;
-    border-style: solid;
-    border-width: 1px;
-    border-color: black;
     display: block;
     white-space: pre;
+}
+
+.cell-wrapper:after {
+    content: "";
+    clear: both;
+    display: block;
+}
+
+.cell-outer {
+    display:flex;
+    flex-direction: row;
+    justify-content: left;
 }
 
 .content-div {
@@ -17,26 +25,37 @@
     float: left;
 }
 
-.cell-input {
-    margin: 0;
-    background-color: lavender;
-    display: block;
-}
-
 .hide {
     display: none;
 }
 
-.cell-output {
+.cell-execution-count {
+    font-weight: bold;
 }
 
-.clear-floats {
-    clear: both;
+.cell-input {
+    margin: 0;
+}
+
+.cell-output {
+    margin-top: 5px;
+}
+
+.cell-output-vscode-light {
+    background: whitesmoke;
+}
+
+.cell-output-vscode-dark {
+    background: dimgray;
 }
 
 .remove-style {
     background-color:transparent;
     border:transparent;
+}
+
+.controls-flex {
+    display:flex;
 }
 
 .center-img {

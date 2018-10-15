@@ -14,6 +14,7 @@ import * as vscode from 'vscode';
 import * as localize from '../../utils/localize';
 import '../common/extensions';
 import { IFileSystem } from '../common/platform/types';
+import { IPythonExecutionService } from '../common/process/types';
 import { ILogger } from '../common/types';
 import { parseExecuteMessage } from './jupyterExecuteParser';
 import { JupyterProcess } from './jupyterProcess';
@@ -24,6 +25,7 @@ import { ICell, IJupyterServer } from './types';
 
 export class JupyterServer implements IJupyterServer, IDisposable {
     private static trackingTemps: boolean = false;
+    private static textPlainMimeType : string = 'text/plain';
     public isDisposed: boolean = false;
     private session: Session.ISession | undefined;
     private tempFile: temp.OpenFile | undefined;
@@ -32,10 +34,10 @@ export class JupyterServer implements IJupyterServer, IDisposable {
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
     private logger: ILogger;
 
-    constructor(fileSystem: IFileSystem, logger: ILogger) {
+    constructor(fileSystem: IFileSystem, logger: ILogger, pythonService: IPythonExecutionService) {
         this.fileSystem = fileSystem;
         this.logger = logger;
-        this.process = new JupyterProcess();
+        this.process = new JupyterProcess(pythonService);
     }
 
     public async start(notebookFile? : string) : Promise<boolean> {
@@ -150,10 +152,11 @@ export class JupyterServer implements IJupyterServer, IDisposable {
         const cell: ICell = {
             input: code,
             output: {},
-            id: id
+            id: id,
+            executionCount: 0
         };
 
-        // Listen to the request messages
+        // Listen to the reponse messages
         request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
             if (KernelMessage.isExecuteResultMsg(msg)) {
                 this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
@@ -165,8 +168,15 @@ export class JupyterServer implements IJupyterServer, IDisposable {
                 this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
             } else if (KernelMessage.isDisplayDataMsg(msg)) {
                 this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
+            } else if (KernelMessage.isErrorMsg(msg)) {
+                this.handleError(msg as KernelMessage.IErrorMsg, cell);
             } else {
-                this.logger.logWarning(`Unknown message ${typeof msg}`);
+                this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+            }
+
+            // Set execution count, all messages should have it
+            if (msg.content.executionCount) {
+                cell.executionCount = msg.content.executionCount as number;
             }
         };
 
@@ -193,19 +203,26 @@ export class JupyterServer implements IJupyterServer, IDisposable {
         }
     }
 
-    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, cell: ICell) {
-        const mimeType = 'text/plain';
-
-        // Stream/concat the text together
-        if (cell.output.hasOwnProperty(mimeType)) {
-            cell.output[mimeType] = `${cell.output[mimeType].toString()}\n${msg.content.text}`;
+    private handleTextPlain(text: string, cell: ICell) {
+        if (cell.output.hasOwnProperty(JupyterServer.textPlainMimeType)) {
+            cell.output[JupyterServer.textPlainMimeType] = `${cell.output[JupyterServer.textPlainMimeType].toString()}\n${text}`;
         } else {
-            cell.output[mimeType] = msg.content.text;
+            cell.output[JupyterServer.textPlainMimeType] = text;
         }
+    }
+
+    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, cell: ICell) {
+        // Stream/concat the text together
+        this.handleTextPlain((msg.content.text), cell);
     }
 
     private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, cell: ICell) {
         cell.output = msg.content.data;
+    }
+
+    private handleError(msg: KernelMessage.IErrorMsg, cell: ICell) {
+        // Stream/concat the text together
+        this.handleTextPlain((msg.content.evalue), cell);
     }
 
     private async generateTempFile(notebookFile?: string) : Promise<temp.OpenFile> {

@@ -3,55 +3,93 @@
 
 'use strict';
 
-import { richestMimetype, standardDisplayOrder, standardTransforms } from '@nteract/transforms';
+import { displayOrder, richestMimetype, transforms  } from './transforms';
+
 import * as React from 'react';
 // tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
 
+import { ILocalizableProps } from '../react-common/locReactSide';
+import { RelativeImage } from '../react-common/relativeImage';
 import { ICell } from '../types';
 import './cell.css';
+import { CellButton } from './cellButton';
+import { MenuBar } from './menuBar';
 
-export class Cell extends React.Component<ICell, {inputBlockOpen: boolean, inputBlockText: string}> {
-    constructor(prop: ICell) {
+interface ICellProps extends ILocalizableProps {
+    cell : ICell;
+    theme: string;
+    gotoCode() : void;
+    delete() : void;
+}
+
+interface ICellState {
+    unknownMimeType : string | undefined;
+    inputBlockOpen: boolean;
+    inputBlockText: string;
+}
+
+export class Cell extends React.Component<ICellProps, ICellState> {
+    private static unknownMimeType : string | undefined;
+    constructor(prop: ICellProps) {
         super(prop);
 
         // Initial state of our cell toggle
         this.state = { inputBlockOpen: true,
-                       inputBlockText: prop.input };
+                       inputBlockText: prop.cell.input,
+                       unknownMimeType : undefined };
+    }
+
+    public componentDidMount() {
+      if (!Cell.unknownMimeType) {
+          this.props.getLocalized('DataScience.unknownMimeType').then((v : string) => {
+              Cell.unknownMimeType = v;
+              this.forceUpdate();
+          }).catch((e) => { Cell.unknownMimeType = e; });
+      }
     }
 
     public render() {
+        const outputClassNames = `cell-output cell-output-${this.props.theme}`;
+
         return (
-            <div className='cell-outer'>
-              <div className='controls-div'>
-                <button className='remove-style' onClick={this.toggleInputBlock}>
-                  <img className={(this.state.inputBlockOpen ? ' hide' : 'center-img')} src='expandArrow.svg' />
-                  <img className={(this.state.inputBlockOpen ? 'center-img' : ' hide')} src='expandArrowRotate.svg' />
-                </button>
-              </div>
-              <div className='content-div'>
-                <div className='cell-input'>
-                  <div className='cell-input-text'>{this.state.inputBlockText}</div>
+            <div className='cell-wrapper'>
+                <MenuBar theme={this.props.theme}>
+                    <CellButton theme={this.props.theme} onClick={this.props.delete} tooltip='Delete'>X</CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip='Goto Code'><RelativeImage class='cell-button-image' path='./images/gotoCode.png' /></CellButton>
+                </MenuBar>
+                <div className='cell-outer'>
+                  <div className='controls-div'>
+                    <div className='controls-flex'>
+                        <div className='cell-execution-count'>{`[${this.props.cell.executionCount}]:`}</div>
+                            <button className='collapse-input remove-style' onClick={this.toggleInputBlock}>
+                                <img className={(this.state.inputBlockOpen ? ' hide' : 'center-img')} alt='input expand button closed' src='expandArrow.svg' />
+                                <img className={(this.state.inputBlockOpen ? 'center-img' : ' hide')} alt='input expand button opened' src='expandArrowRotate.svg' />
+                            </button>
+                    </div>
+                  </div>
+                  <div className='content-div'>
+                    <div className='cell-result-container'>
+                        <div className='cell-input'>{this.state.inputBlockText}</div>
+                        <div className={outputClassNames}>{this.renderOutput()}</div>
+                    </div>
+                  </div>
                 </div>
-                <div className='cell-output'>{this.renderOutput()}</div>
-              </div>
-              <div className='clear-floats'></div>
             </div>
         );
     }
 
     private toggleInputBlock = () => {
-      var newState = !this.state.inputBlockOpen;
-      var newText = '';
+      const newState = !this.state.inputBlockOpen;
+      let newText = '';
       // Set our input text based on the new state
-      if(newState) {
-        newText = this.props.input;
-      }
-      else {
-        if(this.props.input.length > 0) {
-          newText = this.props.input.split('\n',1)[0];
+      if (newState) {
+        newText = this.props.cell.input;
+      } else {
+        if (this.props.cell.input.length > 0) {
+          newText = this.props.cell.input.split('\n', 1)[0];
           newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
-          newText = newText.concat("...");
+          newText = newText.concat('...');
         }
       }
       this.setState({
@@ -60,10 +98,37 @@ export class Cell extends React.Component<ICell, {inputBlockOpen: boolean, input
       });
     }
 
-    private renderOutput() {
+    private renderWithTransform = (mimetype: string, cell: ICell) => {
 
+        // If we found a mimetype, use the transform
+        if (mimetype) {
+
+            // Get the matching React.Component for that mimetype
+            const Transform = transforms[mimetype];
+
+            if (typeof mimetype !== 'string') {
+                return <div>{this.getUnknownMimeTypeString()}</div>;
+            }
+
+            try {
+                return <Transform data={cell.output[mimetype]}/>;
+            } catch (ex) {
+                window.console.log('Error in rendering');
+                window.console.log(ex);
+                return <div></div>;
+            }
+        }
+
+        return <div></div>;
+    }
+
+    private getUnknownMimeTypeString = () => {
+        return this.state.unknownMimeType ? this.state.unknownMimeType : 'Unknown mime type';
+    }
+
+    private renderOutput = () => {
         // Borrowed this from Don's Jupyter extension
-        const cell = this.props;
+        const cell = this.props.cell;
 
         // First make sure we have the mime data
         if (!cell || !cell.output) {
@@ -78,29 +143,14 @@ export class Cell extends React.Component<ICell, {inputBlockOpen: boolean, input
         // Jupyter style MIME bundle
 
         // Find out which mimetype is the richest
-        const mimetype: string = richestMimetype(cell.output, standardDisplayOrder, standardTransforms);
+        const mimetype: string = richestMimetype(cell.output, displayOrder, transforms);
 
-        // Get the matching React.Component for that mimetype
-        const Transform = standardTransforms[mimetype];
-
-        if (typeof mimetype !== 'string') {
-          return <div>Unknown Mime Type</div>;
-        }
-        // If dealing with images, set the background color to white
-        const style: React.CSSProperties = {};
-        if (mimetype.startsWith('image')) {
-          style.backgroundColor = 'white';
-        }
-        if (mimetype === 'text/plain') {
-          style.whiteSpace = 'pre';
-        }
-        try {
-          return <div style={style}><Transform data={cell.output[mimetype]} /></div>;
-        } catch (ex) {
-          window.console.log('Error in rendering');
-          window.console.log(ex);
-          return <div></div>;
+        // If that worked, use the transform
+        if (mimetype) {
+            return this.renderWithTransform(mimetype, cell);
         }
 
+        const str : string = this.getUnknownMimeTypeString();
+        return <div>${str}</div>;
     }
 }

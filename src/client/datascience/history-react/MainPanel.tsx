@@ -5,35 +5,38 @@
 import * as React from 'react';
 import { HistoryMessages } from '../constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
-import { PostOffice } from '../react-common/postOffice';
+import { LocReactPostOffice } from '../react-common/locReactSide';
+import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { ICell } from '../types';
 import { Cell } from './cell';
 
 export interface IState {
     cells: ICell[];
+    busy: boolean;
+    skipNextScroll? : boolean;
 }
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
+    theme: string;
 }
 
-export class MainPanel extends React.Component<IMainPanelProps, IState> {
+export class MainPanel extends React.Component<IMainPanelProps, IState> implements IMessageHandler {
 
-    // tslint:disable-next-line:no-any
-    private messageHandlers: { [index: string]: (msg?: any) => void } = {
-    };
+    private bottom: HTMLDivElement | undefined;
+    private locPostOffice : LocReactPostOffice = new LocReactPostOffice();
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, state: IState) {
         super(props);
-        this.state = { cells: [] };
-        this.updateState.bind(this);
-        this.messageHandlers[HistoryMessages.UpdateState] = this.updateState;
+        this.state = { cells: [], busy: false };
 
         // Setup up some dummy cells for debugging when not running in vscode
         // This should show a gray rectangle in the cell.
         if (!PostOffice.canSendMessages() && !this.props.skipDefault) {
-            this.state = {cells: [
+            this.state = {
+                busy: false,
+                cells: [
                 {
                     input: 'get_ipython().run_line_magic("matplotlib", "inline")',
                     output: {
@@ -46,27 +49,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> {
                           '<IPython.core.display.SVG object>'
                          ]
                         },
+                    executionCount: 12,
                     id: '1'
                 },
                 {
                     input: 'df.head()',
                     id: '2',
+                    executionCount: 11,
                     output: {
                         'text/html': [
                          '<div>\n',
-                         '<style>\n',
-                         '    .dataframe thead tr:only-child th {\n',
-                         '        text-align: right;\n',
-                         '    }\n',
-                         '\n',
-                         '    .dataframe thead th {\n',
-                         '        text-align: left;\n',
-                         '    }\n',
-                         '\n',
-                         '    .dataframe tbody tr th {\n',
-                         '        vertical-align: top;\n',
-                         '    }\n',
-                         '</style>\n',
                          '<table border=\'1\' class=\'dataframe\'>\n',
                          '  <thead>\n',
                          '    <tr style=\'text-align: right;\'>\n',
@@ -168,21 +160,73 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> {
         }
     }
 
+    public componentDidMount() {
+        this.scrollToBottom();
+    }
+
+    public componentDidUpdate(prevProps, prevState) {
+        this.scrollToBottom();
+    }
+
     public render() {
         return (
             <div className='main-panel'>
-                <PostOffice messageHandlers={this.messageHandlers} />
+                <PostOffice messageHandlers={[this, this.locPostOffice]} />
                 {this.renderCells()}
+                <div ref={this.updateBottom} />
             </div>
         );
+    }
+
+    // tslint:disable-next-line:no-any
+    public handleMessage = (msg: string, payload?: any) => {
+        if (msg === HistoryMessages.UpdateState) {
+            this.updateState(payload);
+            return true;
+        }
+
+        return false;
     }
 
     private renderCells = () => {
         return this.state.cells.map((cell: ICell, index: number) =>
             <ErrorBoundary key={index}>
-                <Cell input={cell.input} output={cell.output} id={cell.id} />
+                <Cell
+                    cell={cell}
+                    theme={this.props.theme}
+                    getLocalized={this.locPostOffice.getLocalizedString}
+                    gotoCode={() => this.gotoCellCode(index)}
+                    delete={() => this.deleteCell(index)}/>
             </ErrorBoundary>
         );
+    }
+
+    private gotoCellCode = (index: number) => {
+        // Send a message to the other side to jump to a particular cell
+        PostOffice.sendMessage({ type: HistoryMessages.GotoCodeCell, payload: index});
+    }
+
+    private deleteCell = (index: number) => {
+        // Send a message to the other side to delete a particular cell.
+        PostOffice.sendMessage({ type: HistoryMessages.DeleteCell, payload: index});
+
+        // Do the same thing on this side
+        this.setState({
+            cells: this.state.cells.filter((c : ICell, i: number) => {
+                return i !== index;
+            }),
+            skipNextScroll: true,
+            busy: false});
+    }
+
+    private scrollToBottom = () => {
+        if (this.bottom && this.bottom.scrollIntoView && !this.state.skipNextScroll) {
+            this.bottom.scrollIntoView({behavior: 'smooth'});
+        }
+    }
+
+    private updateBottom = (newBottom: HTMLDivElement) => {
+        this.bottom = newBottom;
     }
 
     // tslint:disable-next-line:no-any

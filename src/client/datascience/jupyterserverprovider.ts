@@ -4,9 +4,9 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IFileSystem, IPlatformService } from '../common/platform/types';
+import { IFileSystem } from '../common/platform/types';
+import { IPythonExecutionFactory } from '../common/process/types';
 import { IDisposableRegistry, ILogger } from '../common/types';
-import { IServiceContainer } from '../ioc/types';
 import { JupyterProcess } from './jupyterProcess';
 import { JupyterServer } from './jupyterServer';
 import { IJupyterServer, IJupyterServerProvider } from './types';
@@ -14,26 +14,24 @@ import { IJupyterServer, IJupyterServerProvider } from './types';
 @injectable()
 export class JupyterServerProvider implements IJupyterServerProvider {
 
-    private fileSystem: IFileSystem;
-    private disposableRegistry: IDisposableRegistry;
-    private logger: ILogger;
-    private platformService: IPlatformService;
-
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-        this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        this.disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        this.logger = this.serviceContainer.get<ILogger>(ILogger);
-        this.platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
+    constructor(
+        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
+        @inject(ILogger) private logger: ILogger,
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IPythonExecutionFactory) private pythonExecutionFactory : IPythonExecutionFactory) {
     }
 
     public async start(notebookFile? : string): Promise<IJupyterServer> {
-        const server = new JupyterServer(this.fileSystem, this.logger);
+        // Use the default python service (should match the currently selected one?)
+        const pythonService = await this.pythonExecutionFactory.create({});
+        const server = new JupyterServer(this.fileSystem, this.logger, pythonService);
         this.disposableRegistry.push(server);
         await server.start(notebookFile);
         return server;
     }
 
-    public isSupported() : Promise<boolean> {
-        return JupyterProcess.exists(this.platformService);
+    public async isSupported() : Promise<boolean> {
+        const pythonService = await this.pythonExecutionFactory.create({});
+        return JupyterProcess.exists(pythonService);
     }
 }

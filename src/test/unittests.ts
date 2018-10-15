@@ -19,6 +19,7 @@ import * as vscodeMoscks from './vscode-mock';
 // Setup the enzyme global state
 import { configure } from 'enzyme';
 import * as Adapter from 'enzyme-adapter-react-16';
+import { setUpDomEnvironment } from './datascience/reactHelpers';
 configure({ adapter: new Adapter() });
 
 process.env.VSC_PYTHON_CI_TEST = '1';
@@ -35,6 +36,10 @@ export function runTests(testOptions?: { grep?: string; timeout?: number }) {
         timeout,
         grep
     };
+
+    // nteract/transforms-full expects to run in the browser so we have to fake
+    // parts of the browser here.
+    setUpDomEnvironment();
 
     let temp_mocha: Mocha | undefined;
 
@@ -80,11 +85,11 @@ export function runTests(testOptions?: { grep?: string; timeout?: number }) {
 function reportErrors(error?: Error, failures?: number) {
     let failed = false;
     if (error) {
-        console.log(error);
+        console.error(error);
         failed = true;
     }
     if (failures && failures >= 0) {
-        console.log(`${failures} failed tests 👎.`);
+        console.error(`${failures} failed tests 👎.`);
         failed = true;
     }
     if (failed) {

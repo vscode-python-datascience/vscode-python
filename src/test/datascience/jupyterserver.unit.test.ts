@@ -6,34 +6,33 @@
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
-import { PlatformService } from '../../client/common/platform/platformService';
-import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { IDisposableRegistry, ILogger } from '../../client/common/types';
+import { IFileSystem } from '../../client/common/platform/types';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
+import { ILogger } from '../../client/common/types';
 import { JupyterServerProvider } from '../../client/datascience/jupyterServerProvider';
 import { IJupyterServerProvider } from '../../client/datascience/types';
-import { IServiceContainer } from '../../client/ioc/types';
+import { MockPythonExecutionService } from './executionServiceMock';
 
 suite('Jupyter server tests', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let logger: TypeMoq.IMock<ILogger>;
-    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     const disposables: Disposable[] = [];
     let serverProvider: IJupyterServerProvider;
-    let platformService : IPlatformService;
+    let pythonExecutionService : IPythonExecutionService;
+    let factory : TypeMoq.IMock<IPythonExecutionFactory>;
 
     setup(() => {
-        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        pythonExecutionService = new MockPythonExecutionService();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        platformService = new PlatformService();
         logger = TypeMoq.Mock.ofType<ILogger>();
+        factory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
+
+        factory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService));
         fileSystem.setup(f => f.getFileHash(TypeMoq.It.isAny())).returns(() => Promise.resolve('42'));
+
         // tslint:disable-next-line:no-empty
         logger.setup(l => l.logInformation(TypeMoq.It.isAny())).returns((m) => {}); // console.log(m)); // REnable this to debug the server
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny())).returns(() => disposables);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => fileSystem.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny())).returns(() => platformService);
-        serverProvider = new JupyterServerProvider(serviceContainer.object);
+        serverProvider = new JupyterServerProvider(disposables, logger.object, fileSystem.object, factory.object);
     });
 
     teardown(() => {
@@ -67,8 +66,9 @@ suite('Jupyter server tests', () => {
                 statusCount += 1;
             });
             const cell = await server.execute('a = 1\r\na', 'foo.py', 2);
-            assert.equal(cell.output, '1', 'Cell not correct');
-            assert.equal(statusCount, 2, 'Status wasnt updated');
+            assert.ok(cell.output.hasOwnProperty('text/plain'), 'Cell mime type not correct');
+            assert.equal(cell.output['text/plain'], '1', 'Cell not correct');
+            assert.ok(statusCount >= 2, 'Status wasnt updated');
         } else {
             // tslint:disable-next-line:no-console
             console.log('Execution test skipped, no Jupyter installed');

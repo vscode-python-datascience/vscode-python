@@ -1,0 +1,13 @@
+
+.menuBar{
+	position: relative;
+    margin: 10px;
+    display:flex;
+    flex-direction: row-reverse;
+    justify-content: right;
+}
+.menuBar:after{
+    content: "";
+    clear: both;
+    display: block;
+}

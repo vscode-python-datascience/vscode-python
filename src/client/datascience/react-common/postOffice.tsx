@@ -6,7 +6,7 @@
 import * as React from 'react';
 import { IWebPanelMessage } from '../../common/application/types';
 
-interface IVsCodeApi {
+export interface IVsCodeApi {
     // tslint:disable-next-line:no-any
     postMessage(msg: any) : void;
     // tslint:disable-next-line:no-any
@@ -15,9 +15,13 @@ interface IVsCodeApi {
     getState() : any;
 }
 
-interface IPostOfficeProps {
+export interface IMessageHandler {
     // tslint:disable-next-line:no-any
-    messageHandlers: {[index: string]: (msg?: any) => void};
+    handleMessage(type: string, payload?: any) : boolean;
+}
+
+interface IPostOfficeProps {
+    messageHandlers: IMessageHandler[];
 }
 
 // This special function talks to vscode from a web panel
@@ -55,13 +59,13 @@ export class PostOffice extends React.Component<IPostOfficeProps> {
         return null;
     }
 
-    private handleMessages = (ev: MessageEvent) => {
+    private handleMessages = async (ev: MessageEvent) => {
         if (this.props) {
             const msg = ev.data as IWebPanelMessage;
             if (msg) {
-                if (this.props.messageHandlers.hasOwnProperty(msg.type)) {
-                    this.props.messageHandlers[msg.type](msg.payload);
-                }
+                this.props.messageHandlers.forEach((h : IMessageHandler) => {
+                    h.handleMessage(msg.type, msg.payload);
+                });
             }
         }
     }

@@ -11,7 +11,7 @@ import '../../common/extensions';
 import * as localize from '../../../utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { IDisposableRegistry } from '../types';
-import { IWebPanel, IWebPanelMessageListener, IWebPanelMessage  } from './types';
+import { IWebPanel, IWebPanelMessage, IWebPanelMessageListener } from './types';
 
 export class WebPanel implements IWebPanel {
 
@@ -70,7 +70,7 @@ export class WebPanel implements IWebPanel {
 
                 this.disposableRegistry.push(this.panel.webview.onDidReceiveMessage(message => {
                     // Pass the message onto our listener
-                    this.listener.onMessage(message.command, message).ignoreErrors();
+                    this.listener.onMessage(message.command, message);
                 }));
             } else {
                 // Indicate that we can't load the file path
