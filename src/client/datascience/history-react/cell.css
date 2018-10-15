@@ -3,7 +3,7 @@
     padding: 2px;
     display: block;
     white-space: pre;
-  }
+}
 
 .cell-wrapper:after {
     content: "";
@@ -17,16 +17,28 @@
     justify-content: left;
 }
 
+.content-div {
+    float: left;
+}
+
+.controls-div {
+    float: left;
+}
+
+.hide {
+    display: none;
+}
+
 .cell-execution-count {
-    margin-right: 5px;
     font-weight: bold;
   }
 
 .cell-result-container {
     width: 100%;
 }
+
 .cell-input {
-      margin: 0;
+    margin: 0;
 }
 
 .cell-output {
@@ -39,4 +51,18 @@
 
 .cell-output-vscode-dark {
     background: dimgray;
+}
+
+.remove-style {
+    background-color:transparent;
+    border:transparent;
+}
+
+.controls-flex {
+    display:flex;
+}
+
+.center-img {
+    display: block;
+    margin: 0 auto;
 }

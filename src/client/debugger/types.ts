@@ -52,7 +52,7 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
     pythonPath: string;
     // Automatically stop target after launch. If not specified, target does not stop.
     stopOnEntry?: boolean;
-    /** Show return values of functions while stepping. */
+    // Show return values of functions while stepping.
     showReturnValue?: boolean;
     args: string[];
     cwd?: string;
