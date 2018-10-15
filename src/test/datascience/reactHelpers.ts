@@ -3,7 +3,8 @@
 
 'use strict';
 
-import { ComponentClass, ReactWrapper  } from 'enzyme';
+import { ComponentClass, configure, ReactWrapper  } from 'enzyme';
+import * as Adapter from 'enzyme-adapter-react-16';
 import { JSDOM } from 'jsdom';
 import * as React from 'react';
 
@@ -49,6 +50,7 @@ export function setUpDomEnvironment() {
         return { 'DataScience.unknownMimeType' : 'Unknown mime type from helper' };
     };
 
+    configure({ adapter: new Adapter() });
 }
 
 function copyProps(src, target) {
