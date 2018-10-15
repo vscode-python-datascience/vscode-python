@@ -51,6 +51,7 @@ export class Cell extends React.Component<ICellProps, ICellState> {
 
     public render() {
         const outputClassNames = `cell-output cell-output-${this.props.theme}`;
+        const collapseInputClassNames = `collapse-input-svg ${this.state.inputBlockOpen ? ' collapse-input-svg-rotate' : ''} collapse-input-svg-${this.props.theme}`;
 
         return (
             <div className='cell-wrapper'>
@@ -63,8 +64,9 @@ export class Cell extends React.Component<ICellProps, ICellState> {
                     <div className='controls-flex'>
                         <div className='cell-execution-count'>{`[${this.props.cell.executionCount}]:`}</div>
                             <button className='collapse-input remove-style' onClick={this.toggleInputBlock}>
-                                <img className={(this.state.inputBlockOpen ? ' hide' : 'center-img')} alt='input expand button closed' src='expandArrow.svg' />
-                                <img className={(this.state.inputBlockOpen ? 'center-img' : ' hide')} alt='input expand button opened' src='expandArrowRotate.svg' />
+                                <svg version='1.1' baseProfile='full' width='8px' height='11px'>
+                                    <polygon points='0,0 0,10 5,5' className={collapseInputClassNames} fill='black'/>
+                                </svg>
                             </button>
                     </div>
                   </div>
@@ -78,7 +80,6 @@ export class Cell extends React.Component<ICellProps, ICellState> {
             </div>
         );
     }
-
     private toggleInputBlock = () => {
       const newState = !this.state.inputBlockOpen;
       let newText = '';
