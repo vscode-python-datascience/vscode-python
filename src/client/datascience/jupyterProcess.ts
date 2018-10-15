@@ -6,9 +6,9 @@
 import { IDisposable } from '@phosphor/disposable';
 import * as tk from 'tree-kill';
 import { URL } from 'url';
-import { createDeferred, Deferred } from '../../utils/async';
 import { IPythonExecutionService, ObservableExecutionResult, Output } from '../common/process/types';
 import { ILogger } from '../common/types';
+import { createDeferred, Deferred } from '../common/utils/async';
 
 export interface IConnectionInfo {
     baseUrl: string;

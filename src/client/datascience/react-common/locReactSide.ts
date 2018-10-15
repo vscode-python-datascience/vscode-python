@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { createDeferred, Deferred } from '../../../utils/async';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { LocalizationMessages } from './locCommon';
 import { IMessageHandler, PostOffice } from './postOffice';
 
