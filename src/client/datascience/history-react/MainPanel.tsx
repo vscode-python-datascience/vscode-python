@@ -33,7 +33,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
 
         // Setup up some dummy cells for debugging when not running in vscode
         // This should show a gray rectangle in the cell.
-        if (!PostOffice.canSendMessages() && !this.props.skipDefault) {
+        if (!this.props.skipDefault) {
             this.state = {
                 busy: false,
                 cells: [
@@ -50,12 +50,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                          ]
                         },
                     executionCount: 12,
-                    id: '1'
+                    id: '1',
+                    file: 'foo.py',
+                    line: 1
                 },
                 {
                     input: 'df.head()',
                     id: '2',
                     executionCount: 11,
+                    file: 'foo.py',
+                    line: 1,
                     output: {
                         'text/html': [
                          '<div>\n',
@@ -202,12 +206,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
 
     private gotoCellCode = (index: number) => {
         // Send a message to the other side to jump to a particular cell
-        PostOffice.sendMessage({ type: HistoryMessages.GotoCodeCell, payload: index});
+        PostOffice.sendMessage({ type: HistoryMessages.GotoCodeCell, payload: { index : index }});
     }
 
     private deleteCell = (index: number) => {
         // Send a message to the other side to delete a particular cell.
-        PostOffice.sendMessage({ type: HistoryMessages.DeleteCell, payload: index});
+        PostOffice.sendMessage({ type: HistoryMessages.DeleteCell, payload:  { index : index }});
 
         // Do the same thing on this side
         this.setState({

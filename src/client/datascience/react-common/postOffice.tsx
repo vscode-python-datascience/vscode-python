@@ -29,22 +29,35 @@ export declare function acquireVsCodeApi(): IVsCodeApi;
 
 export class PostOffice extends React.Component<IPostOfficeProps> {
 
+    private static vscodeApi : IVsCodeApi | undefined;
+
     constructor(props: IPostOfficeProps) {
         super(props);
     }
 
     public static canSendMessages() {
-        // tslint:disable-next-line:no-typeof-undefined
-        if (typeof acquireVsCodeApi !== 'undefined') {
+        if (PostOffice.acquireApi()) {
             return true;
         }
         return false;
     }
 
     public static sendMessage(message: IWebPanelMessage) {
-        if (PostOffice.canSendMessages()) {
-            acquireVsCodeApi().postMessage(message);
+        if (this) {
+            PostOffice.acquireApi().postMessage(message);
         }
+    }
+
+    private static acquireApi() : IVsCodeApi | undefined {
+
+        // Only do this once as it crashes if we ask more than once
+        if (!PostOffice.vscodeApi &&
+            // tslint:disable-next-line:no-typeof-undefined
+            typeof acquireVsCodeApi !== 'undefined') {
+            PostOffice.vscodeApi = acquireVsCodeApi();
+        }
+
+        return PostOffice.vscodeApi;
     }
 
     public componentDidMount() {

@@ -33,6 +33,7 @@ import { PlatformService } from '../../client/common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { IDisposableRegistry, ILogger } from '../../client/common/types';
+import { Cell } from '../../client/datascience/history-react/Cell';
 import { MainPanel } from '../../client/datascience/history-react/MainPanel';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
 import { JupyterServerProvider } from '../../client/datascience/jupyterServerProvider';
@@ -148,27 +149,13 @@ suite('History output tests', () => {
     }).timeout(60000);
 
     test('Loc React test', async () => {
-        if (await serverProvider.isSupported()) {
-            // Create our main panel and tie it into the JSDOM
-            const wrapper = mount(<MainPanel theme='vscode-light' skipDefault={true} />);
+        // Create our main panel and tie it into the JSDOM
+        const wrapper = mount(<MainPanel theme='vscode-light' skipDefault={false} />);
 
-            // Create a history object and have him listen. We have to show him
-            // so he creates the loc post office
-            const history = await historyProvider.getOrCreateHistory();
-            await history.show();
-
-            // Ask for a string from the main panel\
-            const mainObj = wrapper.find(MainPanel).instance();
-            // tslint:disable-next-line:no-string-literal
-            const postOffice = mainObj['locPostOffice'] as LocReactPostOffice;
-            const result = await postOffice.getLocalizedString('DataScience.unknownMimeType');
-
-            assert.equal(result, 'Unknown mime type for data', 'Did not find unknownMimeType string');
-        } else {
-            // tslint:disable-next-line:no-console
-            console.log('History test skipped, no Jupyter installed');
-        }
-
-    }).timeout(60000);
+        // Our cell should have been rendered. It should have a method to get a loc string
+        const cellFound = wrapper.find('Cell');
+        const cell = cellFound.at(0).instance() as Cell;
+        assert.equal(cell.getUnknownMimeTypeString(), 'Unknown mime type from helper', 'Unknown mime type did not come from script');
+    });
 
 });

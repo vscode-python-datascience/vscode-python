@@ -70,7 +70,7 @@ export class WebPanel implements IWebPanel {
 
                 this.disposableRegistry.push(this.panel.webview.onDidReceiveMessage(message => {
                     // Pass the message onto our listener
-                    this.listener.onMessage(message.command, message);
+                    this.listener.onMessage(message.type, message.payload);
                 }));
             } else {
                 // Indicate that we can't load the file path

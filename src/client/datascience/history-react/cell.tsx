@@ -27,15 +27,14 @@ export class Cell extends React.Component<ICellProps> {
 
     constructor(prop: ICellProps) {
         super(prop);
-        this.state = { unknownMimeType : undefined };
     }
 
     public render() {
         const outputClassNames = `cell-output cell-output-${this.props.theme}`;
-        const clearButtonImage = this.props.theme == 'vscode-dark' ? './images/Cancel/Cancel_16xMD_vscode.svg' :
+        const clearButtonImage = this.props.theme !== 'vscode-dark' ? './images/Cancel/Cancel_16xMD_vscode.svg' :
         './images/Cancel/Cancel_16xMD_vscode_dark.svg';
-        const gotoSourceImage = this.props.theme == 'vscode-dark' ? './images/GoToSourceCode/GoToSourceCode_16xMD_vscode.svg' :
-        './images/GoToSourceCode/GoToSourceCode_16xMD_vscode_dark.svg';
+        const gotoSourceImage = this.props.theme !== 'vscode-dark' ? './images/GoToSourceCode/GoToSourceCode_16x_vscode.svg' :
+        './images/GoToSourceCode/GoToSourceCode_16x_vscode_dark.svg';
 
         return (
             <div className='cell-wrapper'>
@@ -56,6 +55,19 @@ export class Cell extends React.Component<ICellProps> {
                 </div>
             </div>
         );
+    }
+
+    // Public for testing
+    public getUnknownMimeTypeString = () => {
+        return getLocString('DataScience.unknownMimeType', 'Unknown Mime Type');
+    }
+
+    private getDeleteString = () => {
+        return getLocString('DataScience.deleteButtonTooltip', 'Delete');
+    }
+
+    private getGoToCodeString = () => {
+        return getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code');
     }
 
     private renderWithTransform = (mimetype: string, cell: ICell) => {
@@ -80,18 +92,6 @@ export class Cell extends React.Component<ICellProps> {
         }
 
         return <div></div>;
-    }
-
-    private getUnknownMimeTypeString = () => {
-        return getLocString('DataScience.unknownMimeType', 'Unknown Mime Type');
-    }
-
-    private getDeleteString = () => {
-        return getLocString('DataScience.deleteButtonTooltip', 'Delete');
-    }
-
-    private getGoToCodeString = () => {
-        return getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code');
     }
 
     private renderOutput = () => {
