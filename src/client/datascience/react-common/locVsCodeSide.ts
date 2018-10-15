@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { localize } from '../../../utils/localize';
+import { localize } from '../../common/utils/localize';
 import { IWebPanel, IWebPanelMessageListener } from '../../common/application/types';
 import { LocalizationMessages } from './locCommon';
 

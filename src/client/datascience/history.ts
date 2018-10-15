@@ -3,8 +3,8 @@
 
 'use strict';
 import * as path from 'path';
-import * as localize from '../../utils/localize';
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider } from '../common/application/types';
+import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
 import { HistoryMessages } from './constants';
 import { LocVsCodePostOffice } from './react-common/locVsCodeSide';

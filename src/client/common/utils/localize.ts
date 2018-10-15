@@ -14,13 +14,20 @@ export namespace LanguageServiceSurveyBanner {
     export const bannerLabelNo = localize('LanguageServiceSurveyBanner.bannerLabelNo', 'No, thanks');
 }
 
+export namespace DataScience {
+    export const historyTitle = localize('DataScience.historyTitle', 'History');
+    export const badWebPanelFormatString = localize('DataScience.badWebPanelFormatString', '<html><body><h1>{0} is not a valid file name</h1></body></html>');
+    export const sessionDisposed = localize('DataScience.sessionDisposed', 'Cannot execute code, session has been disposed.');
+    export const unknownMimeType = localize('DataScience.unknownMimeType', 'Unknown mime type for data');
+}
+
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
 // can be loaded out of the nls.<locale>.json files
 let loadedCollection: { [index: string]: string } | undefined;
 let defaultCollection: { [index: string]: string } | undefined;
 let loadedLocale: string;
 
-function localize(key: string, defValue: string) {
+export function localize(key: string, defValue: string) {
     // Return a pointer to function so that we refetch it on each call.
     return () => {
         return getString(key, defValue);
@@ -72,7 +79,7 @@ function load() {
         const defaultNlsFile = path.join(EXTENSION_ROOT_DIR, 'package.nls.json');
         if (fs.existsSync(defaultNlsFile)) {
             const contents = fs.readFileSync(defaultNlsFile, 'utf8');
-            return JSON.parse(contents);
+            defaultCollection = JSON.parse(contents);
         } else {
             defaultCollection = {};
         }
