@@ -25,23 +25,28 @@ interface ICellProps extends ILocalizableProps {
 
 interface ICellState {
     unknownMimeType : string | undefined;
+    inputBlockOpen: boolean;
+    inputBlockText: string;
 }
 
 export class Cell extends React.Component<ICellProps, ICellState> {
     private static unknownMimeType : string | undefined;
-
     constructor(prop: ICellProps) {
         super(prop);
-        this.state = { unknownMimeType : undefined };
+
+        // Initial state of our cell toggle
+        this.state = { inputBlockOpen: true,
+                       inputBlockText: prop.cell.input,
+                       unknownMimeType : undefined };
     }
 
     public componentDidMount() {
-        if (!Cell.unknownMimeType) {
-            this.props.getLocalized('DataScience.unknownMimeType').then((v : string) => {
-                Cell.unknownMimeType = v;
-                this.forceUpdate();
-            }).catch((e) => { Cell.unknownMimeType = e; });
-        }
+      if (!Cell.unknownMimeType) {
+          this.props.getLocalized('DataScience.unknownMimeType').then((v : string) => {
+              Cell.unknownMimeType = v;
+              this.forceUpdate();
+          }).catch((e) => { Cell.unknownMimeType = e; });
+      }
     }
 
     public render() {
@@ -54,14 +59,43 @@ export class Cell extends React.Component<ICellProps, ICellState> {
                     <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip='Goto Code'><RelativeImage class='cell-button-image' path='./images/gotoCode.png' /></CellButton>
                 </MenuBar>
                 <div className='cell-outer'>
-                    <div className='cell-execution-count'>{`[${this.props.cell.executionCount}]:`}</div>
+                  <div className='controls-div'>
+                    <div className='controls-flex'>
+                        <div className='cell-execution-count'>{`[${this.props.cell.executionCount}]:`}</div>
+                            <button className='collapse-input remove-style' onClick={this.toggleInputBlock}>
+                                <img className={(this.state.inputBlockOpen ? ' hide' : 'center-img')} alt='input expand button closed' src='expandArrow.svg' />
+                                <img className={(this.state.inputBlockOpen ? 'center-img' : ' hide')} alt='input expand button opened' src='expandArrowRotate.svg' />
+                            </button>
+                    </div>
+                  </div>
+                  <div className='content-div'>
                     <div className='cell-result-container'>
-                        <div className='cell-input'>{this.props.cell.input}</div>
+                        <div className='cell-input'>{this.state.inputBlockText}</div>
                         <div className={outputClassNames}>{this.renderOutput()}</div>
                     </div>
+                  </div>
                 </div>
             </div>
         );
+    }
+
+    private toggleInputBlock = () => {
+      const newState = !this.state.inputBlockOpen;
+      let newText = '';
+      // Set our input text based on the new state
+      if (newState) {
+        newText = this.props.cell.input;
+      } else {
+        if (this.props.cell.input.length > 0) {
+          newText = this.props.cell.input.split('\n', 1)[0];
+          newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
+          newText = newText.concat('...');
+        }
+      }
+      this.setState({
+        inputBlockOpen: newState,
+        inputBlockText: newText
+      });
     }
 
     private renderWithTransform = (mimetype: string, cell: ICell) => {
@@ -93,7 +127,6 @@ export class Cell extends React.Component<ICellProps, ICellState> {
     }
 
     private renderOutput = () => {
-
         // Borrowed this from Don's Jupyter extension
         const cell = this.props.cell;
 

@@ -3,8 +3,8 @@
 
 'use strict';
 
-import { localize } from '../../common/utils/localize';
 import { IWebPanel, IWebPanelMessageListener } from '../../common/application/types';
+import { localize } from '../../common/utils/localize';
 import { LocalizationMessages } from './locCommon';
 
 export class LocVsCodePostOffice implements IWebPanelMessageListener {
