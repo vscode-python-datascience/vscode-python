@@ -9,49 +9,43 @@ import * as React from 'react';
 // tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
 
-import { ILocalizableProps } from '../react-common/locReactSide';
+import { getLocString } from '../react-common/locReactSide';
 import { RelativeImage } from '../react-common/relativeImage';
 import { ICell } from '../types';
 import './cell.css';
 import { CellButton } from './cellButton';
 import { MenuBar } from './menuBar';
 
-interface ICellProps extends ILocalizableProps {
+interface ICellProps {
     cell : ICell;
     theme: string;
     gotoCode() : void;
     delete() : void;
 }
 
-interface ICellState {
-    unknownMimeType : string | undefined;
-}
-
-export class Cell extends React.Component<ICellProps, ICellState> {
-    private static unknownMimeType : string | undefined;
+export class Cell extends React.Component<ICellProps> {
 
     constructor(prop: ICellProps) {
         super(prop);
         this.state = { unknownMimeType : undefined };
     }
 
-    public componentDidMount() {
-        if (!Cell.unknownMimeType) {
-            this.props.getLocalized('DataScience.unknownMimeType').then((v : string) => {
-                Cell.unknownMimeType = v;
-                this.forceUpdate();
-            }).catch((e) => { Cell.unknownMimeType = e; });
-        }
-    }
-
     public render() {
         const outputClassNames = `cell-output cell-output-${this.props.theme}`;
+        const clearButtonImage = this.props.theme == 'vscode-dark' ? './images/Cancel/Cancel_16xMD_vscode.svg' :
+        './images/Cancel/Cancel_16xMD_vscode_dark.svg';
+        const gotoSourceImage = this.props.theme == 'vscode-dark' ? './images/GoToSourceCode/GoToSourceCode_16xMD_vscode.svg' :
+        './images/GoToSourceCode/GoToSourceCode_16xMD_vscode_dark.svg';
 
         return (
             <div className='cell-wrapper'>
                 <MenuBar theme={this.props.theme}>
-                    <CellButton theme={this.props.theme} onClick={this.props.delete} tooltip='Delete'>X</CellButton>
-                    <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip='Goto Code'><RelativeImage class='cell-button-image' path='./images/gotoCode.png' /></CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.props.delete} tooltip={this.getDeleteString()}>
+                        <RelativeImage class='cell-button-image' path={clearButtonImage}/>
+                    </CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()}>
+                        <RelativeImage class='cell-button-image' path={gotoSourceImage}/>
+                    </CellButton>
                 </MenuBar>
                 <div className='cell-outer'>
                     <div className='cell-execution-count'>{`[${this.props.cell.executionCount}]:`}</div>
@@ -89,7 +83,15 @@ export class Cell extends React.Component<ICellProps, ICellState> {
     }
 
     private getUnknownMimeTypeString = () => {
-        return this.state.unknownMimeType ? this.state.unknownMimeType : 'Unknown mime type';
+        return getLocString('DataScience.unknownMimeType', 'Unknown Mime Type');
+    }
+
+    private getDeleteString = () => {
+        return getLocString('DataScience.deleteButtonTooltip', 'Delete');
+    }
+
+    private getGoToCodeString = () => {
+        return getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code');
     }
 
     private renderOutput = () => {

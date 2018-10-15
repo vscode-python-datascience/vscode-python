@@ -36,7 +36,6 @@ import { IDisposableRegistry, ILogger } from '../../client/common/types';
 import { MainPanel } from '../../client/datascience/history-react/MainPanel';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
 import { JupyterServerProvider } from '../../client/datascience/jupyterServerProvider';
-import { LocReactPostOffice } from '../../client/datascience/react-common/locReactSide';
 import { IVsCodeApi } from '../../client/datascience/react-common/postOffice';
 import { IHistoryProvider, IJupyterServerProvider  } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';

@@ -5,7 +5,6 @@
 import * as React from 'react';
 import { HistoryMessages } from '../constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
-import { LocReactPostOffice } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { ICell } from '../types';
 import { Cell } from './cell';
@@ -19,12 +18,13 @@ export interface IState {
 export interface IMainPanelProps {
     skipDefault?: boolean;
     theme: string;
+
+    localizedStrings? : { [index: string] : string };
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IState> implements IMessageHandler {
 
     private bottom: HTMLDivElement | undefined;
-    private locPostOffice : LocReactPostOffice = new LocReactPostOffice();
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, state: IState) {
@@ -171,7 +171,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
     public render() {
         return (
             <div className='main-panel'>
-                <PostOffice messageHandlers={[this, this.locPostOffice]} />
+                <PostOffice messageHandlers={[this]} />
                 {this.renderCells()}
                 <div ref={this.updateBottom} />
             </div>
@@ -194,7 +194,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                 <Cell
                     cell={cell}
                     theme={this.props.theme}
-                    getLocalized={this.locPostOffice.getLocalizedString}
                     gotoCode={() => this.gotoCellCode(index)}
                     delete={() => this.deleteCell(index)}/>
             </ErrorBoundary>
