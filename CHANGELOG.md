@@ -1,9 +1,62 @@
 # Changelog
 
-## 2018.8.1-beta (20 September 2018)
+## 2018.9.0 (9 Oct 2018)
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [isort 4.3.4](https://pypi.org/project/isort/4.3.4/)
+- [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
+  and [parso 0.2.1](https://pypi.org/project/parso/0.2.1/)
+- [Microsoft Python Language Server 2018.9.0](https://github.com/Microsoft/python-language-server/releases/tag/2018.9.0)
+- [ptvsd 4.1.3](https://github.com/Microsoft/ptvsd/releases/tag/v4.1.3)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+- Debugging support:
+  [Django](https://pypi.org/project/Django/),
+  [Flask](https://pypi.org/project/Flask/),
+  [gevent](https://pypi.org/project/gevent/),
+  [Jinja](https://pypi.org/project/Jinja/),
+  [Pyramid](https://pypi.org/project/pyramid/),
+  [PySpark](https://pypi.org/project/pyspark/),
+  [Scrapy](https://pypi.org/project/Scrapy/),
+  [Watson](https://pypi.org/project/Watson/)
+- Formatting:
+  [autopep8](https://pypi.org/project/autopep8/),
+  [black](https://pypi.org/project/black/),
+  [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
+- Linting:
+  [bandit](https://pypi.org/project/bandit/),
+  [flake8](https://pypi.org/project/flake8/),
+  [mypy](https://pypi.org/project/mypy/),
+  [prospector](https://pypi.org/project/prospector/),
+  [pylint](https://pypi.org/project/pylint/),
+  [pydocstyle](https://pypi.org/project/pydocstyle/),
+  [pylama](https://pypi.org/project/pylama/)
+- Testing:
+  [nose](https://pypi.org/project/nose/),
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
 
 ### Enhancements
 
+1. Adds support for code completion in the debug console window.
+   ([#1076](https://github.com/Microsoft/vscode-python/issues/1076))
 1. Auto activate Python Environment in terminals (disable with `"python.terminal.activateEnvironment": false`).
    ([#1387](https://github.com/Microsoft/vscode-python/issues/1387))
 1. Add support for activation of `pyenv` environments in the Terminal.
@@ -27,17 +80,32 @@
    ([#2617](https://github.com/Microsoft/vscode-python/issues/2617))
 1. Add Python Language Server version to the survey banner URL presented to some users.
    ([#2630](https://github.com/Microsoft/vscode-python/issues/2630))
+1. Language server now provides rename functionality.
+   ([#2650](https://github.com/Microsoft/vscode-python/issues/2650))
+1. Search for default known paths for conda environments on windows.
+   ([#2794](https://github.com/Microsoft/vscode-python/issues/2794)
+1. Add [bandit](https://pypi.org/project/bandit/) to supported linters.
+   (thanks [Steven Demurjian](https://github.com/demus))
+   ([#2775](https://github.com/Microsoft/vscode-python/issues/2775))
 
 ### Fixes
 
 1. Improvements to the display format of interpreter information in the list of interpreters.
    ([#1352](https://github.com/Microsoft/vscode-python/issues/1352))
-1. Add a new `"python.condaPath"` setting to use if conda is not found on `PATH`.
+1. Deprecate the use of the setting `python.autoComplete.preloadModules`. Recommendation is to utilize the new language server (change the setting `"python.jediEnabled": false`).
+   ([#1704](https://github.com/Microsoft/vscode-python/issues/1704))
+1. Add a new `python.condaPath` setting to use if conda is not found on `PATH`.
    ([#1944](https://github.com/Microsoft/vscode-python/issues/1944))
 1. Ensure code is executed when the last line of selected code is indented.
    ([#2167](https://github.com/Microsoft/vscode-python/issues/2167))
-1. Stop duplicate initializations of Python Language Server progress reporter.
+1. Stop duplicate initializations of the Python Language Server's progress reporter.
    ([#2297](https://github.com/Microsoft/vscode-python/issues/2297))
+1. Fix the regex expression to match MyPy linter messages that expects the file name to have a `.py` extension, that isn't always the case, to catch any filename.
+   E.g., .pyi files that describes interfaces wouldn't get the linter messages to Problems tab.
+   ([#2380](https://github.com/Microsoft/vscode-python/issues/2380))
+1. Do not use variable substitution when updating `python.pythonPath`.  This matters
+   because VS Code does not do variable substitution in settings values.
+   ([#2459](https://github.com/Microsoft/vscode-python/issues/2459))
 1. Use a python script to launch the debugger, instead of using `-m` which requires changes to the `PYTHONPATH` variable.
    ([#2509](https://github.com/Microsoft/vscode-python/issues/2509))
 1. Provide paths from `PYTHONPATH` environment variable to the language server, as additional search locations of Python modules.
@@ -50,6 +118,14 @@
    ([#2563](https://github.com/Microsoft/vscode-python/issues/2563))
 1. Use the environment folder name for environments without environment names in the Conda Environments list file.
    ([#2577](https://github.com/Microsoft/vscode-python/issues/2577))
+1. Update environment variable naming convention for `SPARK_HOME`, when stored in `settings.json`.
+   ([#2628](https://github.com/Microsoft/vscode-python/issues/2628))
+1. Fix debug adapter `Attach` test.
+   ([#2655](https://github.com/Microsoft/vscode-python/issues/2655))
+1. Fix colon-triggered block formatting.
+   ([#2714](https://github.com/Microsoft/vscode-python/issues/2714))
+1. Use full path to activate command in conda environments on windows when python.condaPath is set.
+   ([#2753](https://github.com/Microsoft/vscode-python/issues/2753))
 
 ### Code Health
 
@@ -57,6 +133,10 @@
    ([#2549](https://github.com/Microsoft/vscode-python/issues/2549))
 1. Upgraded our version of `request` to `2.87.0`.
    ([#2621](https://github.com/Microsoft/vscode-python/issues/2621))
+1. Include the version of language server in telemetry.
+   ([#2702](https://github.com/Microsoft/vscode-python/issues/2702))
+1. Update `vscode-extension-telemetry` to `0.0.22`.
+   ([#2745](https://github.com/Microsoft/vscode-python/issues/2745))
 
 
 ## 2018.8.0 (04 September 2018)

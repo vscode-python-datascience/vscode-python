@@ -23,6 +23,7 @@
   }
 
 .cell-result-container {
+    width: 100%;
 }
 .cell-input {
       margin: 0;
