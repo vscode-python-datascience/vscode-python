@@ -8,7 +8,7 @@ import * as path from 'path';
 import { Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 import '../../common/extensions';
 
-import * as localize from '../../../utils/localize';
+import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { IDisposableRegistry } from '../types';
 import { IWebPanel, IWebPanelMessage, IWebPanelMessageListener } from './types';

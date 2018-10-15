@@ -6,9 +6,9 @@
 import { injectable, unmanaged } from 'inversify';
 import * as md5 from 'md5';
 import { Uri } from 'vscode';
-import { createDeferred, Deferred } from '../../../../utils/async';
 import { IWorkspaceService } from '../../../common/application/types';
 import { IPersistentStateFactory } from '../../../common/types';
+import { createDeferred, Deferred } from '../../../common/utils/async';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
 
@@ -19,7 +19,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     constructor(@unmanaged() name: string,
         @unmanaged() protected readonly serviceContainer: IServiceContainer,
         @unmanaged() private cachePerWorkspace: boolean = false) {
-        this.cacheKeyPrefix = `INTERPRETERS_CACHE_v1_${name}`;
+        this.cacheKeyPrefix = `INTERPRETERS_CACHE_v2_${name}`;
     }
     public abstract dispose();
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {

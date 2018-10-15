@@ -31,6 +31,10 @@
 
 .cell-execution-count {
     font-weight: bold;
+  }
+
+.cell-result-container {
+    width: 100%;
 }
 
 .cell-input {

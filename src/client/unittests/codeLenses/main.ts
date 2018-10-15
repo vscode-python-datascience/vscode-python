@@ -9,6 +9,7 @@ export function activateCodeLenses(onDidChange: vscode.EventEmitter<void>,
     const disposables: vscode.Disposable[] = [];
     const codeLensProvider = new TestFileCodeLensProvider(onDidChange, symboldProvider, testCollectionStorage);
     disposables.push(vscode.languages.registerCodeLensProvider(PYTHON, codeLensProvider));
+
     return {
         dispose: () => { disposables.forEach(d => d.dispose()); }
     };
