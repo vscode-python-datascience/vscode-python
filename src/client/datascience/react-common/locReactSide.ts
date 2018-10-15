@@ -25,7 +25,7 @@ export function getLocString(key: string, defValue: string) : string {
 }
 
 function load() {
-    if (typeof getLocStrings !== 'undefined') {
+    if (typeof getLocStrings !== undefined) {
         loadedCollection = getLocStrings();
     } else {
         loadedCollection = {};
