@@ -3,45 +3,31 @@
 
 'use strict';
 
-import { createDeferred, Deferred } from '../../common/utils/async';
-import { LocalizationMessages } from './locCommon';
-import { IMessageHandler, PostOffice } from './postOffice';
+// The WebPanel constructed by the extension should inject a getLocStrings function into
+// the script. This should return a dictionary of key value pairs for loc strings
+export declare function getLocStrings() : { [index: string ] : string };
 
-export interface ILocalizableProps {
-    getLocalized(key: string) : Promise<string>;
-}
+// The react code can't use the localize.ts module because it reads from
+// disk. This isn't allowed inside a browswer, so we pass the collection
+// through the javascript.
+let loadedCollection: { [index: string]: string } | undefined ;
 
-export class LocReactPostOffice implements IMessageHandler {
-
-    private pendingLocRequests : { [index: string] : Deferred<string> } = {};
-
-    // tslint:disable-next-line:no-any
-    public handleMessage = (msg: string, payload? : any) => {
-        if (msg === LocalizationMessages.response) {
-
-            // Should have a key and a result value on the payload
-            const key = payload.key;
-            const result = payload.result;
-
-            if (key && result && this.pendingLocRequests.hasOwnProperty(key)) {
-                this.pendingLocRequests[key].resolve(result);
-                delete this.pendingLocRequests[key];
-            }
-
-            return true;
-        }
-
-        return false;
+export function getLocString(key: string, defValue: string) : string {
+    if (!loadedCollection) {
+        load();
     }
 
-    public async getLocalizedString(key: string) {
-        if (PostOffice.canSendMessages()) {
-            // Create a deferred promise that will be set when the response comes in
-            this.pendingLocRequests[key] = createDeferred<string>();
-            PostOffice.sendMessage({type: LocalizationMessages.send, payload: key});
-            return this.pendingLocRequests[key].promise;
-        }
+    if (loadedCollection && loadedCollection.hasOwnProperty(key)) {
+        return loadedCollection[key];
+    }
 
-        return Promise.resolve(key);
+    return defValue;
+}
+
+function load() {
+    if (typeof getLocStrings !== undefined) {
+        loadedCollection = getLocStrings();
+    } else {
+        loadedCollection = {};
     }
 }

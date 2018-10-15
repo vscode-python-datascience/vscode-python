@@ -34,7 +34,17 @@ export function localize(key: string, defValue: string) {
     };
 }
 
-function parseLocale(): string {
+export function getCollection () {
+    // Load the current collection
+    if (!loadedCollection || parseLocale() !== loadedLocale) {
+        load();
+    }
+
+    // Combine the default and loaded collections
+    return {...defaultCollection, ...loadedCollection};
+}
+
+function parseLocale() : string {
     // Attempt to load from the vscode locale. If not there, use english
     const vscodeConfigString = process.env.VSCODE_NLS_CONFIG;
     return vscodeConfigString ? JSON.parse(vscodeConfigString).locale : 'en-us';

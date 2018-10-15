@@ -9,14 +9,14 @@ import * as React from 'react';
 // tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
 
-import { ILocalizableProps } from '../react-common/locReactSide';
+import { getLocString } from '../react-common/locReactSide';
 import { RelativeImage } from '../react-common/relativeImage';
 import { ICell } from '../types';
 import './cell.css';
 import { CellButton } from './cellButton';
 import { MenuBar } from './menuBar';
 
-interface ICellProps extends ILocalizableProps {
+interface ICellProps {
     cell : ICell;
     theme: string;
     gotoCode() : void;
@@ -24,40 +24,37 @@ interface ICellProps extends ILocalizableProps {
 }
 
 interface ICellState {
-    unknownMimeType : string | undefined;
     inputBlockOpen: boolean;
     inputBlockText: string;
 }
 
 export class Cell extends React.Component<ICellProps, ICellState> {
-    private static unknownMimeType : string | undefined;
+
     constructor(prop: ICellProps) {
         super(prop);
 
         // Initial state of our cell toggle
         this.state = { inputBlockOpen: true,
-                       inputBlockText: prop.cell.input,
-                       unknownMimeType : undefined };
-    }
-
-    public componentDidMount() {
-      if (!Cell.unknownMimeType) {
-          this.props.getLocalized('DataScience.unknownMimeType').then((v : string) => {
-              Cell.unknownMimeType = v;
-              this.forceUpdate();
-          }).catch((e) => { Cell.unknownMimeType = e; });
-      }
+                       inputBlockText: prop.cell.input };
     }
 
     public render() {
         const outputClassNames = `cell-output cell-output-${this.props.theme}`;
         const collapseInputClassNames = `collapse-input-svg ${this.state.inputBlockOpen ? ' collapse-input-svg-rotate' : ''} collapse-input-svg-${this.props.theme}`;
+        const clearButtonImage = this.props.theme !== 'vscode-dark' ? './images/Cancel/Cancel_16xMD_vscode.svg' :
+        './images/Cancel/Cancel_16xMD_vscode_dark.svg';
+        const gotoSourceImage = this.props.theme !== 'vscode-dark' ? './images/GoToSourceCode/GoToSourceCode_16x_vscode.svg' :
+        './images/GoToSourceCode/GoToSourceCode_16x_vscode_dark.svg';
 
         return (
             <div className='cell-wrapper'>
                 <MenuBar theme={this.props.theme}>
-                    <CellButton theme={this.props.theme} onClick={this.props.delete} tooltip='Delete'>X</CellButton>
-                    <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip='Goto Code'><RelativeImage class='cell-button-image' path='./images/gotoCode.png' /></CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.props.delete} tooltip={this.getDeleteString()}>
+                        <RelativeImage class='cell-button-image' path={clearButtonImage}/>
+                    </CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()}>
+                        <RelativeImage class='cell-button-image' path={gotoSourceImage}/>
+                    </CellButton>
                 </MenuBar>
                 <div className='cell-outer'>
                   <div className='controls-div'>
@@ -80,23 +77,18 @@ export class Cell extends React.Component<ICellProps, ICellState> {
             </div>
         );
     }
-    private toggleInputBlock = () => {
-      const newState = !this.state.inputBlockOpen;
-      let newText = '';
-      // Set our input text based on the new state
-      if (newState) {
-        newText = this.props.cell.input;
-      } else {
-        if (this.props.cell.input.length > 0) {
-          newText = this.props.cell.input.split('\n', 1)[0];
-          newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
-          newText = newText.concat('...');
-        }
-      }
-      this.setState({
-        inputBlockOpen: newState,
-        inputBlockText: newText
-      });
+
+    // Public for testing
+    public getUnknownMimeTypeString = () => {
+        return getLocString('DataScience.unknownMimeType', 'Unknown Mime Type');
+    }
+
+    private getDeleteString = () => {
+        return getLocString('DataScience.deleteButtonTooltip', 'Delete');
+    }
+
+    private getGoToCodeString = () => {
+        return getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code');
     }
 
     private renderWithTransform = (mimetype: string, cell: ICell) => {
@@ -123,9 +115,24 @@ export class Cell extends React.Component<ICellProps, ICellState> {
         return <div></div>;
     }
 
-    private getUnknownMimeTypeString = () => {
-        return this.state.unknownMimeType ? this.state.unknownMimeType : 'Unknown mime type';
-    }
+    private toggleInputBlock = () => {
+        const newState = !this.state.inputBlockOpen;
+        let newText = '';
+        // Set our input text based on the new state
+        if (newState) {
+          newText = this.props.cell.input;
+        } else {
+          if (this.props.cell.input.length > 0) {
+            newText = this.props.cell.input.split('\n', 1)[0];
+            newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
+            newText = newText.concat('...');
+          }
+        }
+        this.setState({
+          inputBlockOpen: newState,
+          inputBlockText: newText
+        });
+      }
 
     private renderOutput = () => {
         // Borrowed this from Don's Jupyter extension

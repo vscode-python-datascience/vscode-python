@@ -4,15 +4,17 @@
 'use strict';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import { PostOffice } from '../react-common/postOffice';
 import { detectTheme } from '../react-common/themeDetector';
 import './index.css';
 import { MainPanel } from './MainPanel';
 import { registerServiceWorker } from './registerServiceWorker';
 
 const theme = detectTheme();
+const skipDefault = PostOffice.canSendMessages();
 
 ReactDOM.render(
-  <MainPanel theme={theme} />,
+  <MainPanel theme={theme} skipDefault={skipDefault} />,
   document.getElementById('root') as HTMLElement
 );
 registerServiceWorker();

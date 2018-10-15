@@ -3,7 +3,8 @@
 
 'use strict';
 
-import { ComponentClass, ReactWrapper  } from 'enzyme';
+import { ComponentClass, configure, ReactWrapper  } from 'enzyme';
+import * as Adapter from 'enzyme-adapter-react-16';
 import { JSDOM } from 'jsdom';
 import * as React from 'react';
 
@@ -43,6 +44,13 @@ export function setUpDomEnvironment() {
     // tslint:disable-next-line:no-string-literal no-eval
     global['WebSocket'] = eval('require')('ws');
 
+    // For the loc test to work, we have to have a global getter for loc strings
+    // tslint:disable-next-line:no-string-literal no-eval
+    global['getLocStrings'] = () => {
+        return { 'DataScience.unknownMimeType' : 'Unknown mime type from helper' };
+    };
+
+    configure({ adapter: new Adapter() });
 }
 
 function copyProps(src, target) {
