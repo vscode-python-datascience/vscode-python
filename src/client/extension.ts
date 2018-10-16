@@ -101,7 +101,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
 
     const jupyterExtension = extensions.getExtension('donjayamanne.jupyter');
     const lintingEngine = serviceManager.get<ILintingEngine>(ILintingEngine);
-    lintingEngine.linkJupiterExtension(jupyterExtension).ignoreErrors();
+    lintingEngine.linkJupyterExtension(jupyterExtension).ignoreErrors();
 
     // Activate data science features
     const dataScience = serviceManager.get<IDataScience>(IDataScience);

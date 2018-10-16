@@ -4,9 +4,10 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CodeLens, Command, Range, TextDocument } from 'vscode';
-import { Commands, RegExpValues } from './constants';
-import { ICodeWatcher, IHistoryProvider } from './types';
+import { CodeLens, Command, Range, TextDocument, window } from 'vscode';
+import { Commands, EditorContexts, RegExpValues } from '../constants';
+import { ICodeWatcher, IHistoryProvider } from '../types';
+import { EditorContextKey } from './editorcontextkey';
 
 export interface ICell {
     range: Range;
@@ -23,9 +24,9 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     // Implmentation of getCells here based on Don's Jupyter extension work
-    // Note, there is code here for setting editor context on which files have cells or not in Don's code
     public static getCells(document: TextDocument): ICell[] {
         const cellIdentifier: RegExp = RegExpValues.PythonCellMarker;
+        const editorContext: EditorContextKey = new EditorContextKey(EditorContexts.HasCodeCells);
 
         const cells: ICell[] = [];
         for (let index = 0; index < document.lineCount; index += 1) {
@@ -54,6 +55,8 @@ export class CodeWatcher implements ICodeWatcher {
             previousCell.range = new Range(previousCell.range.start, line.range.end);
         }
 
+        // Inform the editor context that we have cells
+        editorContext.set(cells.length > 0);
         return cells;
     }
 
@@ -95,6 +98,21 @@ export class CodeWatcher implements ICodeWatcher {
         if (this.document) {
             const code = this.document.getText(range);
             await activeHistory.addCode(code, this.getFileName(), range.start.line);
+        }
+    }
+
+    public async runCurrentCell() {
+        if (!window.activeTextEditor || !window.activeTextEditor.document)
+        {
+            return;
+        }
+
+        for (const lens of this.codeLenses) {
+            // Check to see which lens range overlaps the current selection start
+            if (lens.range.contains(window.activeTextEditor.selection.start)) {
+                await this.runCell(lens.range);
+                break;
+            }
         }
     }
 }
