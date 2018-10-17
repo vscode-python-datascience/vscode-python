@@ -16,6 +16,7 @@ import { ICell } from '../types';
 import './cell.css';
 import { CellButton } from './cellButton';
 import { MenuBar } from './menuBar';
+import { strictEqual } from 'assert';
 
 interface ICellProps {
     cell: ICell;
@@ -79,12 +80,12 @@ export class Cell extends React.Component<ICellProps, ICellState> {
                             </button>
                         </div>
                     </div>
-                  </div>
-                  <div className='content-div'>
-                    <div className='cell-result-container'>
-                        <div className='cell-input'>{this.state.inputBlockText}</div>
-                        <div className={outputClassNames}>
-                            {this.renderOutputs()}
+                    <div className='content-div'>
+                        <div className='cell-result-container'>
+                            <div className='cell-input'>{this.state.inputBlockText}</div>
+                            <div className={outputClassNames}>
+                                {this.renderOutputs()}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -107,13 +108,16 @@ export class Cell extends React.Component<ICellProps, ICellState> {
 
     private concatMultilineString(str : nbformat.MultilineString) : string {
         if (Array.isArray(str)) {
-            return str.map((s : string) => {
-                if (s.endsWith('\n')) {
-                    return s;
+            let result = '';
+            for (let i=0; i<str.length; i++) {
+                const s = str[i];
+                if (i < str.length - 1 && !s.endsWith('\n')) {
+                    result = result.concat(`${s}\n`)
+                } else {
+                    result = result.concat(s);
                 }
-
-                return `${s}\n`;
-            }).join('');
+            }
+            return result;
         }
         return str.toString();
     }
