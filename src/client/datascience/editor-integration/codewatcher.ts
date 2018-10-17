@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CodeLens, Command, Range, TextDocument, window } from 'vscode';
+import * as localize from '../../common/utils/localize';
 import { Commands, EditorContexts, RegExpValues } from '../constants';
 import { ICodeWatcher, IHistoryProvider } from '../types';
 import { EditorContextKey } from './editorcontextkey';
@@ -86,7 +87,7 @@ export class CodeWatcher implements ICodeWatcher {
         cells.forEach(cell => {
             const cmd: Command = {
                 arguments: [this, cell.range],
-                title: 'Run cell',
+                title: localize.DataScience.runCellLensCommandTitle(),
                 command: Commands.RunCell
             };
             this.codeLenses.push(new CodeLens(cell.range, cmd));

@@ -19,6 +19,7 @@ export namespace DataScience {
     export const badWebPanelFormatString = localize('DataScience.badWebPanelFormatString', '<html><body><h1>{0} is not a valid file name</h1></body></html>');
     export const sessionDisposed = localize('DataScience.sessionDisposed', 'Cannot execute code, session has been disposed.');
     export const unknownMimeType = localize('DataScience.unknownMimeType', 'Unknown mime type for data');
+    export const runCellLensCommandTitle = localize('python.command.python.datascience.runcell.title', 'Run cell');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
