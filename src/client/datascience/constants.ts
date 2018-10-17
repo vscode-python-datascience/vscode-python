@@ -4,10 +4,14 @@
 'use strict';
 
 export namespace Commands {
-    export const DataScience = 'python.datascience';
     export const RunCell = 'python.datascience.runcell';
+    export const RunCurrentCell = 'python.datascience.runcurrentcell';
     export const ShowHistoryPane = 'python.datascience.showhistorypane';
     export const TestHistoryPane = 'python.datascience.testhistorypane';
+}
+
+export namespace EditorContexts {
+    export const HasCodeCells = 'python.datascience.hascodecells';
 }
 
 export namespace RegExpValues {

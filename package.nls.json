@@ -23,7 +23,7 @@
     "python.command.python.setLinter.title": "Select Linter",
     "python.command.python.enableLinting.title": "Enable Linting",
     "python.command.python.runLinting.title": "Run Linting",
-    "python.command.python.datascience.datascience.title": "Data Science Test Command",
+    "python.command.python.datascience.runcurrentcell.title": "Run Current Cell",
     "python.command.python.datascience.runcell.title": "Run Cell",
     "python.command.python.datascience.showhistorypane.title": "Show History Pane",
     "python.command.python.datascience.testhistorypane.title": "Send Dummy Data to History Pane",

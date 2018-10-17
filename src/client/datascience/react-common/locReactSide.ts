@@ -25,6 +25,7 @@ export function getLocString(key: string, defValue: string) : string {
 }
 
 function load() {
+    // tslint:disable-next-line:no-typeof-undefined
     if (typeof getLocStrings !== 'undefined') {
         loadedCollection = getLocStrings();
     } else {
