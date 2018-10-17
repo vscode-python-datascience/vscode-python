@@ -64,6 +64,6 @@ export interface ILintingEngine {
     lintOpenPythonFiles(): Promise<vscode.DiagnosticCollection>;
     lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<void>;
     // tslint:disable-next-line:no-any
-    linkJupiterExtension(jupiter: vscode.Extension<any> | undefined): Promise<void>;
+    linkJupyterExtension(jupyter: vscode.Extension<any> | undefined): Promise<void>;
     clearDiagnostics(document: vscode.TextDocument): void;
 }

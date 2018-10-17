@@ -56,6 +56,7 @@ export interface IPostOffice {
 // Wraps the vscode CodeLensProvider base class
 export const IDataScienceCodeLensProvider = Symbol('IDataScienceCodeLensProvider');
 export interface IDataScienceCodeLensProvider extends CodeLensProvider {
+    getCodeWatcher(document: TextDocument) : ICodeWatcher;
 }
 
 // Wraps the Code Watcher API
@@ -66,6 +67,7 @@ export interface ICodeWatcher {
     getCodeLenses() : CodeLens[];
     addFile(document: TextDocument);
     runCell(range: Range);
+    runCurrentCell();
 }
 
 // Basic structure for a cell from a notebook

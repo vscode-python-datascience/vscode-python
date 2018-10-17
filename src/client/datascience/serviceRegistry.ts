@@ -4,9 +4,9 @@
 'use strict';
 
 import { IServiceManager } from '../ioc/types';
-import { DataScienceCodeLensProvider } from './codelensprovider';
-import { CodeWatcher } from './codewatcher';
 import { DataScience } from './datascience';
+import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
+import { CodeWatcher } from './editor-integration/codewatcher';
 import { HistoryCommandListener } from './historycommandlistener';
 import { HistoryProvider } from './historyprovider';
 import { JupyterServerProvider } from './jupyterserverprovider';

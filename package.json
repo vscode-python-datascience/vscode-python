@@ -100,6 +100,11 @@
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
                 "when": "editorFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed"
+            },
+            {
+                "command": "python.datascience.runcurrentcell",
+                "key": "ctrl+shift+enter",
+                "when": "python.datascience.hascodecells"
             }
         ],
         "commands": [
@@ -224,6 +229,12 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.runcurrentcell",
+                "title": "%python.command.python.datascience.runcurrentcell.title%",
+                "category": "Python",
+                "when": "python.datascience.hascodecells"
+            },
+            {
                 "command": "python.datascience.showhistorypane",
                 "title": "%python.command.python.datascience.showhistorypane.title%",
                 "category": "Python"
@@ -276,6 +287,11 @@
                 {
                     "when": "resourceLangId == python",
                     "command": "python.runCurrentTestFile",
+                    "group": "Python"
+                },
+                {
+                    "when": "python.datascience.hascodecells",
+                    "command": "python.datascience.runcurrentcell",
                     "group": "Python"
                 }
             ],
