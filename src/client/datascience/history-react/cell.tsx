@@ -154,7 +154,7 @@ export class Cell extends React.Component<ICellProps, ICellState> {
         // Set our input text based on the new state
         if (!newState) {
           if (newText.length > 0) {
-            newText = newText.split('\n')[0];
+            newText = newText.split('\n', 1)[0];
             newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
             newText = newText.concat('...');
           }

@@ -56,5 +56,13 @@
     "LanguageServiceSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Python Language Server is working for you?",
     "LanguageServiceSurveyBanner.bannerLabelYes": "Yes, take survey now",
     "LanguageServiceSurveyBanner.bannerLabelNo": "No, thanks",
-    "DataScience.unknownMimeType" : "Unknown mime type for data"
+    "DataScience.unknownMimeType" : "Unknown mime type for data",
+    "DataScience.historyTitle" : "History",
+    "DataScience.badWebPanelFormatString": "<html><body><h1>{0} is not a valid file name</h1></body></html>",
+    "DataScience.sessionDisposed" : "Cannot execute code, session has been disposed.",
+	"DataScience.exportDialogTitle" : "Export to Jupyter Notebook",
+	"DataScience.exportDialogFilter" : "Jupyter Notebooks",
+	"DataScience.exportDialogComplete" : "Notebook written to {0}",
+	"DataScience.exportDialogFailed" : "Failed to export notebook. {0}",
+	"DataScience.exportOpenQuestion" : "Open in browser?"
 }

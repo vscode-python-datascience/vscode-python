@@ -30,6 +30,7 @@ export namespace DataScience {
 // can be loaded out of the nls.<locale>.json files
 let loadedCollection: { [index: string]: string } | undefined;
 let defaultCollection: { [index: string]: string } | undefined;
+const askedForCollection: { [index: string]: string } = {};
 let loadedLocale: string;
 
 export function localize(key: string, defValue: string) {
@@ -49,6 +50,10 @@ export function getCollection () {
     return {...defaultCollection, ...loadedCollection};
 }
 
+export function getAskedForCollection() {
+    return askedForCollection;
+}
+
 function parseLocale() : string {
     // Attempt to load from the vscode locale. If not there, use english
     const vscodeConfigString = process.env.VSCODE_NLS_CONFIG;
@@ -63,15 +68,18 @@ function getString(key: string, defValue: string) {
 
     // First lookup in the dictionary that matches the current locale
     if (loadedCollection && loadedCollection.hasOwnProperty(key)) {
+        askedForCollection[key] = loadedCollection[key];
         return loadedCollection[key];
     }
 
     // Fallback to the default dictionary
     if (defaultCollection && defaultCollection.hasOwnProperty(key)) {
+        askedForCollection[key] = defaultCollection[key];
         return defaultCollection[key];
     }
 
     // Not found, return the default
+    askedForCollection[key] = defValue;
     return defValue;
 }
 

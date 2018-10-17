@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
+import { min } from 'lodash';
 import * as React from 'react';
 import { HistoryMessages } from '../constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
@@ -271,12 +272,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
         return this.state.undoStack.length > 0 ;
     }
 
-    private addToUndoStack = () => {
-        if (this.state.undoStack.length < this.stackLimit) {
-            return [...this.state.undoStack, this.state.cells];
-        }
+    private pushStack = (stack : ICell[][], cells : ICell[]) => {
+        // Get the undo stack up to the maximum length
+        const slicedUndo = stack.slice(0, min([stack.length, this.stackLimit]));
 
-        return this.state.undoStack;
+        // Combine this with our set of cells
+        return [...slicedUndo, cells];
     }
 
     private gotoCellCode = (index: number) => {
@@ -293,7 +294,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
             cells: this.state.cells.filter((c : ICell, i: number) => {
                 return i !== index;
             }),
-            undoStack : this.addToUndoStack(),
+            undoStack : this.pushStack(this.state.undoStack, this.state.cells),
             skipNextScroll: true,
             busy: false
         });
@@ -303,7 +304,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
         // Update our state
         this.setState({
             cells: [],
-            undoStack : this.addToUndoStack(),
+            undoStack : this.pushStack(this.state.undoStack, this.state.cells),
             skipNextScroll: true,
             busy: false});
     }
@@ -312,7 +313,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
         // Pop one off of our redo stack and update our undo
         const cells = this.state.redoStack[this.state.redoStack.length - 1];
         const redoStack = this.state.redoStack.slice(0, this.state.redoStack.length - 1);
-        const undoStack = [...this.state.undoStack, this.state.cells];
+        const undoStack = this.pushStack(this.state.undoStack, this.state.cells);
         this.setState({
             cells: cells,
             undoStack: undoStack,
@@ -326,7 +327,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
         // Pop one off of our undo stack and update our redo
         const cells = this.state.undoStack[this.state.undoStack.length - 1];
         const undoStack = this.state.undoStack.slice(0, this.state.undoStack.length - 1);
-        const redoStack = [...this.state.redoStack, this.state.cells];
+        const redoStack = this.pushStack(this.state.redoStack, this.state.cells);
         this.setState({
             cells: cells,
             undoStack : undoStack,
@@ -364,7 +365,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
             if (cell) {
                 this.setState({
                     cells: [...this.state.cells, cell],
-                    undoStack : this.state.undoStack,
+                    undoStack : this.pushStack(this.state.undoStack, this.state.cells),
                     redoStack: this.state.redoStack,
                     skipNextScroll: false,
                     busy: false
