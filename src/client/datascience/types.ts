@@ -4,6 +4,7 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
+import { JSONObject } from '@phosphor/coreutils';
 import { CodeLens, CodeLensProvider, Event, Range, TextDocument } from 'vscode';
 import { ICommandManager } from '../common/application/types';
 
@@ -31,6 +32,9 @@ export interface IJupyterServer {
     onStatusChanged: Event<boolean>;
     getCurrentState() : Promise<ICell[]>;
     execute(code: string, file: string, line: number) : Promise<ICell>;
+    restartKernel();
+    translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
+    launchNotebook(file: string) : Promise<boolean>;
 }
 
 export const IHistoryProvider = Symbol('IHistoryProvider');
@@ -71,10 +75,7 @@ export interface ICodeWatcher {
 }
 
 // Basic structure for a cell from a notebook
-export interface ICell {
-    input: string;
-    output: nbformat.IMimeBundle;
-    executionCount: number;
+export interface ICell extends nbformat.ICodeCell {
     id: string;
     file: string;
     line: number;

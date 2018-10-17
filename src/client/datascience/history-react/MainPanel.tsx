@@ -2,163 +2,189 @@
 // Licensed under the MIT License.
 
 'use strict';
+import { min } from 'lodash';
 import * as React from 'react';
 import { HistoryMessages } from '../constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
+import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
+import { RelativeImage } from '../react-common/relativeImage';
 import { ICell } from '../types';
 import { Cell } from './cell';
+import { CellButton } from './cellButton';
+import './mainPanel.css';
+import { MenuBar } from './menuBar';
 
 export interface IState {
     cells: ICell[];
     busy: boolean;
     skipNextScroll? : boolean;
+    undoStack : ICell[][];
+    redoStack : ICell[][];
 }
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
     theme: string;
-
-    localizedStrings? : { [index: string] : string };
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IState> implements IMessageHandler {
+    private stackLimit = 10;
 
     private bottom: HTMLDivElement | undefined;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, state: IState) {
         super(props);
-        this.state = { cells: [], busy: false };
+        this.state = { cells: [], busy: false, undoStack: [], redoStack : [] };
 
         // Setup up some dummy cells for debugging when not running in vscode
         // This should show a gray rectangle in the cell.
         if (!this.props.skipDefault) {
             this.state = {
                 busy: false,
+                undoStack: [],
+                redoStack: [],
                 cells: [
                 {
-                    input: 'get_ipython().run_line_magic("matplotlib", "inline")',
-                    output: {
-                         'image/svg+xml': [
-                          '<svg height=\"110\" width=\"400\">\n',
-                          '  <rect height=\"100\" style=\"fill:#FFE0E0;\" width=\"300\"/> \n',
-                          '</svg>'
-                         ],
-                         'text/plain': [
-                          '<IPython.core.display.SVG object>'
-                         ]
+                        cell_type: 'code',
+                        execution_count: 4,
+                        metadata: {
+                         slideshow: {
+                          slide_type: '-'
+                         }
                         },
-                    executionCount: 12,
+                        outputs: [
+                         {
+                          data: {
+                           'text/html': [
+                            '<div>\n',
+                            '<style scoped>\n',
+                            '    .dataframe tbody tr th:only-of-type {\n',
+                            '        vertical-align: middle;\n',
+                            '    }\n',
+                            '\n',
+                            '    .dataframe tbody tr th {\n',
+                            '        vertical-align: top;\n',
+                            '    }\n',
+                            '\n',
+                            '    .dataframe thead th {\n',
+                            '        text-align: right;\n',
+                            '    }\n',
+                            '</style>\n',
+                            '<table border=\'1\' class=\'dataframe\'>\n',
+                            '  <thead>\n',
+                            '    <tr style=\'text-align: right;\'>\n',
+                            '      <th></th>\n',
+                            '      <th>num_preg</th>\n',
+                            '      <th>glucose_conc</th>\n',
+                            '      <th>diastolic_bp</th>\n',
+                            '      <th>thickness</th>\n',
+                            '      <th>insulin</th>\n',
+                            '      <th>bmi</th>\n',
+                            '      <th>diab_pred</th>\n',
+                            '      <th>age</th>\n',
+                            '      <th>skin</th>\n',
+                            '      <th>diabetes</th>\n',
+                            '    </tr>\n',
+                            '  </thead>\n',
+                            '  <tbody>\n',
+                            '    <tr>\n',
+                            '      <th>0</th>\n',
+                            '      <td>6</td>\n',
+                            '      <td>148</td>\n',
+                            '      <td>72</td>\n',
+                            '      <td>35</td>\n',
+                            '      <td>0</td>\n',
+                            '      <td>33.6</td>\n',
+                            '      <td>0.627</td>\n',
+                            '      <td>50</td>\n',
+                            '      <td>1.3790</td>\n',
+                            '      <td>True</td>\n',
+                            '    </tr>\n',
+                            '    <tr>\n',
+                            '      <th>1</th>\n',
+                            '      <td>1</td>\n',
+                            '      <td>85</td>\n',
+                            '      <td>66</td>\n',
+                            '      <td>29</td>\n',
+                            '      <td>0</td>\n',
+                            '      <td>26.6</td>\n',
+                            '      <td>0.351</td>\n',
+                            '      <td>31</td>\n',
+                            '      <td>1.1426</td>\n',
+                            '      <td>False</td>\n',
+                            '    </tr>\n',
+                            '    <tr>\n',
+                            '      <th>2</th>\n',
+                            '      <td>8</td>\n',
+                            '      <td>183</td>\n',
+                            '      <td>64</td>\n',
+                            '      <td>0</td>\n',
+                            '      <td>0</td>\n',
+                            '      <td>23.3</td>\n',
+                            '      <td>0.672</td>\n',
+                            '      <td>32</td>\n',
+                            '      <td>0.0000</td>\n',
+                            '      <td>True</td>\n',
+                            '    </tr>\n',
+                            '    <tr>\n',
+                            '      <th>3</th>\n',
+                            '      <td>1</td>\n',
+                            '      <td>89</td>\n',
+                            '      <td>66</td>\n',
+                            '      <td>23</td>\n',
+                            '      <td>94</td>\n',
+                            '      <td>28.1</td>\n',
+                            '      <td>0.167</td>\n',
+                            '      <td>21</td>\n',
+                            '      <td>0.9062</td>\n',
+                            '      <td>False</td>\n',
+                            '    </tr>\n',
+                            '    <tr>\n',
+                            '      <th>4</th>\n',
+                            '      <td>0</td>\n',
+                            '      <td>137</td>\n',
+                            '      <td>40</td>\n',
+                            '      <td>35</td>\n',
+                            '      <td>168</td>\n',
+                            '      <td>43.1</td>\n',
+                            '      <td>2.288</td>\n',
+                            '      <td>33</td>\n',
+                            '      <td>1.3790</td>\n',
+                            '      <td>True</td>\n',
+                            '    </tr>\n',
+                            '  </tbody>\n',
+                            '</table>\n',
+                            '</div>'
+                           ],
+                           'text/plain': [
+                            '   num_preg  glucose_conc  diastolic_bp  thickness  insulin   bmi  diab_pred  \\\n',
+                            '0         6           148            72         35        0  33.6      0.627   \n',
+                            '1         1            85            66         29        0  26.6      0.351   \n',
+                            '2         8           183            64          0        0  23.3      0.672   \n',
+                            '3         1            89            66         23       94  28.1      0.167   \n',
+                            '4         0           137            40         35      168  43.1      2.288   \n',
+                            '\n',
+                            '   age    skin  diabetes  \n',
+                            '0   50  1.3790      True  \n',
+                            '1   31  1.1426     False  \n',
+                            '2   32  0.0000      True  \n',
+                            '3   21  0.9062     False  \n',
+                            '4   33  1.3790      True  '
+                           ]
+                          },
+                          execution_count: 4,
+                          metadata: {},
+                          output_type: 'execute_result'
+                         }
+                        ],
+                        source: [
+                         'df.head(5)'
+                        ],
                     id: '1',
                     file: 'foo.py',
                     line: 1
-                },
-                {
-                    input: 'df.head()',
-                    id: '2',
-                    executionCount: 11,
-                    file: 'foo.py',
-                    line: 1,
-                    output: {
-                        'text/html': [
-                         '<div>\n',
-                         '<table border=\'1\' class=\'dataframe\'>\n',
-                         '  <thead>\n',
-                         '    <tr style=\'text-align: right;\'>\n',
-                         '      <th></th>\n',
-                         '      <th>Acceleration</th>\n',
-                         '      <th>Cylinders</th>\n',
-                         '      <th>Displacement</th>\n',
-                         '      <th>Horsepower</th>\n',
-                         '      <th>Miles_per_Gallon</th>\n',
-                         '      <th>Name</th>\n',
-                         '      <th>Origin</th>\n',
-                         '      <th>Weight_in_lbs</th>\n',
-                         '      <th>Year</th>\n',
-                         '    </tr>\n',
-                         '  </thead>\n',
-                         '  <tbody>\n',
-                         '    <tr>\n',
-                         '      <th>0</th>\n',
-                         '      <td>12.0</td>\n',
-                         '      <td>8</td>\n',
-                         '      <td>307.0</td>\n',
-                         '      <td>130.0</td>\n',
-                         '      <td>18.0</td>\n',
-                         '      <td>chevrolet chevelle malibu</td>\n',
-                         '      <td>USA</td>\n',
-                         '      <td>3504</td>\n',
-                         '      <td>1970-01-01</td>\n',
-                         '    </tr>\n',
-                         '    <tr>\n',
-                         '      <th>1</th>\n',
-                         '      <td>11.5</td>\n',
-                         '      <td>8</td>\n',
-                         '      <td>350.0</td>\n',
-                         '      <td>165.0</td>\n',
-                         '      <td>15.0</td>\n',
-                         '      <td>buick skylark 320</td>\n',
-                         '      <td>USA</td>\n',
-                         '      <td>3693</td>\n',
-                         '      <td>1970-01-01</td>\n',
-                         '    </tr>\n',
-                         '    <tr>\n',
-                         '      <th>2</th>\n',
-                         '      <td>11.0</td>\n',
-                         '      <td>8</td>\n',
-                         '      <td>318.0</td>\n',
-                         '      <td>150.0</td>\n',
-                         '      <td>18.0</td>\n',
-                         '      <td>plymouth satellite</td>\n',
-                         '      <td>USA</td>\n',
-                         '      <td>3436</td>\n',
-                         '      <td>1970-01-01</td>\n',
-                         '    </tr>\n',
-                         '    <tr>\n',
-                         '      <th>3</th>\n',
-                         '      <td>12.0</td>\n',
-                         '      <td>8</td>\n',
-                         '      <td>304.0</td>\n',
-                         '      <td>150.0</td>\n',
-                         '      <td>16.0</td>\n',
-                         '      <td>amc rebel sst</td>\n',
-                         '      <td>USA</td>\n',
-                         '      <td>3433</td>\n',
-                         '      <td>1970-01-01</td>\n',
-                         '    </tr>\n',
-                         '    <tr>\n',
-                         '      <th>4</th>\n',
-                         '      <td>10.5</td>\n',
-                         '      <td>8</td>\n',
-                         '      <td>302.0</td>\n',
-                         '      <td>140.0</td>\n',
-                         '      <td>17.0</td>\n',
-                         '      <td>ford torino</td>\n',
-                         '      <td>USA</td>\n',
-                         '      <td>3449</td>\n',
-                         '      <td>1970-01-01</td>\n',
-                         '    </tr>\n',
-                         '  </tbody>\n',
-                         '</table>\n',
-                         '</div>'
-                        ],
-                        'text/plain': [
-                         '   Acceleration  Cylinders  Displacement  Horsepower  Miles_per_Gallon  \\\n',
-                         '0          12.0          8         307.0       130.0              18.0   \n',
-                         '1          11.5          8         350.0       165.0              15.0   \n',
-                         '2          11.0          8         318.0       150.0              18.0   \n',
-                         '3          12.0          8         304.0       150.0              16.0   \n',
-                         '4          10.5          8         302.0       140.0              17.0   \n',
-                         '\n',
-                         '                        Name Origin  Weight_in_lbs        Year  \n',
-                         '0  chevrolet chevelle malibu    USA           3504  1970-01-01  \n',
-                         '1          buick skylark 320    USA           3693  1970-01-01  \n',
-                         '2         plymouth satellite    USA           3436  1970-01-01  \n',
-                         '3              amc rebel sst    USA           3433  1970-01-01  \n',
-                         '4                ford torino    USA           3449  1970-01-01  '
-                        ]
-                       }
                 }
             ]};
         }
@@ -173,9 +199,39 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
     }
 
     public render() {
+
+        const clearButtonImage = this.props.theme !== 'vscode-dark' ? './images/Cancel/Cancel_16xMD_vscode.svg' :
+        './images/Cancel/Cancel_16xMD_vscode_dark.svg';
+        const redoImage = this.props.theme !== 'vscode-dark' ? './images/Redo/Redo_16x_vscode.svg' :
+        './images/Redo/Redo_16x_vscode_dark.svg';
+        const undoImage = this.props.theme !== 'vscode-dark' ? './images/Undo/Undo_16x_vscode.svg' :
+        './images/Undo/Undo_16x_vscode_dark.svg';
+        const restartImage = this.props.theme !== 'vscode-dark' ? './images/Restart/Restart_grey_16x_vscode.svg' :
+        './images/Restart/Restart_grey_16x_vscode_dark.svg';
+        const saveAsImage = this.props.theme !== 'vscode-dark' ? './images/SaveAs/SaveAs_16x_vscode.svg' :
+        './images/SaveAs/SaveAs_16x_vscode_dark.svg';
+
         return (
             <div className='main-panel'>
                 <PostOffice messageHandlers={[this]} />
+                <MenuBar theme={this.props.theme} stylePosition='top-fixed'>
+                    <CellButton theme={this.props.theme} onClick={this.export} disabled={!this.canExport()} tooltip={getLocString('DataScience.export', 'Export as Jupyter Notebook')}>
+                        <RelativeImage class='cell-button-image' path={saveAsImage}/>
+                    </CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart iPython Kernel')}>
+                        <RelativeImage class='cell-button-image' path={restartImage}/>
+                    </CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.undo} disabled={!this.canUndo()} tooltip={getLocString('DataScience.undo', 'Undo')}>
+                        <RelativeImage class='cell-button-image' path={undoImage}/>
+                    </CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.redo} disabled={!this.canRedo()} tooltip={getLocString('DataScience.redo', 'Redo')}>
+                        <RelativeImage class='cell-button-image' path={redoImage}/>
+                    </CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.clearAll} tooltip={getLocString('DataScience.clearAll', 'Delete All')}>
+                        <RelativeImage class='cell-button-image' path={clearButtonImage}/>
+                    </CellButton>
+                </MenuBar>
+                <div className='top-spacing'/>
                 {this.renderCells()}
                 <div ref={this.updateBottom} />
             </div>
@@ -184,8 +240,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
 
     // tslint:disable-next-line:no-any
     public handleMessage = (msg: string, payload?: any) => {
-        if (msg === HistoryMessages.UpdateState) {
-            this.updateState(payload);
+        if (msg === HistoryMessages.AddCell) {
+            this.addCell(payload);
             return true;
         }
 
@@ -204,22 +260,92 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
         );
     }
 
+    private canExport = () => {
+        return this.state.cells.length > 0 ;
+    }
+
+    private canRedo = () => {
+        return this.state.redoStack.length > 0 ;
+    }
+
+    private canUndo = () => {
+        return this.state.undoStack.length > 0 ;
+    }
+
+    private pushStack = (stack : ICell[][], cells : ICell[]) => {
+        // Get the undo stack up to the maximum length
+        const slicedUndo = stack.slice(0, min([stack.length, this.stackLimit]));
+
+        // Combine this with our set of cells
+        return [...slicedUndo, cells];
+    }
+
     private gotoCellCode = (index: number) => {
+        // Find our cell
+        const cell = this.state.cells[index];
+
         // Send a message to the other side to jump to a particular cell
-        PostOffice.sendMessage({ type: HistoryMessages.GotoCodeCell, payload: { index : index }});
+        PostOffice.sendMessage({ type: HistoryMessages.GotoCodeCell, payload: { file : cell.file, line: cell.line }});
     }
 
     private deleteCell = (index: number) => {
-        // Send a message to the other side to delete a particular cell.
-        PostOffice.sendMessage({ type: HistoryMessages.DeleteCell, payload:  { index : index }});
-
-        // Do the same thing on this side
+        // Update our state
         this.setState({
             cells: this.state.cells.filter((c : ICell, i: number) => {
                 return i !== index;
             }),
+            undoStack : this.pushStack(this.state.undoStack, this.state.cells),
+            skipNextScroll: true,
+            busy: false
+        });
+    }
+
+    private clearAll = () => {
+        // Update our state
+        this.setState({
+            cells: [],
+            undoStack : this.pushStack(this.state.undoStack, this.state.cells),
             skipNextScroll: true,
             busy: false});
+    }
+
+    private redo = () => {
+        // Pop one off of our redo stack and update our undo
+        const cells = this.state.redoStack[this.state.redoStack.length - 1];
+        const redoStack = this.state.redoStack.slice(0, this.state.redoStack.length - 1);
+        const undoStack = this.pushStack(this.state.undoStack, this.state.cells);
+        this.setState({
+            cells: cells,
+            undoStack: undoStack,
+            redoStack: redoStack,
+            skipNextScroll: true,
+            busy: false
+        });
+    }
+
+    private undo = () => {
+        // Pop one off of our undo stack and update our redo
+        const cells = this.state.undoStack[this.state.undoStack.length - 1];
+        const undoStack = this.state.undoStack.slice(0, this.state.undoStack.length - 1);
+        const redoStack = this.pushStack(this.state.redoStack, this.state.cells);
+        this.setState({
+            cells: cells,
+            undoStack : undoStack,
+            redoStack : redoStack,
+            skipNextScroll : true,
+            busy: false
+        });
+
+    }
+
+    private restartKernel = () => {
+        // Send a message to the other side to restart the kernel
+        PostOffice.sendMessage({ type: HistoryMessages.RestartKernel, payload: { }});
+    }
+
+    private export = () => {
+        // Send a message to the other side to export our current list
+        PostOffice.sendMessage({ type: HistoryMessages.Export, payload: { contents: this.state.cells }});
     }
 
     private scrollToBottom = () => {
@@ -233,11 +359,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
     }
 
     // tslint:disable-next-line:no-any
-    private updateState = (payload?: any) => {
+    private addCell = (payload?: any) => {
         if (payload) {
-            const cells = payload as ICell[];
-            if (cells) {
-                this.setState({ cells: cells });
+            const cell = payload as ICell;
+            if (cell) {
+                this.setState({
+                    cells: [...this.state.cells, cell],
+                    undoStack : this.pushStack(this.state.undoStack, this.state.cells),
+                    redoStack: this.state.redoStack,
+                    skipNextScroll: false,
+                    busy: false
+                });
             }
         }
     }

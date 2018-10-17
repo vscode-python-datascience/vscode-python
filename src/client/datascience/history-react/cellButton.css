@@ -1,3 +1,8 @@
+:root {
+    --button-size: 24px;
+}
+
+
 .cell-button {
     border-width: 1px;
     border-style: solid;
@@ -5,10 +10,15 @@
     text-align: center;
     line-height: 16px;
     overflow: hidden;
-    width: 16px;
-    height: 16px;
+    width: var(--button-size);
+    height: var(--button-size);
     margin-left: 2px;
     padding: 1px;
+    background-color: transparent;
+}
+
+.cell-button-inner-disabled-filter {
+    opacity: 0.5;
 }
 
 .cell-button-child {
@@ -30,11 +40,34 @@
     color: white;
 }
 
+.cell-button-vscode-light:disabled:hover {
+    background-color:transparent;
+}
+
+.cell-button-vscode-light:disabled {
+    border-color: gray;
+    filter: grayscale(100%);
+}
+
 .cell-button-vscode-dark {
     border-color: white;
+}
+
+.cell-button-vscode-dark:disabled {
+    border-color: transparent;
 }
 
 .cell-button-vscode-dark:hover {
     background-color:white;
     color: black;
 }
+
+.cell-button-vscode-dark:disabled:hover {
+    background-color:transparent;
+}
+
+.cell-button-vscode-dark:disabled {
+    border-color: gray;
+    filter: grayscale(100%);
+}
+

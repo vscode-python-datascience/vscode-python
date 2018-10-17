@@ -5,10 +5,10 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Gulp compile-webviews-watch",
+            "name": "Gulp precommit",
             "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
             "args": [
-                "compile-webviews-watch"
+                "precommit"
             ]
         },
         {
@@ -146,7 +146,7 @@
             "sourceMaps": true,
             "args": [
                 "timeout=300000",
-                "grep="
+                "grep=keys.*exist"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

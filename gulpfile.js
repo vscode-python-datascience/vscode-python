@@ -86,6 +86,8 @@ const copyrightHeader = [
 ];
 const copyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n')];
 
+gulp.task('precommit', () => run({ exitOnError: true, mode: 'staged' }));
+
 gulp.task('hygiene', () => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }));
 
 gulp.task('compile', () => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }));
@@ -448,12 +450,12 @@ const hygiene = (options) => {
         function customReporter() {
             return {
                 error: function (error, typescript) {
-                    console.error(`Error: ${error.message}`);
                     const fullFilename = error.fullFilename || '';
                     const relativeFilename = error.relativeFilename || '';
                     if (tsFiles.findIndex(file => fullFilename === file || relativeFilename === file) === -1) {
                         return;
                     }
+                    console.error(`Error: ${error.message}`);
                     errorCount += 1;
                 },
                 finish: function () {

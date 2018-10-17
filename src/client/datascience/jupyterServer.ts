@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import { IDisposable } from '@phosphor/disposable';
 import * as fssync from 'fs';
@@ -16,7 +17,6 @@ import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionService } from '../common/process/types';
 import { ILogger } from '../common/types';
 import * as localize from '../common/utils/localize';
-import { parseExecuteMessage } from './jupyterExecuteParser';
 import { JupyterProcess } from './jupyterProcess';
 import { ICell, IJupyterServer } from './types';
 
@@ -25,7 +25,6 @@ import { ICell, IJupyterServer } from './types';
 
 export class JupyterServer implements IJupyterServer, IDisposable {
     private static trackingTemps: boolean = false;
-    private static textPlainMimeType : string = 'text/plain';
     public isDisposed: boolean = false;
     private session: Session.ISession | undefined;
     private tempFile: temp.OpenFile | undefined;
@@ -71,10 +70,9 @@ export class JupyterServer implements IJupyterServer, IDisposable {
             this.session = await Session.startNew(options);
 
             // Setup the default imports (this should be configurable in the future)
-            this.execute(
-                'import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt',
-                'foo.py',
-                -1).ignoreErrors();
+            this.executeSilently(
+                'import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt'
+                ).ignoreErrors();
 
             return true;
         } catch (err) {
@@ -116,6 +114,28 @@ export class JupyterServer implements IJupyterServer, IDisposable {
         return Promise.reject(localize.DataScience.sessionDisposed);
     }
 
+    public async executeSilently(code: string) : Promise<void> {
+        // If we have a session, execute the code now.
+        if (this.session) {
+                const request = this.session.kernel.requestExecute(
+                    {
+                        // Replace windows line endings with unix line endings.
+                        code : code.replace('\r\n', '\n'),
+                        stop_on_error: false,
+                        allow_stdin: false,
+                        silent: true
+                    },
+                    true
+                );
+
+                await this.awaitExecuteResponse(code, '0', 'file', 0, request);
+
+                return;
+        }
+
+        return Promise.reject(localize.DataScience.sessionDisposed);
+    }
+
     public get onStatusChanged() : vscode.Event<boolean> {
         return this.onStatusChangedEvent.event.bind(this.onStatusChangedEvent);
     }
@@ -134,26 +154,84 @@ export class JupyterServer implements IJupyterServer, IDisposable {
         }
     }
 
+    public restartKernel = () => {
+        if (this.session && this.session.kernel) {
+            this.session.kernel.restart().ignoreErrors();
+        }
+    }
+
+    public async translateToNotebook (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> {
+
+        if (this.process) {
+
+            // First we need the python version we're running
+            const pythonVersion = await this.process.getPythonVersionString();
+
+            // Pull off the first number. Should be  3 or a 2
+            const first = pythonVersion.substr(0, 1);
+
+            // Use this to build our metadata object
+            const metadata : nbformat.INotebookMetadata = {
+                kernelspec: {
+                    display_name: `Python ${first}`,
+                    language: 'python',
+                    name: `python${first}`
+                },
+                language_info: {
+                    name: 'python',
+                    codemirror_mode: {
+                        name: 'ipython',
+                        version: parseInt(first, 10)
+                    }
+                },
+                orig_nbformat : 2,
+                file_extension: '.py',
+                mimetype: 'text/x-python',
+                name: 'python',
+                npconvert_exporter: 'python',
+                pygments_lexer: `ipython${first}`,
+                version: pythonVersion
+            };
+
+            // Combine this into a JSON object
+            return {
+                cells: cells.map((cell : ICell) => this.pruneCell(cell)),
+                nbformat: 4,
+                nbformat_minor: 2,
+                metadata: metadata
+            };
+        }
+    }
+
+    public async launchNotebook(file: string) : Promise<boolean> {
+        if (this.process) {
+            await this.process.spawn(file);
+            return true;
+        }
+        return false;
+    }
+
+    private pruneCell(cell : ICell) : nbformat.ICodeCell {
+        const { file, id, line, ...pruned} = cell;
+        return pruned;
+    }
+
     private async makeId(file: string, line: number) {
         let hash = await this.fileSystem.getFileHash(file);
         hash += line.toString();
         return hash;
     }
 
-    // private async readNotebook(notebookFile: string) : Promise<ICell[]> {
-    //     const manager = new ContentsManager();
-    //     const contents = await manager.get(notebookFile, { type: 'notebook' });
-    //     return [];
-    // }
-
     private async awaitExecuteResponse(code: string, id: string, file: string, line: number, request: Kernel.IFuture) : Promise<ICell> {
 
         // Start out empty;
         const cell: ICell = {
-            input: code,
-            output: {},
+            source: code.split('\n'),
+            cell_type: 'code',
+            outputs: [],
+            metadata : {},
             id: id,
-            executionCount: 0,
+            execution_count: 0,
             file: file,
             line: line
         };
@@ -178,7 +256,7 @@ export class JupyterServer implements IJupyterServer, IDisposable {
 
             // Set execution count, all messages should have it
             if (msg.content.execution_count) {
-                cell.executionCount = msg.content.execution_count as number;
+                cell.execution_count = msg.content.execution_count as number;
             }
         };
 
@@ -190,11 +268,11 @@ export class JupyterServer implements IJupyterServer, IDisposable {
     }
 
     private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, cell: ICell) {
-        parseExecuteMessage(msg, cell);
+        cell.outputs = [...cell.outputs, { output_type : 'execute_result', data: msg.content.data, metadata : msg.content.metadata, execution_count : msg.content.execution_count }];
     }
 
     private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, cell: ICell) {
-        cell.input = msg.content.code;
+        cell.execution_count = msg.content.execution_count;
     }
 
     private handleStatusMessage(msg: KernelMessage.IStatusMsg) {
@@ -205,26 +283,32 @@ export class JupyterServer implements IJupyterServer, IDisposable {
         }
     }
 
-    private handleTextPlain(text: string, cell: ICell) {
-        if (cell.output.hasOwnProperty(JupyterServer.textPlainMimeType)) {
-            cell.output[JupyterServer.textPlainMimeType] = `${cell.output[JupyterServer.textPlainMimeType].toString()}\n${text}`;
-        } else {
-            cell.output[JupyterServer.textPlainMimeType] = text;
-        }
-    }
-
     private handleStreamMesssage(msg: KernelMessage.IStreamMsg, cell: ICell) {
-        // Stream/concat the text together
-        this.handleTextPlain((msg.content.text), cell);
+        const output : nbformat.IStream = {
+            output_type : 'stream',
+            name : msg.content.name,
+            text : msg.content.text
+        };
+        cell.outputs = [...cell.outputs, output];
     }
 
     private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, cell: ICell) {
-        cell.output = msg.content.data;
+        const output : nbformat.IDisplayData = {
+            output_type : 'display_data',
+            data: msg.content.data,
+            metadata : msg.content.metadata
+        };
+        cell.outputs = [...cell.outputs, output];
     }
 
     private handleError(msg: KernelMessage.IErrorMsg, cell: ICell) {
-        // Stream/concat the text together
-        this.handleTextPlain((msg.content.evalue), cell);
+        const output : nbformat.IError = {
+            output_type : 'error',
+            ename : msg.content.ename,
+            evalue : msg.content.evalue,
+            traceback : msg.content.traceback
+        };
+        cell.outputs = [...cell.outputs, output];
     }
 
     private async generateTempFile(notebookFile?: string) : Promise<temp.OpenFile> {

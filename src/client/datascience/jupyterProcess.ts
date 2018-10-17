@@ -6,7 +6,7 @@
 import { IDisposable } from '@phosphor/disposable';
 import * as tk from 'tree-kill';
 import { URL } from 'url';
-import { IPythonExecutionService, ObservableExecutionResult, Output } from '../common/process/types';
+import { ExecutionResult, IPythonExecutionService, ObservableExecutionResult, Output } from '../common/process/types';
 import { ILogger } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 
@@ -60,6 +60,20 @@ export class JupyterProcess implements IDisposable {
                 this.output(output.out);
             }
         });
+    }
+
+    public spawn(notebookFile: string) : Promise<ExecutionResult<string>> {
+
+        // Compute args for the file
+        const args: string [] = ['notebook', `--NotebookApp.file_to_run=${notebookFile}`];
+
+        // Use the IPythonExecutionService to find Jupyter
+        return this.pythonService.execModule('jupyter', args, {throwOnStdErr: true, encoding: 'utf8'});
+    }
+
+    public async getPythonVersionString() : Promise<string> {
+        const info = await this.pythonService.getInterpreterInformation();
+        return info ? info.version : '3';
     }
 
     // Returns the information necessary to talk to this instance

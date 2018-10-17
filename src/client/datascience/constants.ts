@@ -19,7 +19,9 @@ export namespace RegExpValues {
 }
 
 export namespace HistoryMessages {
-    export const UpdateState = 'update_state';
-    export const DeleteCell = 'delete_cell';
+    export const AddCell = 'add_cell';
     export const GotoCodeCell = 'gotocell_code';
+
+    export const RestartKernel = 'restart_kernel';
+    export const Export = 'export_to_ipynb';
 }

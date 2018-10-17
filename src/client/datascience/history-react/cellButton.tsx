@@ -8,24 +8,28 @@ import './cellButton.css';
 interface ICellButtonProps {
     theme: string;
     tooltip : string;
+    disabled?: boolean;
     onClick() : void;
 }
 
 export class CellButton extends React.Component<ICellButtonProps> {
     constructor(props) {
         super(props);
-        this.state = { hover: false };
     }
 
     public render() {
         const classNames = `cell-button cell-button-${this.props.theme}`;
+        const innerFilter = this.props.disabled ? 'cell-button-inner-disabled-filter' : '';
 
         return (
-            <div role='button' aria-pressed='false' title={this.props.tooltip} className={classNames} onClick={this.props.onClick}>
-                <div className='cell-button-child'>
-                    {this.props.children}
-                </div>
-            </div>);
+                <button role='button' aria-pressed='false' disabled={this.props.disabled} title={this.props.tooltip} className={classNames} onClick={this.props.onClick}>
+                    <div className={innerFilter} >
+                        <div className='cell-button-child'>
+                            {this.props.children}
+                        </div>
+                    </div>
+                </button>
+            );
     }
 
 }

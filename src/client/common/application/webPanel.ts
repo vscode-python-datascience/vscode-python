@@ -85,7 +85,7 @@ export class WebPanel implements IWebPanel {
         const uriPath = Uri.file(mainScriptPath);
         const uriBase = uriBasePath.with({ scheme: 'vscode-resource'});
         const uri = uriPath.with({ scheme: 'vscode-resource' });
-        const locDatabase = localize.getCollection();
+        const locDatabase = JSON.stringify(localize.getCollection());
 
         return `<!doctype html>
         <html lang="en">

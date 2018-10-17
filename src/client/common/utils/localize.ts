@@ -19,6 +19,11 @@ export namespace DataScience {
     export const badWebPanelFormatString = localize('DataScience.badWebPanelFormatString', '<html><body><h1>{0} is not a valid file name</h1></body></html>');
     export const sessionDisposed = localize('DataScience.sessionDisposed', 'Cannot execute code, session has been disposed.');
     export const unknownMimeType = localize('DataScience.unknownMimeType', 'Unknown mime type for data');
+    export const exportDialogTitle = localize('DataScience.exportDialogTitle', 'Export to Jupyter Notebook');
+    export const exportDialogFilter = localize('DataScience.exportDialogFilter', 'Jupyter Notebooks');
+    export const exportDialogComplete = localize('DataScience.exportDialogComplete', 'Notebook written to {0}');
+    export const exportDialogFailed = localize('DataScience.exportDialogFailed', 'Failed to export notebook. {0}');
+    export const exportOpenQuestion = localize('DataScience.exportOpenQuestion', 'Open in browser?');
     export const runCellLensCommandTitle = localize('python.command.python.datascience.runcell.title', 'Run cell');
 }
 
@@ -26,6 +31,7 @@ export namespace DataScience {
 // can be loaded out of the nls.<locale>.json files
 let loadedCollection: { [index: string]: string } | undefined;
 let defaultCollection: { [index: string]: string } | undefined;
+const askedForCollection: { [index: string]: string } = {};
 let loadedLocale: string;
 
 export function localize(key: string, defValue: string) {
@@ -45,6 +51,10 @@ export function getCollection () {
     return {...defaultCollection, ...loadedCollection};
 }
 
+export function getAskedForCollection() {
+    return askedForCollection;
+}
+
 function parseLocale() : string {
     // Attempt to load from the vscode locale. If not there, use english
     const vscodeConfigString = process.env.VSCODE_NLS_CONFIG;
@@ -59,15 +69,18 @@ function getString(key: string, defValue: string) {
 
     // First lookup in the dictionary that matches the current locale
     if (loadedCollection && loadedCollection.hasOwnProperty(key)) {
+        askedForCollection[key] = loadedCollection[key];
         return loadedCollection[key];
     }
 
     // Fallback to the default dictionary
     if (defaultCollection && defaultCollection.hasOwnProperty(key)) {
+        askedForCollection[key] = defaultCollection[key];
         return defaultCollection[key];
     }
 
     // Not found, return the default
+    askedForCollection[key] = defValue;
     return defValue;
 }
 
