@@ -34,7 +34,7 @@ import { IFileSystem, IPlatformService } from '../../client/common/platform/type
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { IDisposableRegistry, ILogger } from '../../client/common/types';
 import { Cell } from '../../client/datascience/history-react/Cell';
-import { MainPanel } from '../../client/datascience/history-react/MainPanel';
+import { MainPanel } from '../../client/datascience/history-react/mainPanel';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
 import { JupyterServerProvider } from '../../client/datascience/jupyterServerProvider';
 import { IVsCodeApi } from '../../client/datascience/react-common/postOffice';
@@ -158,4 +158,8 @@ suite('History output tests', () => {
         assert.equal(cell.getUnknownMimeTypeString(), 'Unknown mime type from helper', 'Unknown mime type did not come from script');
     });
 
+    // Tests to do:
+    // 1) Cell output works on different mime types. Could just use a notebook to drive
+    // 2) History commands work (export/restart/clear all)
+    // 3) Jupyter server commands work (open notebook)
 });

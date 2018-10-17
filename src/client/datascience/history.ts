@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 'use strict';
+import * as fs from 'fs-extra';
 import * as path from 'path';
-import { Range, TextEditor, Uri, ViewColumn } from 'vscode';
-import { IDocumentManager, IWebPanel, IWebPanelMessageListener, IWebPanelProvider } from '../common/application/types';
+import { Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
+import { IApplicationShell, IDocumentManager, IWebPanel, IWebPanelMessageListener, IWebPanelProvider  } from '../common/application/types';
 import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
 import { HistoryMessages } from './constants';
@@ -16,15 +17,16 @@ export class History implements IWebPanelMessageListener {
     // tslint:disable-next-line: no-unused-variable
     private jupyterServer: IJupyterServer | undefined;
     private loadPromise: Promise<void>;
-    private cells: ICell[] = [];
     private documentManager : IDocumentManager;
+    private applicationShell : IApplicationShell;
 
     constructor(serviceContainer: IServiceContainer) {
         // Load on a background thread.
         this.loadPromise = this.load(serviceContainer);
 
-        // Save our document manager
+        // Save our services
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
+        this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
     }
 
     public static getOrCreateActive(serviceContainer: IServiceContainer) {
@@ -56,12 +58,9 @@ export class History implements IWebPanelMessageListener {
             // First attempt to evaluate this cell in the jupyter notebook
             const newCell = await this.jupyterServer.execute(code, file, line);
 
-            // Save the new cell in our current state
-            this.cells.push(newCell);
-
             // Send our new state to our panel
             if (this.webPanel) {
-                this.webPanel.postMessage({type: HistoryMessages.UpdateState, payload: this.cells});
+                this.webPanel.postMessage({type: HistoryMessages.AddCell, payload: newCell});
             }
         }
     }
@@ -70,11 +69,15 @@ export class History implements IWebPanelMessageListener {
     public onMessage = (message: string, payload: any) => {
         switch (message) {
             case HistoryMessages.GotoCodeCell:
-                this.gotoCode(payload.index);
+                this.gotoCode(payload.file, payload.line);
                 break;
 
-            case HistoryMessages.DeleteCell:
-                this.deleteCell(payload.index);
+            case HistoryMessages.RestartKernel:
+                this.restartKernel();
+                break;
+
+            case HistoryMessages.Export:
+                this.export(payload);
                 break;
 
             default:
@@ -86,20 +89,62 @@ export class History implements IWebPanelMessageListener {
     public onDisposed() {
     }
 
-    private gotoCode = (index: number) => {
-        if (index >= 0 && index <= this.cells.length) {
-            const cell = this.cells[index];
-            this.documentManager.showTextDocument(Uri.file(cell.file), { viewColumn: ViewColumn.One }).then((editor : TextEditor) => {
-                editor.revealRange(new Range(cell.line, 0, cell.line, 0));
-            });
+    private gotoCode = (file: string, line: number) => {
+        this.documentManager.showTextDocument(Uri.file(file), { viewColumn: ViewColumn.One }).then((editor: TextEditor) => {
+            editor.revealRange(new Range(line, 0, line, 0));
+            editor.selection = new Selection(new Position(line, 0), new Position(line, 0));
+        });
+    }
+
+    private restartKernel = () => {
+        if (this.jupyterServer) {
+            this.jupyterServer.restartKernel();
         }
     }
 
-    private deleteCell = (index: number) => {
-        if (index >= 0 && index <= this.cells.length) {
-            this.cells = this.cells.filter((c : ICell, i: number) => {
-                return i !== index;
-            });
+    // tslint:disable-next-line: no-any no-empty
+    private export = (payload: any) => {
+        if (payload.contents) {
+            // Should be an array of cells
+            const cells = payload.contents as ICell[];
+            if (cells && this.applicationShell) {
+
+                const filtersKey = localize.DataScience.exportDialogFilter();
+                const filtersObject = {};
+                filtersObject[filtersKey] = ['ipynb'];
+
+                // Bring up the open file dialog box
+                this.applicationShell.showSaveDialog(
+                    {
+                        saveLabel: localize.DataScience.exportDialogTitle(),
+                        filters: filtersObject
+                    }).then(async (uri: Uri | undefined) => {
+                        if (uri) {
+                            await this.exportToFile(cells, uri.fsPath);
+                        }
+                    });
+            }
+        }
+    }
+
+    private exportToFile = async (cells: ICell[], file : string) => {
+        // Take the list of cells, convert them to a notebook json format and write to disk
+        if (this.jupyterServer) {
+            const notebook = await this.jupyterServer.translateToNotebook(cells);
+
+            try {
+                // tslint:disable-next-line: no-any
+                await fs.writeFile(file, JSON.stringify(notebook, (k: string, v: any) => v, '\n'), {encoding: 'utf8', flag: 'w'});
+                this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), localize.DataScience.exportOpenQuestion()).then((str : string | undefined) => {
+                    if (str && file && this.jupyterServer) {
+                        // If the user wants to, open the notebook they just generated.
+                        this.jupyterServer.launchNotebook(file).ignoreErrors();
+                    }
+                });
+            } catch (exc) {
+                this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
+            }
+
         }
     }
 

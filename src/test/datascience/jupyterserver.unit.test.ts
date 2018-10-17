@@ -66,9 +66,15 @@ suite('Jupyter server tests', () => {
                 statusCount += 1;
             });
             const cell = await server.execute('a = 1\r\na', 'foo.py', 2);
-            assert.ok(cell.output.hasOwnProperty('text/plain'), 'Cell mime type not correct');
-            assert.equal(cell.output['text/plain'], '1', 'Cell not correct');
-            assert.ok(statusCount >= 2, 'Status wasnt updated');
+            assert.equal(cell.outputs.length, 1, 'Cell length not correct');
+            const data = cell.outputs[0].data;
+            assert.ok(data, 'No data object on the cell');
+            if (data) { // For linter
+                assert.ok(data.hasOwnProperty('text/plain'), 'Cell mime type not correct');
+                assert.ok(data['text/plain'], 'Cell mime type not correct');
+                assert.equal(data['text/plain'], '1', 'Cell not correct');
+                assert.ok(statusCount >= 2, 'Status wasnt updated');
+            }
         } else {
             // tslint:disable-next-line:no-console
             console.log('Execution test skipped, no Jupyter installed');

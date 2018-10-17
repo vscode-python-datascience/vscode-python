@@ -5,16 +5,25 @@
 import * as React from 'react';
 import './menuBar.css';
 
+interface IMenuBarProps {
+    theme: string;
+    stylePosition? : string;
+}
+
 // Simple 'bar'. Came up with the css by playing around here:
 // https://www.w3schools.com/cssref/tryit.asp?filename=trycss_float
-export class MenuBar extends React.Component<{theme: string}> {
+export class MenuBar extends React.Component<IMenuBarProps> {
     constructor(props) {
         super(props);
     }
 
     public render() {
+        const classNames = this.props.stylePosition ?
+            `menuBar-${this.props.stylePosition} menuBar-${this.props.stylePosition}-${this.props.theme}`
+            : 'menuBar';
+
         return (
-            <div className={'menuBar'}>
+            <div className={classNames}>
                 {this.props.children}
             </div>
         );

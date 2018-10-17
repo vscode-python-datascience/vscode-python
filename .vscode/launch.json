@@ -5,10 +5,10 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Gulp compile-webviews-watch",
+            "name": "Gulp precommit",
             "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
             "args": [
-                "compile-webviews-watch"
+                "precommit"
             ]
         },
         {

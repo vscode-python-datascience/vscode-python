@@ -19,6 +19,11 @@ export namespace DataScience {
     export const badWebPanelFormatString = localize('DataScience.badWebPanelFormatString', '<html><body><h1>{0} is not a valid file name</h1></body></html>');
     export const sessionDisposed = localize('DataScience.sessionDisposed', 'Cannot execute code, session has been disposed.');
     export const unknownMimeType = localize('DataScience.unknownMimeType', 'Unknown mime type for data');
+    export const exportDialogTitle = localize('DataScience.exportDialogTitle', 'Export to Jupyter Notebook');
+    export const exportDialogFilter = localize('DataScience.exportDialogFilter', 'Jupyter Notebooks');
+    export const exportDialogComplete = localize('DataScience.exportDialogComplete', 'Notebook written to {0}');
+    export const exportDialogFailed = localize('DataScience.exportDialogFailed', 'Failed to export notebook. {0}');
+    export const exportOpenQuestion = localize('DataScience.exportOpenQuestion', 'Open in browser?');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
