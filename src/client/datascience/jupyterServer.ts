@@ -239,7 +239,7 @@ export class JupyterServer implements IJupyterServer, IDisposable {
     }
 
     private pruneCell(cell : ICell) : nbformat.ICodeCell {
-        const { file, id, line, ...pruned} = cell;
+        const { file, id, line, state, ...pruned} = cell;
         return pruned;
     }
 
