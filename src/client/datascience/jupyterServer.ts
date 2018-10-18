@@ -9,16 +9,18 @@ import { IDisposable } from '@phosphor/disposable';
 import * as fssync from 'fs';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { Observable } from 'rxjs/Observable';
 import * as temp from 'temp';
 import * as tp from 'typed-promisify';
+import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 import '../common/extensions';
-import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionService } from '../common/process/types';
 import { ILogger } from '../common/types';
+import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { JupyterProcess } from './jupyterProcess';
-import { ICell, IJupyterServer } from './types';
+import { CellState, ICell, IJupyterServer } from './types';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -28,13 +30,11 @@ export class JupyterServer implements IJupyterServer, IDisposable {
     public isDisposed: boolean = false;
     private session: Session.ISession | undefined;
     private tempFile: temp.OpenFile | undefined;
-    private fileSystem: IFileSystem;
     private process: JupyterProcess;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
     private logger: ILogger;
 
-    constructor(fileSystem: IFileSystem, logger: ILogger, pythonService: IPythonExecutionService) {
-        this.fileSystem = fileSystem;
+    constructor(logger: ILogger, pythonService: IPythonExecutionService) {
         this.logger = logger;
         this.process = new JupyterProcess(pythonService);
     }
@@ -91,10 +91,33 @@ export class JupyterServer implements IJupyterServer, IDisposable {
         return Promise.resolve([]);
     }
 
-    public async execute(code: string, file: string, line: number) : Promise<ICell> {
+    public execute(code : string, file: string, line: number) : Promise<ICell> {
+        // Create a deferred that we'll fire when we're done
+        const deferred = createDeferred<ICell>();
+
+        // Attempt to evaluate this cell in the jupyter notebook
+        const observable = this.executeObservable(code, file, line);
+        let output: ICell;
+
+        observable.subscribe(
+            (cell: ICell) => {
+                output = cell;
+            },
+            (error) => {
+                deferred.resolve(output);
+            },
+            () => {
+                deferred.resolve(output);
+            });
+
+        // Wait for the execution to finish
+        return deferred.promise;
+    }
+
+    public executeObservable(code: string, file: string, line: number) : Observable<ICell> {
         // If we have a session, execute the code now.
         if (this.session) {
-            const id = await this.makeId(file, line);
+            const id = uuid();
 
             if (id) {
                 const request = this.session.kernel.requestExecute(
@@ -107,11 +130,15 @@ export class JupyterServer implements IJupyterServer, IDisposable {
                     true
                 );
 
-                return this.awaitExecuteResponse(code, id, file, line, request);
+                return this.generateExecuteObservable(code, file, line, id, request);
             }
         }
 
-        return Promise.reject(localize.DataScience.sessionDisposed);
+        // Can't run because no session
+        return new Observable<ICell>(subscriber => {
+            subscriber.error(localize.DataScience.sessionDisposed());
+            subscriber.complete();
+        });
     }
 
     public async executeSilently(code: string) : Promise<void> {
@@ -128,7 +155,7 @@ export class JupyterServer implements IJupyterServer, IDisposable {
                     true
                 );
 
-                await this.awaitExecuteResponse(code, '0', 'file', 0, request);
+                await this.generateExecuteObservable(code, 'file', 0, '0', request).toPromise();
 
                 return;
         }
@@ -216,55 +243,67 @@ export class JupyterServer implements IJupyterServer, IDisposable {
         return pruned;
     }
 
-    private async makeId(file: string, line: number) {
-        let hash = await this.fileSystem.getFileHash(file);
-        hash += line.toString();
-        return hash;
-    }
+    private generateExecuteObservable(code: string, file: string, line: number, id: string, request: Kernel.IFuture) : Observable<ICell> {
+        return new Observable<ICell>(subscriber => {
+            // Start out empty;
+            const cell: ICell = {
+                source: code.split('\n'),
+                cell_type: 'code',
+                outputs: [],
+                metadata: {},
+                id: id,
+                execution_count: 0,
+                file: file,
+                line: line,
+                state: CellState.init
+            };
 
-    private async awaitExecuteResponse(code: string, id: string, file: string, line: number, request: Kernel.IFuture) : Promise<ICell> {
+            // Tell our listener.
+            subscriber.next(cell);
 
-        // Start out empty;
-        const cell: ICell = {
-            source: code.split('\n'),
-            cell_type: 'code',
-            outputs: [],
-            metadata : {},
-            id: id,
-            execution_count: 0,
-            file: file,
-            line: line
-        };
+            // Transition to the busy stage
+            cell.state = CellState.executing;
+            subscriber.next(cell);
 
-        // Listen to the reponse messages
-        request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
-            if (KernelMessage.isExecuteResultMsg(msg)) {
-                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
-            } else if (KernelMessage.isExecuteInputMsg(msg)) {
-                this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
-            } else if (KernelMessage.isStatusMsg(msg)) {
-                this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
-            } else if (KernelMessage.isStreamMsg(msg)) {
-                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
-            } else if (KernelMessage.isDisplayDataMsg(msg)) {
-                this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
-            } else if (KernelMessage.isErrorMsg(msg)) {
-                this.handleError(msg as KernelMessage.IErrorMsg, cell);
-            } else {
-                this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
-            }
+            // Listen to the reponse messages and update state as we go
+            request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+                if (KernelMessage.isExecuteResultMsg(msg)) {
+                    this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
+                } else if (KernelMessage.isExecuteInputMsg(msg)) {
+                    this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
+                } else if (KernelMessage.isStatusMsg(msg)) {
+                    this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
+                } else if (KernelMessage.isStreamMsg(msg)) {
+                    this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
+                } else if (KernelMessage.isDisplayDataMsg(msg)) {
+                    this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
+                } else if (KernelMessage.isErrorMsg(msg)) {
+                    this.handleError(msg as KernelMessage.IErrorMsg, cell);
+                } else {
+                    this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+                }
 
-            // Set execution count, all messages should have it
-            if (msg.content.execution_count) {
-                cell.execution_count = msg.content.execution_count as number;
-            }
-        };
+                // Set execution count, all messages should have it
+                if (msg.content.execution_count) {
+                    cell.execution_count = msg.content.execution_count as number;
+                }
+            };
 
-        // Wait for the request to finish
-        await request.done;
+            // Create completion and error functions so we can bind our cell object
+            const completion = () => {
+                cell.state = CellState.finished;
+                subscriber.next(cell);
+                subscriber.complete();
+            };
+            const error = () => {
+                cell.state = CellState.error;
+                subscriber.next(cell);
+                subscriber.complete();
+            };
 
-        // Cell should be filled in now.
-        return cell;
+            // When the request finishes we are done
+            request.done.then(completion, error);
+        });
     }
 
     private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, cell: ICell) {

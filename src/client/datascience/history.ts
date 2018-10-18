@@ -6,10 +6,11 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { IApplicationShell, IDocumentManager, IWebPanel, IWebPanelMessageListener, IWebPanelProvider  } from '../common/application/types';
+import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
 import { HistoryMessages } from './constants';
-import { ICell, IJupyterServer, IJupyterServerProvider  } from './types';
+import { CellState, ICell, IJupyterServer, IJupyterServerProvider } from './types';
 
 export class History implements IWebPanelMessageListener {
     private static activeHistory: History;
@@ -55,13 +56,43 @@ export class History implements IWebPanelMessageListener {
         await this.loadPromise;
 
         if (this.jupyterServer) {
-            // First attempt to evaluate this cell in the jupyter notebook
-            const newCell = await this.jupyterServer.execute(code, file, line);
+            // Create a deferred that we'll fire when we're done
+            const deferred = createDeferred();
 
-            // Send our new state to our panel
-            if (this.webPanel) {
-                this.webPanel.postMessage({type: HistoryMessages.AddCell, payload: newCell});
-            }
+            // Attempt to evaluate this cell in the jupyter notebook
+            const observable = this.jupyterServer.executeObservable(code, file, line);
+
+            // Sign up for cell changes
+            observable.subscribe(
+                (cell: ICell) => {
+                    if (this.webPanel) {
+                        switch (cell.state) {
+                            case CellState.init:
+                                // Tell the react controls we have a new cell
+                                this.webPanel.postMessage({ type: HistoryMessages.StartCell, payload: cell });
+                                break;
+
+                            case CellState.error:
+                            case CellState.finished:
+                                // Tell the react controls we're done
+                                this.webPanel.postMessage({ type: HistoryMessages.FinishCell, payload: cell });
+                                break;
+
+                            default:
+                                break; // might want to do a progress bar or something
+                        }
+                    }
+                },
+                (error) => {
+                    this.applicationShell.showErrorMessage(error);
+                    deferred.resolve();
+                },
+                () => {
+                    deferred.resolve();
+                });
+
+            // Wait for the execution to finish
+            await deferred.promise;
         }
     }
 

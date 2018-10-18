@@ -32,7 +32,7 @@ suite('Jupyter server tests', () => {
 
         // tslint:disable-next-line:no-empty
         logger.setup(l => l.logInformation(TypeMoq.It.isAny())).returns((m) => {}); // console.log(m)); // REnable this to debug the server
-        serverProvider = new JupyterServerProvider(disposables, logger.object, fileSystem.object, factory.object);
+        serverProvider = new JupyterServerProvider(disposables, logger.object, factory.object);
     });
 
     teardown(() => {

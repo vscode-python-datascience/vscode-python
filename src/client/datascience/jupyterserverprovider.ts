@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IDisposableRegistry, ILogger } from '../common/types';
 import { JupyterProcess } from './jupyterProcess';
@@ -17,14 +16,13 @@ export class JupyterServerProvider implements IJupyterServerProvider {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(ILogger) private logger: ILogger,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IPythonExecutionFactory) private pythonExecutionFactory : IPythonExecutionFactory) {
     }
 
     public async start(notebookFile? : string): Promise<IJupyterServer> {
         // Use the default python service (should match the currently selected one?)
         const pythonService = await this.pythonExecutionFactory.create({});
-        const server = new JupyterServer(this.fileSystem, this.logger, pythonService);
+        const server = new JupyterServer(this.logger, pythonService);
         this.disposableRegistry.push(server);
         await server.start(notebookFile);
         return server;
