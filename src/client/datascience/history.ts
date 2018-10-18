@@ -60,7 +60,7 @@ export class History implements IWebPanelMessageListener {
             const deferred = createDeferred();
 
             // Attempt to evaluate this cell in the jupyter notebook
-            const observable = this.jupyterServer.execute(code, file, line);
+            const observable = this.jupyterServer.executeObservable(code, file, line);
 
             // Sign up for cell changes
             observable.subscribe(

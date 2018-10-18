@@ -17,6 +17,7 @@ import * as vscode from 'vscode';
 import '../common/extensions';
 import { IPythonExecutionService } from '../common/process/types';
 import { ILogger } from '../common/types';
+import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { JupyterProcess } from './jupyterProcess';
 import { CellState, ICell, IJupyterServer } from './types';
@@ -90,7 +91,30 @@ export class JupyterServer implements IJupyterServer, IDisposable {
         return Promise.resolve([]);
     }
 
-    public execute(code: string, file: string, line: number) : Observable<ICell> {
+    public execute(code : string, file: string, line: number) : Promise<ICell> {
+        // Create a deferred that we'll fire when we're done
+        const deferred = createDeferred<ICell>();
+
+        // Attempt to evaluate this cell in the jupyter notebook
+        const observable = this.executeObservable(code, file, line);
+        let output: ICell;
+
+        observable.subscribe(
+            (cell: ICell) => {
+                output = cell;
+            },
+            (error) => {
+                deferred.resolve(output);
+            },
+            () => {
+                deferred.resolve(output);
+            });
+
+        // Wait for the execution to finish
+        return deferred.promise;
+    }
+
+    public executeObservable(code: string, file: string, line: number) : Observable<ICell> {
         // If we have a session, execute the code now.
         if (this.session) {
             const id = uuid();

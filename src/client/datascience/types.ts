@@ -32,7 +32,8 @@ export const IJupyterServer = Symbol('IJupyterServer');
 export interface IJupyterServer {
     onStatusChanged: Event<boolean>;
     getCurrentState() : Promise<ICell[]>;
-    execute(code: string, file: string, line: number) : Observable<ICell>;
+    executeObservable(code: string, file: string, line: number) : Observable<ICell>;
+    execute(code: string, file: string, line: number) : Promise<ICell>;
     restartKernel();
     translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
     launchNotebook(file: string) : Promise<boolean>;
