@@ -12,11 +12,11 @@ import JSONTree from 'react-json-tree';
 import { nbformat } from '@jupyterlab/coreutils';
 import { getLocString } from '../react-common/locReactSide';
 import { RelativeImage } from '../react-common/relativeImage';
-import { ICell } from '../types';
+import { CellState, ICell } from '../types';
 import './cell.css';
 import { CellButton } from './cellButton';
+import { ExecutionCount } from './executionCount';
 import { MenuBar } from './menuBar';
-import { strictEqual } from 'assert';
 
 interface ICellProps {
     cell: ICell;
@@ -72,12 +72,14 @@ export class Cell extends React.Component<ICellProps, ICellState> {
                 <div className='cell-outer'>
                     <div className='controls-div'>
                         <div className='controls-flex'>
-                            <div className='cell-execution-count'>{`[${this.props.cell.execution_count}]:`}</div>
-                            <button className={collapseInputClassNames} onClick={this.toggleInputBlock}>
-                                <svg version='1.1' baseProfile='full' width='8px' height='11px'>
-                                    <polygon points='0,0 0,10 5,5' className={collapseInputPolygonClassNames} fill='black' />
-                                </svg>
-                            </button>
+                            <ExecutionCount cell={this.props.cell} theme={this.props.theme} />
+                            <div className='collapse-button-container'>
+                                <button className={collapseInputClassNames} onClick={this.toggleInputBlock}>
+                                    <svg version='1.1' baseProfile='full' width='8px' height='11px'>
+                                        <polygon points='0,0 0,10 5,5' className={collapseInputPolygonClassNames} fill='black' />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div className='content-div'>
@@ -109,10 +111,10 @@ export class Cell extends React.Component<ICellProps, ICellState> {
     private concatMultilineString(str : nbformat.MultilineString) : string {
         if (Array.isArray(str)) {
             let result = '';
-            for (let i=0; i<str.length; i++) {
+            for (let i = 0; i < str.length; i += 1) {
                 const s = str[i];
                 if (i < str.length - 1 && !s.endsWith('\n')) {
-                    result = result.concat(`${s}\n`)
+                    result = result.concat(`${s}\n`);
                 } else {
                     result = result.concat(s);
                 }
@@ -127,9 +129,11 @@ export class Cell extends React.Component<ICellProps, ICellState> {
     }
 
     private renderOutputs = () => {
-        return this.props.cell.outputs.map((output : nbformat.IOutput, index : number) => {
-            return this.renderOutput(output, index);
-        });
+        if (this.props.cell && (this.props.cell.state === CellState.finished || this.props.cell.state === CellState.error)) {
+            return this.props.cell.outputs.map((output: nbformat.IOutput, index: number) => {
+                return this.renderOutput(output, index);
+            });
+        }
     }
 
     private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number) => {

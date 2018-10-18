@@ -91,7 +91,7 @@ suite('History output tests', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny())).returns(() => platformService);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IJupyterServerProvider), TypeMoq.It.isAny())).returns(() => serverProvider);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWebPanelProvider), TypeMoq.It.isAny())).returns(() => webPanelProvider.object);
-        serverProvider = new JupyterServerProvider(disposables, logger.object, fileSystem.object, factory.object);
+        serverProvider = new JupyterServerProvider(disposables, logger.object, factory.object);
         historyProvider = new HistoryProvider(serviceContainer.object);
 
         // Setup a global for the acquireVsCodeApi so that the React PostOffice can find it

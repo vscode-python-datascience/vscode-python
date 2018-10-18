@@ -57,7 +57,7 @@
     "LanguageServiceSurveyBanner.bannerLabelYes": "Yes, take survey now",
     "LanguageServiceSurveyBanner.bannerLabelNo": "No, thanks",
     "DataScience.unknownMimeType" : "Unknown mime type for data",
-    "DataScience.historyTitle" : "History",
+    "DataScience.historyTitle" : "History - (beta)",
     "DataScience.badWebPanelFormatString": "<html><body><h1>{0} is not a valid file name</h1></body></html>",
     "DataScience.sessionDisposed" : "Cannot execute code, session has been disposed.",
 	"DataScience.exportDialogTitle" : "Export to Jupyter Notebook",

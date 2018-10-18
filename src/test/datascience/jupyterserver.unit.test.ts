@@ -32,7 +32,7 @@ suite('Jupyter server tests', () => {
 
         // tslint:disable-next-line:no-empty
         logger.setup(l => l.logInformation(TypeMoq.It.isAny())).returns((m) => {}); // console.log(m)); // REnable this to debug the server
-        serverProvider = new JupyterServerProvider(disposables, logger.object, fileSystem.object, factory.object);
+        serverProvider = new JupyterServerProvider(disposables, logger.object, factory.object);
     });
 
     teardown(() => {
@@ -65,7 +65,7 @@ suite('Jupyter server tests', () => {
             server.onStatusChanged((bool: boolean) => {
                 statusCount += 1;
             });
-            const cell = await server.execute('a = 1\r\na', 'foo.py', 2);
+            const cell = await server.execute('a = 1\r\na', 'foo.py', 2).toPromise();
             assert.equal(cell.outputs.length, 1, 'Cell length not correct');
             const data = cell.outputs[0].data;
             assert.ok(data, 'No data object on the cell');

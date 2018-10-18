@@ -5,6 +5,7 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
+import { Observable } from 'rxjs/Observable';
 import { CodeLens, CodeLensProvider, Event, Range, TextDocument } from 'vscode';
 import { ICommandManager } from '../common/application/types';
 
@@ -31,7 +32,7 @@ export const IJupyterServer = Symbol('IJupyterServer');
 export interface IJupyterServer {
     onStatusChanged: Event<boolean>;
     getCurrentState() : Promise<ICell[]>;
-    execute(code: string, file: string, line: number) : Promise<ICell>;
+    execute(code: string, file: string, line: number) : Observable<ICell>;
     restartKernel();
     translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
     launchNotebook(file: string) : Promise<boolean>;
@@ -74,9 +75,17 @@ export interface ICodeWatcher {
     runCurrentCell();
 }
 
+export enum CellState {
+    init = 0,
+    executing = 1,
+    finished = 2,
+    error = 3
+}
+
 // Basic structure for a cell from a notebook
 export interface ICell extends nbformat.ICodeCell {
     id: string;
     file: string;
     line: number;
+    state: CellState;
 }
