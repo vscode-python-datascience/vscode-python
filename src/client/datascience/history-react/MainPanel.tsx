@@ -210,11 +210,21 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
         './images/Restart/Restart_grey_16x_vscode_dark.svg';
         const saveAsImage = this.props.theme !== 'vscode-dark' ? './images/SaveAs/SaveAs_16x_vscode.svg' :
         './images/SaveAs/SaveAs_16x_vscode_dark.svg';
+        const collapseAllImage = this.props.theme !== 'vscode-dark' ? './images/CollapseAll/CollapseAll_16x_vscode.svg' :
+        './images/CollapseAll/CollapseAll_16x_vscode_dark.svg';
+        const expandAllImage = this.props.theme !== 'vscode-dark' ? './images/ExpandAll/ExpandAll_16x_vscode.svg' :
+        './images/ExpandAll/ExpandAll_16x_vscode_dark.svg';
 
         return (
             <div className='main-panel'>
                 <PostOffice messageHandlers={[this]} />
                 <MenuBar theme={this.props.theme} stylePosition='top-fixed'>
+                    <CellButton theme={this.props.theme} onClick={this.export} disabled={!this.canCollapseAll()} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
+                        <RelativeImage class='cell-button-image' path={collapseAllImage}/>
+                    </CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.export} disabled={!this.canExpandAll()} tooltip={getLocString('DataScience.expandAll', 'Expand all cell inputs')}>
+                        <RelativeImage class='cell-button-image' path={expandAllImage}/>
+                    </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.export} disabled={!this.canExport()} tooltip={getLocString('DataScience.export', 'Export as Jupyter Notebook')}>
                         <RelativeImage class='cell-button-image' path={saveAsImage}/>
                     </CellButton>
@@ -258,6 +268,22 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                     delete={() => this.deleteCell(index)}/>
             </ErrorBoundary>
         );
+    }
+
+    private collapseAll = () => {
+
+    }
+
+    private expandAll = () => {
+
+    }
+
+    private canCollapseAll = () => {
+        return this.state.cells.length > 0;
+    }
+
+    private canExpandAll = () => {
+        return this.state.cells.length > 0;
     }
 
     private canExport = () => {

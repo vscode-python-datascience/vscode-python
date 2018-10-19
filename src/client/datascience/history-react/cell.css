@@ -56,11 +56,6 @@
     background: dimgray;
 }
 
-.remove-style {
-    background-color:transparent;
-    border:transparent;
-}
-
 .controls-flex {
     display:flex;
 }
@@ -68,17 +63,4 @@
 .center-img {
     display: block;
     margin: 0 auto;
-}
-
-.collapse-input-svg-rotate {
-    transform: rotate(45deg);
-    transform-origin: 0% 100%;
-}
-
-.collapse-input-svg-vscode-light {
-    fill: black;
-}
-
-.collapse-input-svg-vscode-dark {
-    fill: lightgray;
 }

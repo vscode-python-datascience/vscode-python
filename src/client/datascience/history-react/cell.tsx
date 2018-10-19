@@ -15,6 +15,7 @@ import { RelativeImage } from '../react-common/relativeImage';
 import { ICell } from '../types';
 import './cell.css';
 import { CellButton } from './cellButton';
+import { CollapseButton } from './collapseButton';
 import { MenuBar } from './menuBar';
 import { strictEqual } from 'assert';
 
@@ -35,15 +36,13 @@ export class Cell extends React.Component<ICellProps, ICellState> {
 
     constructor(prop: ICellProps) {
         super(prop);
-
         let inputLinesCount = 0;
 
-        // Don't show our collapses if the input block is just one line
         const inputText = this.extractInputText();
+
         if (inputText) {
             inputLinesCount = inputText.split('\n').length;
         }
-
         // Initial state of our cell toggle
         this.state = { inputBlockOpen: true,
                        inputBlockText: inputText,
@@ -52,8 +51,6 @@ export class Cell extends React.Component<ICellProps, ICellState> {
 
     public render() {
         const outputClassNames = `cell-output cell-output-${this.props.theme}`;
-        const collapseInputPolygonClassNames = `collapse-input-svg ${this.state.inputBlockOpen ? ' collapse-input-svg-rotate' : ''} collapse-input-svg-${this.props.theme}`;
-        const collapseInputClassNames = `collapse-input remove-style ${this.state.inputBlockCollapseNeeded ? '' : ' hide'}`;
         const clearButtonImage = this.props.theme !== 'vscode-dark' ? './images/Cancel/Cancel_16xMD_vscode.svg' :
             './images/Cancel/Cancel_16xMD_vscode_dark.svg';
         const gotoSourceImage = this.props.theme !== 'vscode-dark' ? './images/GoToSourceCode/GoToSourceCode_16x_vscode.svg' :
@@ -73,11 +70,9 @@ export class Cell extends React.Component<ICellProps, ICellState> {
                     <div className='controls-div'>
                         <div className='controls-flex'>
                             <div className='cell-execution-count'>{`[${this.props.cell.execution_count}]:`}</div>
-                            <button className={collapseInputClassNames} onClick={this.toggleInputBlock}>
-                                <svg version='1.1' baseProfile='full' width='8px' height='11px'>
-                                    <polygon points='0,0 0,10 5,5' className={collapseInputPolygonClassNames} fill='black' />
-                                </svg>
-                            </button>
+                            <CollapseButton theme={this.props.theme} hidden={this.state.inputBlockCollapseNeeded}
+                                open={this.state.inputBlockOpen} onClick={this.toggleInputBlock} 
+                                tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>
                         </div>
                     </div>
                     <div className='content-div'>
@@ -91,6 +86,24 @@ export class Cell extends React.Component<ICellProps, ICellState> {
                 </div>
             </div>
         );
+    }
+
+    // Toggle if our input block is collapsed or expanded
+    private toggleInputBlock = () => {
+        const newState = !this.state.inputBlockOpen;
+        let newText = this.extractInputText();
+        // Set our input text based on the new state
+        if (!newState) {
+          if (newText.length > 0) {
+            newText = newText.split('\n', 1)[0];
+            newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
+            newText = newText.concat('...');
+          }
+        }
+        this.setState({
+            inputBlockOpen: newState,
+            inputBlockText: newText
+        });
     }
 
     // Public for testing
@@ -165,22 +178,6 @@ export class Cell extends React.Component<ICellProps, ICellState> {
         return <div></div>;
     }
 
-    private toggleInputBlock = () => {
-        const newState = !this.state.inputBlockOpen;
-        let newText = this.extractInputText();
-        // Set our input text based on the new state
-        if (!newState) {
-          if (newText.length > 0) {
-            newText = newText.split('\n', 1)[0];
-            newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
-            newText = newText.concat('...');
-          }
-        }
-        this.setState({
-            inputBlockOpen: newState,
-            inputBlockText: newText
-        });
-    }
 
     private renderOutput = (output : nbformat.IOutput, index: number) => {
         // Borrowed this from Don's Jupyter extension
