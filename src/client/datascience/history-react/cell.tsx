@@ -17,36 +17,26 @@ import './cell.css';
 import { CellButton } from './cellButton';
 import { CollapseButton } from './collapseButton';
 import { MenuBar } from './menuBar';
-import { strictEqual } from 'assert';
 
 interface ICellProps {
-    cell: ICell;
+    cellVM: ICellViewModel;
     theme: string;
     gotoCode(): void;
     delete(): void;
 }
 
-interface ICellState {
+export interface ICellViewModel {
+    cell: ICell;
     inputBlockOpen: boolean;
     inputBlockText: string;
     inputBlockCollapseNeeded: boolean;
+    inputBlockToggled(id: string): void;
 }
 
-export class Cell extends React.Component<ICellProps, ICellState> {
+export class Cell extends React.Component<ICellProps> {
 
     constructor(prop: ICellProps) {
         super(prop);
-        let inputLinesCount = 0;
-
-        const inputText = this.extractInputText();
-
-        if (inputText) {
-            inputLinesCount = inputText.split('\n').length;
-        }
-        // Initial state of our cell toggle
-        this.state = { inputBlockOpen: true,
-                       inputBlockText: inputText,
-                       inputBlockCollapseNeeded : inputLinesCount > 1 };
     }
 
     public render() {
@@ -69,15 +59,15 @@ export class Cell extends React.Component<ICellProps, ICellState> {
                 <div className='cell-outer'>
                     <div className='controls-div'>
                         <div className='controls-flex'>
-                            <div className='cell-execution-count'>{`[${this.props.cell.execution_count}]:`}</div>
-                            <CollapseButton theme={this.props.theme} hidden={this.state.inputBlockCollapseNeeded}
-                                open={this.state.inputBlockOpen} onClick={this.toggleInputBlock} 
+                            <div className='cell-execution-count'>{`[${this.props.cellVM.cell.execution_count}]:`}</div>
+                            <CollapseButton theme={this.props.theme} hidden={this.props.cellVM.inputBlockCollapseNeeded}
+                                open={this.props.cellVM.inputBlockOpen} onClick={this.toggleInputBlock} 
                                 tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>
                         </div>
                     </div>
                     <div className='content-div'>
                         <div className='cell-result-container'>
-                            <div className='cell-input'>{this.state.inputBlockText}</div>
+                            <div className='cell-input'>{this.props.cellVM.inputBlockText}</div>
                             <div className={outputClassNames}>
                                 {this.renderOutputs()}
                             </div>
@@ -88,22 +78,9 @@ export class Cell extends React.Component<ICellProps, ICellState> {
         );
     }
 
-    // Toggle if our input block is collapsed or expanded
     private toggleInputBlock = () => {
-        const newState = !this.state.inputBlockOpen;
-        let newText = this.extractInputText();
-        // Set our input text based on the new state
-        if (!newState) {
-          if (newText.length > 0) {
-            newText = newText.split('\n', 1)[0];
-            newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
-            newText = newText.concat('...');
-          }
-        }
-        this.setState({
-            inputBlockOpen: newState,
-            inputBlockText: newText
-        });
+        const cellId: string = this.props.cellVM.cell.id;
+        this.props.cellVM.inputBlockToggled(cellId);
     }
 
     // Public for testing
@@ -119,10 +96,17 @@ export class Cell extends React.Component<ICellProps, ICellState> {
         return getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code');
     }
 
-    private concatMultilineString(str : nbformat.MultilineString) : string {
+    private renderOutputs = () => {
+        return this.props.cellVM.cell.outputs.map((output : nbformat.IOutput, index : number) => {
+            return this.renderOutput(output, index);
+        });
+
+    }
+
+    public static concatMultilineString(str : nbformat.MultilineString) : string {
         if (Array.isArray(str)) {
             let result = '';
-            for (let i=0; i<str.length; i++) {
+            for (let i = 0; i < str.length; i++) {
                 const s = str[i];
                 if (i < str.length - 1 && !s.endsWith('\n')) {
                     result = result.concat(`${s}\n`)
@@ -133,16 +117,6 @@ export class Cell extends React.Component<ICellProps, ICellState> {
             return result;
         }
         return str.toString();
-    }
-
-    private extractInputText = () => {
-        return this.concatMultilineString(this.props.cell.source);
-    }
-
-    private renderOutputs = () => {
-        return this.props.cell.outputs.map((output : nbformat.IOutput, index : number) => {
-            return this.renderOutput(output, index);
-        });
     }
 
     private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number) => {
@@ -162,7 +136,7 @@ export class Cell extends React.Component<ICellProps, ICellState> {
                 if (output.data) {
                     let data = output.data[mimetype];
                     if (mimetype === 'text/plain') {
-                        data = this.concatMultilineString(data);
+                        data = Cell.concatMultilineString(data);
                     }
 
                     // Return the transformed control using the data we massaged
@@ -177,7 +151,6 @@ export class Cell extends React.Component<ICellProps, ICellState> {
 
         return <div></div>;
     }
-
 
     private renderOutput = (output : nbformat.IOutput, index: number) => {
         // Borrowed this from Don's Jupyter extension
@@ -198,7 +171,7 @@ export class Cell extends React.Component<ICellProps, ICellState> {
         // Stream and error output need to be converted
         if (copy.output_type === 'stream') {
             const stream = copy as nbformat.IStream;
-            const text = this.concatMultilineString(stream.text);
+            const text = Cell.concatMultilineString(stream.text);
             copy.data = {
                 'text/html' : text
             };
