@@ -116,7 +116,6 @@ export class Cell extends React.Component<ICellProps> {
         return this.props.cellVM.cell.outputs.map((output : nbformat.IOutput, index : number) => {
             return this.renderOutput(output, index);
         });
-
     }
 
     private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number) => {
