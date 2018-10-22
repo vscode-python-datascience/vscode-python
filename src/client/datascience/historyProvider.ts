@@ -5,8 +5,8 @@
 
 import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../ioc/types';
-import { IHistory, IHistoryProvider } from './types';
 import { History } from './history';
+import { IHistory, IHistoryProvider } from './types';
 
 @injectable()
 export class HistoryProvider implements IHistoryProvider {
