@@ -26,6 +26,7 @@ interface ICellProps {
     delete(): void;
 }
 
+// ViewModel for each ICell
 export interface ICellViewModel {
     cell: ICell;
     inputBlockOpen: boolean;
@@ -119,7 +120,6 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number) => {
-
         // If we found a mimetype, use the transform
         if (mimetype) {
 
