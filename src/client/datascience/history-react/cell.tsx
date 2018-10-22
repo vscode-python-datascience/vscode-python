@@ -35,7 +35,6 @@ export interface ICellViewModel {
 }
 
 export class Cell extends React.Component<ICellProps> {
-
     constructor(prop: ICellProps) {
         super(prop);
     }
