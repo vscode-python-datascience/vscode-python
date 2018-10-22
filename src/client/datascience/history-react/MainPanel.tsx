@@ -9,7 +9,7 @@ import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { RelativeImage } from '../react-common/relativeImage';
-import { ICell } from '../types';
+import { CellState, ICell } from '../types';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
 import './mainPanel.css';
@@ -38,206 +38,216 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
         super(props);
         this.state = { cellVMs: [], busy: false, undoStack: [], redoStack : [] };
 
-        //if (!this.props.skipDefault) {
-            //this.state = {
-                //busy: false,
-                //undoStack: [],
-                //redoStack: [],
-                //cells: [
-                    //{
-                        //cell_type: 'code',
-                        //execution_count: 4,
-                        //metadata: {
-                            //slideshow: {
-                                //slide_type: '-'
-                            //}
-                        //},
-                        //outputs: [
-                            //{
-                                //data: {
-                                    //'text/html': [
-                                        //'<div>\n',
-                                        //'<style scoped>\n',
-                                        //'    .dataframe tbody tr th:only-of-type {\n',
-                                        //'        vertical-align: middle;\n',
-                                        //'    }\n',
-                                        //'\n',
-                                        //'    .dataframe tbody tr th {\n',
-                                        //'        vertical-align: top;\n',
-                                        //'    }\n',
-                                        //'\n',
-                                        //'    .dataframe thead th {\n',
-                                        //'        text-align: right;\n',
-                                        //'    }\n',
-                                        //'</style>\n',
-                                        //'<table border=\'1\' class=\'dataframe\'>\n',
-                                        //'  <thead>\n',
-                                        //'    <tr style=\'text-align: right;\'>\n',
-                                        //'      <th></th>\n',
-                                        //'      <th>num_preg</th>\n',
-                                        //'      <th>glucose_conc</th>\n',
-                                        //'      <th>diastolic_bp</th>\n',
-                                        //'      <th>thickness</th>\n',
-                                        //'      <th>insulin</th>\n',
-                                        //'      <th>bmi</th>\n',
-                                        //'      <th>diab_pred</th>\n',
-                                        //'      <th>age</th>\n',
-                                        //'      <th>skin</th>\n',
-                                        //'      <th>diabetes</th>\n',
-                                        //'    </tr>\n',
-                                        //'  </thead>\n',
-                                        //'  <tbody>\n',
-                                        //'    <tr>\n',
-                                        //'      <th>0</th>\n',
-                                        //'      <td>6</td>\n',
-                                        //'      <td>148</td>\n',
-                                        //'      <td>72</td>\n',
-                                        //'      <td>35</td>\n',
-                                        //'      <td>0</td>\n',
-                                        //'      <td>33.6</td>\n',
-                                        //'      <td>0.627</td>\n',
-                                        //'      <td>50</td>\n',
-                                        //'      <td>1.3790</td>\n',
-                                        //'      <td>True</td>\n',
-                                        //'    </tr>\n',
-                                        //'    <tr>\n',
-                                        //'      <th>1</th>\n',
-                                        //'      <td>1</td>\n',
-                                        //'      <td>85</td>\n',
-                                        //'      <td>66</td>\n',
-                                        //'      <td>29</td>\n',
-                                        //'      <td>0</td>\n',
-                                        //'      <td>26.6</td>\n',
-                                        //'      <td>0.351</td>\n',
-                                        //'      <td>31</td>\n',
-                                        //'      <td>1.1426</td>\n',
-                                        //'      <td>False</td>\n',
-                                        //'    </tr>\n',
-                                        //'    <tr>\n',
-                                        //'      <th>2</th>\n',
-                                        //'      <td>8</td>\n',
-                                        //'      <td>183</td>\n',
-                                        //'      <td>64</td>\n',
-                                        //'      <td>0</td>\n',
-                                        //'      <td>0</td>\n',
-                                        //'      <td>23.3</td>\n',
-                                        //'      <td>0.672</td>\n',
-                                        //'      <td>32</td>\n',
-                                        //'      <td>0.0000</td>\n',
-                                        //'      <td>True</td>\n',
-                                        //'    </tr>\n',
-                                        //'    <tr>\n',
-                                        //'      <th>3</th>\n',
-                                        //'      <td>1</td>\n',
-                                        //'      <td>89</td>\n',
-                                        //'      <td>66</td>\n',
-                                        //'      <td>23</td>\n',
-                                        //'      <td>94</td>\n',
-                                        //'      <td>28.1</td>\n',
-                                        //'      <td>0.167</td>\n',
-                                        //'      <td>21</td>\n',
-                                        //'      <td>0.9062</td>\n',
-                                        //'      <td>False</td>\n',
-                                        //'    </tr>\n',
-                                        //'    <tr>\n',
-                                        //'      <th>4</th>\n',
-                                        //'      <td>0</td>\n',
-                                        //'      <td>137</td>\n',
-                                        //'      <td>40</td>\n',
-                                        //'      <td>35</td>\n',
-                                        //'      <td>168</td>\n',
-                                        //'      <td>43.1</td>\n',
-                                        //'      <td>2.288</td>\n',
-                                        //'      <td>33</td>\n',
-                                        //'      <td>1.3790</td>\n',
-                                        //'      <td>True</td>\n',
-                                        //'    </tr>\n',
-                                        //'  </tbody>\n',
-                                        //'</table>\n',
-                                        //'</div>'
-                                    //],
-                                    //'text/plain': [
-                                        //'   num_preg  glucose_conc  diastolic_bp  thickness  insulin   bmi  diab_pred  \\\n',
-                                        //'0         6           148            72         35        0  33.6      0.627   \n',
-                                        //'1         1            85            66         29        0  26.6      0.351   \n',
-                                        //'2         8           183            64          0        0  23.3      0.672   \n',
-                                        //'3         1            89            66         23       94  28.1      0.167   \n',
-                                        //'4         0           137            40         35      168  43.1      2.288   \n',
-                                        //'\n',
-                                        //'   age    skin  diabetes  \n',
-                                        //'0   50  1.3790      True  \n',
-                                        //'1   31  1.1426     False  \n',
-                                        //'2   32  0.0000      True  \n',
-                                        //'3   21  0.9062     False  \n',
-                                        //'4   33  1.3790      True  '
-                                    //]
-                                //},
-                                //execution_count: 4,
-                                //metadata: {},
-                                //output_type: 'execute_result'
-                            //}
-                        //],
-                        //source: [
-                            //'df',
-                            //'df.head(5)'
-                        //],
-                        //id: '1',
-                        //file: 'foo.py',
-                        //line: 1,
-                        //state: CellState.finished
-                    //},
-                    //{
-                        //cell_type: 'code',
-                        //execution_count: 1,
-                        //metadata: {},
-                        //outputs: [
-                         //{
-                          //ename: 'NameError',
-                          //evalue: 'name "df" is not defined',
-                          //output_type: 'error',
-                          //traceback: [
-                           //'\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
-                           //'\u001b[1;31mNameError\u001b[0m                                 Traceback (most recent call last)',
-                           //'\u001b[1;32m<ipython-input-1-00cf07b74dcd>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m()\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[0mdf\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m',
-                           //'\u001b[1;31mNameError\u001b[0m: name "df" is not defined'
-                          //]
-                         //}
-                        //],
-                        //source: [
-                         //'df'
-                        //],
-                        //id: '2',
-                        //file: 'foo.py',
-                        //line: 1,
-                        //state: CellState.finished
-                       //},
-                       //{
-                        //cell_type: 'code',
-                        //execution_count: 1,
-                        //metadata: {},
-                        //outputs: [
-                         //{
-                          //ename: 'NameError',
-                          //evalue: 'name "df" is not defined',
-                          //output_type: 'error',
-                          //traceback: [
-                           //'\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
-                           //'\u001b[1;31mNameError\u001b[0m                                 Traceback (most recent call last)',
-                           //'\u001b[1;32m<ipython-input-1-00cf07b74dcd>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m()\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[0mdf\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m',
-                           //'\u001b[1;31mNameError\u001b[0m: name "df" is not defined'
-                          //]
-                         //}
-                        //],
-                        //source: [
-                         //'df'
-                        //],
-                        //id: '2',
-                        //file: 'foo.py',
-                        //line: 1,
-                        //state: CellState.init
-                       //}
-            //]};
-        //}
+        if (!this.props.skipDefault) {
+            const cellA: ICell = {
+                cell_type: 'code',
+                execution_count: 4,
+                metadata: {
+                    slideshow: {
+                        slide_type: '-'
+                    }
+                },
+                outputs: [
+                    {
+                        data: {
+                            'text/html': [
+                                '<div>\n',
+                                '<style scoped>\n',
+                                '    .dataframe tbody tr th:only-of-type {\n',
+                                '        vertical-align: middle;\n',
+                                '    }\n',
+                                '\n',
+                                '    .dataframe tbody tr th {\n',
+                                '        vertical-align: top;\n',
+                                '    }\n',
+                                '\n',
+                                '    .dataframe thead th {\n',
+                                '        text-align: right;\n',
+                                '    }\n',
+                                '</style>\n',
+                                '<table border=\'1\' class=\'dataframe\'>\n',
+                                '  <thead>\n',
+                                '    <tr style=\'text-align: right;\'>\n',
+                                '      <th></th>\n',
+                                '      <th>num_preg</th>\n',
+                                '      <th>glucose_conc</th>\n',
+                                '      <th>diastolic_bp</th>\n',
+                                '      <th>thickness</th>\n',
+                                '      <th>insulin</th>\n',
+                                '      <th>bmi</th>\n',
+                                '      <th>diab_pred</th>\n',
+                                '      <th>age</th>\n',
+                                '      <th>skin</th>\n',
+                                '      <th>diabetes</th>\n',
+                                '    </tr>\n',
+                                '  </thead>\n',
+                                '  <tbody>\n',
+                                '    <tr>\n',
+                                '      <th>0</th>\n',
+                                '      <td>6</td>\n',
+                                '      <td>148</td>\n',
+                                '      <td>72</td>\n',
+                                '      <td>35</td>\n',
+                                '      <td>0</td>\n',
+                                '      <td>33.6</td>\n',
+                                '      <td>0.627</td>\n',
+                                '      <td>50</td>\n',
+                                '      <td>1.3790</td>\n',
+                                '      <td>True</td>\n',
+                                '    </tr>\n',
+                                '    <tr>\n',
+                                '      <th>1</th>\n',
+                                '      <td>1</td>\n',
+                                '      <td>85</td>\n',
+                                '      <td>66</td>\n',
+                                '      <td>29</td>\n',
+                                '      <td>0</td>\n',
+                                '      <td>26.6</td>\n',
+                                '      <td>0.351</td>\n',
+                                '      <td>31</td>\n',
+                                '      <td>1.1426</td>\n',
+                                '      <td>False</td>\n',
+                                '    </tr>\n',
+                                '    <tr>\n',
+                                '      <th>2</th>\n',
+                                '      <td>8</td>\n',
+                                '      <td>183</td>\n',
+                                '      <td>64</td>\n',
+                                '      <td>0</td>\n',
+                                '      <td>0</td>\n',
+                                '      <td>23.3</td>\n',
+                                '      <td>0.672</td>\n',
+                                '      <td>32</td>\n',
+                                '      <td>0.0000</td>\n',
+                                '      <td>True</td>\n',
+                                '    </tr>\n',
+                                '    <tr>\n',
+                                '      <th>3</th>\n',
+                                '      <td>1</td>\n',
+                                '      <td>89</td>\n',
+                                '      <td>66</td>\n',
+                                '      <td>23</td>\n',
+                                '      <td>94</td>\n',
+                                '      <td>28.1</td>\n',
+                                '      <td>0.167</td>\n',
+                                '      <td>21</td>\n',
+                                '      <td>0.9062</td>\n',
+                                '      <td>False</td>\n',
+                                '    </tr>\n',
+                                '    <tr>\n',
+                                '      <th>4</th>\n',
+                                '      <td>0</td>\n',
+                                '      <td>137</td>\n',
+                                '      <td>40</td>\n',
+                                '      <td>35</td>\n',
+                                '      <td>168</td>\n',
+                                '      <td>43.1</td>\n',
+                                '      <td>2.288</td>\n',
+                                '      <td>33</td>\n',
+                                '      <td>1.3790</td>\n',
+                                '      <td>True</td>\n',
+                                '    </tr>\n',
+                                '  </tbody>\n',
+                                '</table>\n',
+                                '</div>'
+                            ],
+                            'text/plain': [
+                                '   num_preg  glucose_conc  diastolic_bp  thickness  insulin   bmi  diab_pred  \\\n',
+                                '0         6           148            72         35        0  33.6      0.627   \n',
+                                '1         1            85            66         29        0  26.6      0.351   \n',
+                                '2         8           183            64          0        0  23.3      0.672   \n',
+                                '3         1            89            66         23       94  28.1      0.167   \n',
+                                '4         0           137            40         35      168  43.1      2.288   \n',
+                                '\n',
+                                '   age    skin  diabetes  \n',
+                                '0   50  1.3790      True  \n',
+                                '1   31  1.1426     False  \n',
+                                '2   32  0.0000      True  \n',
+                                '3   21  0.9062     False  \n',
+                                '4   33  1.3790      True  '
+                            ]
+                        },
+                        execution_count: 4,
+                        metadata: {},
+                        output_type: 'execute_result'
+                    }
+                ],
+                source: [
+                    'df',
+                    'df.head(5)'
+                ],
+                id: '1',
+                file: 'foo.py',
+                line: 1,
+                state: CellState.finished
+            }
+            const cellAVM = this.createCellVM(cellA);
+
+            const cellB: ICell = {
+                cell_type: 'code',
+                execution_count: 1,
+                metadata: {},
+                outputs: [
+                    {
+                    ename: 'NameError',
+                    evalue: 'name "df" is not defined',
+                    output_type: 'error',
+                    traceback: [
+                    '\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
+                    '\u001b[1;31mNameError\u001b[0m                                 Traceback (most recent call last)',
+                    '\u001b[1;32m<ipython-input-1-00cf07b74dcd>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m()\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[0mdf\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m',
+                    '\u001b[1;31mNameError\u001b[0m: name "df" is not defined'
+                    ]
+                    }
+                ],
+                source: [
+                    'df'
+                ],
+                id: '2',
+                file: 'foo.py',
+                line: 1,
+                state: CellState.finished
+            }
+            const cellBVM = this.createCellVM(cellB);
+
+            const cellC: ICell = {
+                cell_type: 'code',
+                execution_count: 1,
+                metadata: {},
+                outputs: [
+                    {
+                    ename: 'NameError',
+                    evalue: 'name "df" is not defined',
+                    output_type: 'error',
+                    traceback: [
+                    '\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
+                    '\u001b[1;31mNameError\u001b[0m                                 Traceback (most recent call last)',
+                    '\u001b[1;32m<ipython-input-1-00cf07b74dcd>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m()\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[0mdf\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m',
+                    '\u001b[1;31mNameError\u001b[0m: name "df" is not defined'
+                    ]
+                    }
+                ],
+                source: [
+                    'df'
+                ],
+                id: '2',
+                file: 'foo.py',
+                line: 1,
+                state: CellState.init
+            }
+            const cellCVM = this.createCellVM(cellC);
+
+            this.state = {
+                busy: false,
+                undoStack: [],
+                redoStack: [],
+                cellVMs: [
+                    cellAVM,
+                    cellBVM,
+                    cellCVM
+                ]
+            }
+        }
     }
 
     public componentDidMount() {
