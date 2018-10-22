@@ -31,11 +31,6 @@
     display: none;
 }
 
-.cell-execution-count {
-    font-weight: bold;
-    color: green;
-  }
-
 .cell-result-container {
     width: 100%;
 }
@@ -58,6 +53,7 @@
 
 .controls-flex {
     display:flex;
+    min-width: 40px;
 }
 
 .center-img {

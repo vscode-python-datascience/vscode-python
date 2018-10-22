@@ -16,6 +16,7 @@ import { ICell } from '../types';
 import './cell.css';
 import { CellButton } from './cellButton';
 import { CollapseButton } from './collapseButton';
+import { ExecutionCount } from './executionCount';
 import { MenuBar } from './menuBar';
 
 interface ICellProps {
@@ -39,6 +40,22 @@ export class Cell extends React.Component<ICellProps> {
         super(prop);
     }
 
+    public static concatMultilineString(str : nbformat.MultilineString) : string {
+        if (Array.isArray(str)) {
+            let result = '';
+            for (let i = 0; i < str.length; i += 1) {
+                const s = str[i];
+                if (i < str.length - 1 && !s.endsWith('\n')) {
+                    result = result.concat(`${s}\n`);
+                } else {
+                    result = result.concat(s);
+                }
+            }
+            return result;
+        }
+        return str.toString();
+    }
+
     public render() {
         const outputClassNames = `cell-output cell-output-${this.props.theme}`;
         const clearButtonImage = this.props.theme !== 'vscode-dark' ? './images/Cancel/Cancel_16xMD_vscode.svg' :
@@ -59,9 +76,9 @@ export class Cell extends React.Component<ICellProps> {
                 <div className='cell-outer'>
                     <div className='controls-div'>
                         <div className='controls-flex'>
-                            <div className='cell-execution-count'>{`[${this.props.cellVM.cell.execution_count}]:`}</div>
+                            <ExecutionCount cell={this.props.cellVM.cell} theme={this.props.theme} />
                             <CollapseButton theme={this.props.theme} hidden={this.props.cellVM.inputBlockCollapseNeeded}
-                                open={this.props.cellVM.inputBlockOpen} onClick={this.toggleInputBlock} 
+                                open={this.props.cellVM.inputBlockOpen} onClick={this.toggleInputBlock}
                                 tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>
                         </div>
                     </div>
@@ -78,14 +95,14 @@ export class Cell extends React.Component<ICellProps> {
         );
     }
 
-    private toggleInputBlock = () => {
-        const cellId: string = this.props.cellVM.cell.id;
-        this.props.cellVM.inputBlockToggled(cellId);
-    }
-
     // Public for testing
     public getUnknownMimeTypeString = () => {
         return getLocString('DataScience.unknownMimeType', 'Unknown Mime Type');
+    }
+
+    private toggleInputBlock = () => {
+        const cellId: string = this.props.cellVM.cell.id;
+        this.props.cellVM.inputBlockToggled(cellId);
     }
 
     private getDeleteString = () => {
@@ -101,22 +118,6 @@ export class Cell extends React.Component<ICellProps> {
             return this.renderOutput(output, index);
         });
 
-    }
-
-    public static concatMultilineString(str : nbformat.MultilineString) : string {
-        if (Array.isArray(str)) {
-            let result = '';
-            for (let i = 0; i < str.length; i++) {
-                const s = str[i];
-                if (i < str.length - 1 && !s.endsWith('\n')) {
-                    result = result.concat(`${s}\n`)
-                } else {
-                    result = result.concat(s);
-                }
-            }
-            return result;
-        }
-        return str.toString();
     }
 
     private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number) => {

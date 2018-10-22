@@ -15,7 +15,7 @@ export namespace LanguageServiceSurveyBanner {
 }
 
 export namespace DataScience {
-    export const historyTitle = localize('DataScience.historyTitle', 'History');
+    export const historyTitle = localize('DataScience.historyTitle', 'History - (beta)');
     export const badWebPanelFormatString = localize('DataScience.badWebPanelFormatString', '<html><body><h1>{0} is not a valid file name</h1></body></html>');
     export const sessionDisposed = localize('DataScience.sessionDisposed', 'Cannot execute code, session has been disposed.');
     export const unknownMimeType = localize('DataScience.unknownMimeType', 'Unknown mime type for data');
