@@ -119,7 +119,6 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number) => {
-
         // If we found a mimetype, use the transform
         if (mimetype) {
 
