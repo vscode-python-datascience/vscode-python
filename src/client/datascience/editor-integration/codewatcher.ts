@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
 import { inject, injectable } from 'inversify';
 import { CodeLens, Command, Range, TextDocument, window } from 'vscode';
-import { ICommandManager } from '../../common/application/types';
+
+import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import * as localize from '../../common/utils/localize';
 import { Commands, EditorContexts, RegExpValues } from '../constants';
@@ -23,7 +22,8 @@ export class CodeWatcher implements ICodeWatcher {
     private fileName: string = '';
     private codeLenses: CodeLens[] = [];
     constructor(@inject(IHistoryProvider) private historyProvider: IHistoryProvider,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager) {
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell) {
     }
 
     public getFileName() {
@@ -63,7 +63,13 @@ export class CodeWatcher implements ICodeWatcher {
         const activeHistory = await this.historyProvider.getOrCreateHistory();
         if (this.document) {
             const code = this.document.getText(range);
-            await activeHistory.addCode(code, this.getFileName(), range.start.line, window.activeTextEditor);
+
+            try {
+                await activeHistory.addCode(code, this.getFileName(), range.start.line, window.activeTextEditor);
+            } catch (err) {
+                this.applicationShell.showErrorMessage(err);
+            }
+
         }
     }
 
@@ -114,7 +120,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
 
         // Inform the editor context that we have cells
-        editorContext.set(cells.length > 0);
+        editorContext.set(cells.length > 0).ignoreErrors();
         return cells;
     }
 }

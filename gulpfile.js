@@ -101,7 +101,7 @@ gulp.task('debugger-coverage', () => buildDebugAdapterCoverage());
 
 gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
 
-gulp.task('hygiene-watch-branch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'diffMaster', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
+gulp.task('hygiene-watch-branch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'diffMaster' }), 100)));
 
 gulp.task('hygiene-all', () => run({ mode: 'all' }));
 

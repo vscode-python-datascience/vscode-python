@@ -13,14 +13,14 @@ import { isTestExecution } from './constants';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
+    IDataScienceSettings,
     IFormattingSettings,
     ILintingSettings,
     IPythonSettings,
     ISortImportSettings,
     ITerminalSettings,
     IUnitTestSettings,
-    IWorkspaceSymbolSettings,
-    IDataScienceSettings
+    IWorkspaceSymbolSettings
 } from './types';
 import { SystemVariables } from './variables/systemVariables';
 

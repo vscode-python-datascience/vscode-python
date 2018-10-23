@@ -1,18 +1,25 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
+
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { Position, Range, Selection, TextEditor, Uri, ViewColumn, TextDocument } from 'vscode';
-import { IApplicationShell, IDocumentManager, IWebPanel, IWebPanelMessageListener, IWebPanelProvider  } from '../common/application/types';
+import { Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
+import { Disposable } from 'vscode-jsonrpc';
+
+import {
+    IApplicationShell,
+    IDocumentManager,
+    IWebPanel,
+    IWebPanelMessageListener,
+    IWebPanelProvider
+} from '../common/application/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
+import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { HistoryMessages } from './constants';
 import { CellState, ICell, IJupyterServer, IJupyterServerProvider } from './types';
-import { IConfigurationService } from '../common/types';
-import { PythonSettings } from '../common/configSettings';
 
 export class History implements IWebPanelMessageListener {
     private static activeHistory: History;
@@ -22,8 +29,9 @@ export class History implements IWebPanelMessageListener {
     private loadPromise: Promise<void>;
     private documentManager : IDocumentManager;
     private applicationShell : IApplicationShell;
-    private configuration : IConfigurationService;
+    private interpreterService : IInterpreterService;
     private serviceContainer : IServiceContainer;
+    private settingsChangedDisposable : Disposable;
 
     constructor(serviceContainer: IServiceContainer) {
         this.serviceContainer = serviceContainer;
@@ -35,20 +43,19 @@ export class History implements IWebPanelMessageListener {
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
 
         // Sign up for configuration changes
-        this.configuration = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
-
+        this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+        this.settingsChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
     }
 
     public static getOrCreateActive(serviceContainer: IServiceContainer) {
-        if (!(this.activeHistory)) {
-            this.activeHistory = new History(serviceContainer);
+        if (!(History.activeHistory)) {
+            History.activeHistory = new History(serviceContainer);
         }
-        return this.activeHistory;
+        return History.activeHistory;
     }
 
     public static setActive(active: History) {
-        this.activeHistory = active;
+        History.activeHistory = active;
     }
 
     public async show() : Promise<void> {
@@ -111,9 +118,12 @@ export class History implements IWebPanelMessageListener {
     }
 
     public onDisposed() {
-        (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged);
+        this.settingsChangedDisposable.dispose();
         if (this.jupyterServer) {
             this.jupyterServer.dispose();
+        }
+        if (History.activeHistory === this) {
+            delete History.activeHistory;
         }
     }
 
@@ -143,7 +153,7 @@ export class History implements IWebPanelMessageListener {
         if (cells.length > 1) {
             // If we have an active editor, do the edit there so that the user can undo it, otherwise don't bother
             if (editor) {
-                const edit = editor.edit((editBuilder) => {
+                editor.edit((editBuilder) => {
                     editBuilder.insert(new Position(cells[1].line, 0), '# %%');
                 });
             }
@@ -154,8 +164,10 @@ export class History implements IWebPanelMessageListener {
         // Update our load promise. We need to restart the jupyter server
         if (this.loadPromise) {
             await this.loadPromise;
-            this.jupyterServer.dispose();
-            this.jupyterServer = undefined;
+            if (this.jupyterServer) {
+                this.jupyterServer.dispose();
+                this.jupyterServer = undefined;
+            }
         }
         this.loadPromise = this.loadJupyterServer(this.serviceContainer);
     }

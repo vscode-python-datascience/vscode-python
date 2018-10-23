@@ -8,7 +8,6 @@ export namespace Commands {
     export const RunCurrentCell = 'python.datascience.runcurrentcell';
     export const ShowHistoryPane = 'python.datascience.showhistorypane';
     export const ImportNotebook = 'python.datascience.importnotebook';
-    export const ImportNotebookOnFile = 'python.datascience.importnotebookonfile';
 }
 
 export namespace EditorContexts {

@@ -31,6 +31,8 @@ export namespace DataScience {
     export const notebookCheckForImportYes = localize('DataScience.notebookCheckForImportTitle', 'Import');
     export const notebookCheckForImportNo = localize('DataScience.notebookCheckForImportTitle', 'Later');
     export const notebookCheckForImportDontAskAgain = localize('DataScience.notebookCheckForImportTitle', 'Don\'t Ask Again');
+    export const jupyterNotSupported = localize('DataScience.jupyterNotSupported', 'Jupyter is not installed');
+    export const jupyterNbConvertNotSupported = localize('DataScience.jupyterNbConvertNotSupported', 'Jupyter nbconvert is not installed');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

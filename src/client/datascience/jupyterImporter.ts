@@ -1,23 +1,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
-import { IServiceContainer } from '../ioc/types';
-import { IHistory, IHistoryProvider } from './types';
-import { History } from './history';
-import { IApplicationShell } from '../common/application/types';
-import * as localize from '../common/utils/localize';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
-import { Deferred, createDeferred } from '../common/utils/async';
-import { PythonSettings } from '../common/configSettings';
-import { IConfigurationService } from '../common/types';
 import { IDisposable } from '@phosphor/disposable';
+import * as fs from 'fs-extra';
 import * as temp from 'temp';
 import * as tp from 'typed-promisify';
+import { Disposable } from 'vscode-jsonrpc';
+
+import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
+import { ILogger } from '../common/types';
+import { createDeferred, Deferred } from '../common/utils/async';
+import * as localize from '../common/utils/localize';
+import { IInterpreterService } from '../interpreter/contracts';
+import { IServiceContainer } from '../ioc/types';
 
 export class JupyterImporter implements IDisposable {
+    public isDisposed : boolean = false;
     // Template that changes markdown cells to have # %% [markdown] in the comments
+    // tslint:disable-next-line:no-multiline-string
     private readonly nbconvertTemplate = `
     {%- extends 'null.tpl' -%}
     {% block in_prompt %}
@@ -32,18 +32,21 @@ export class JupyterImporter implements IDisposable {
     {{ cell.source | comment_lines }}
     {% endblock markdowncell %}`;
 
-    private pythonExecutionService : Deferred<IPythonExecutionService>;
+    private pythonExecutionService : Deferred<IPythonExecutionService> | undefined;
     private templatePromise : Promise<string>;
-    public isDisposed : boolean = false;
+    private interpreterService : IInterpreterService;
+    private settingsChangedDiposable : Disposable;
+    private logger : ILogger;
 
     constructor(private serviceContainer: IServiceContainer) {
-        const configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        (configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
+        this.logger = this.serviceContainer.get<ILogger>(ILogger);
+        this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        this.settingsChangedDiposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
         this.templatePromise = this.createTemplateFile();
+        this.createExecutionServicePromise();
     }
 
     public importFromFile = async (file: string) : Promise<string> => {
-        const executionService = await this.getExecutionService();
         const template = await this.templatePromise;
 
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
@@ -53,6 +56,7 @@ export class JupyterImporter implements IDisposable {
             return result.stdout;
         }
 
+        throw localize.DataScience.jupyterNotSupported();
     }
 
     public isSupported = async () : Promise<boolean> => {
@@ -61,25 +65,34 @@ export class JupyterImporter implements IDisposable {
             const executionService = await this.getExecutionService();
             const result = await executionService.execModule('jupyter', ['nbconvert', '--version'], { throwOnStdErr: true, encoding: 'utf8' });
             return (!result.stderr);
-        } catch {
+        } catch (err) {
+            this.logger.logError(err);
             return false;
         }
     }
 
     public dispose = () => {
         this.isDisposed = true;
-        const configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        (configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged);
+        this.settingsChangedDiposable.dispose();
     }
 
     private getExecutionService = () : Promise<IPythonExecutionService> => {
-        return this.pythonExecutionService.promise;
+        if (this.pythonExecutionService) {
+            return this.pythonExecutionService.promise;
+        }
+
+        return Promise.reject();
     }
 
     private createTemplateFile = async () : Promise<string> => {
         // Create a temp file on disk
         const asyncOpen = tp.promisify(temp.open);
         const file: temp.OpenFile = await asyncOpen({ suffix: '.tpl'});
+
+        // Write our template into it
+        await fs.appendFile(file.path, this.nbconvertTemplate);
+
+        // Now we should have a template that will convert
         return file.path;
     }
 
@@ -92,7 +105,8 @@ export class JupyterImporter implements IDisposable {
         // Create a deferred promise that resolves when we have an execution service
         this.pythonExecutionService = createDeferred<IPythonExecutionService>();
         this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
-            .create({}).then((p : IPythonExecutionService) => { this.pythonExecutionService.resolve(p); })
-            .catch(this.pythonExecutionService.reject());
+            .create({})
+            .then((p : IPythonExecutionService) => { if (this.pythonExecutionService) { this.pythonExecutionService.resolve(p); } })
+            .catch(err => this.pythonExecutionService.reject(err));
     }
 }

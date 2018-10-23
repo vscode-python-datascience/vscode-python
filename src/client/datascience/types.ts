@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
+import { IDisposable } from '@phosphor/disposable';
 import { Observable } from 'rxjs/Observable';
 import { CodeLens, CodeLensProvider, Event, Range, TextDocument, TextEditor } from 'vscode';
+
 import { ICommandManager } from '../common/application/types';
-import { IDisposable } from '@phosphor/disposable';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');

@@ -9,157 +9,30 @@ import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { RelativeImage } from '../react-common/relativeImage';
-import { CellState, ICell } from '../types';
+import { ICell } from '../types';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
 import './mainPanel.css';
+import { createCellVM, generateTestState, IMainPanelState } from './mainPanelState';
 import { MenuBar } from './menuBar';
-
-export interface IState {
-    cellVMs: ICellViewModel[];
-    busy: boolean;
-    skipNextScroll? : boolean;
-    undoStack : ICellViewModel[][];
-    redoStack : ICellViewModel[][];
-}
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
     theme: string;
 }
 
-export class MainPanel extends React.Component<IMainPanelProps, IState> implements IMessageHandler {
+export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private stackLimit = 10;
 
     private bottom: HTMLDivElement | undefined;
 
     // tslint:disable-next-line:max-func-body-length
-    constructor(props: IMainPanelProps, state: IState) {
+    constructor(props: IMainPanelProps, state: IMainPanelState) {
         super(props);
         this.state = { cellVMs: [], busy: false, undoStack: [], redoStack : [] };
 
         if (!this.props.skipDefault) {
-            this.state = {
-                busy: false,
-                undoStack: [],
-                redoStack: [],
-                cells: [
-                    {
-                        data : {
-                            cell_type: 'code',
-                        execution_count: 4,
-                        metadata: {
-                            slideshow: {
-                                slide_type: '-'
-                            }
-                        },
-                        outputs: [
-                            {
-                                data: {
-                                    'text/plain': [
-                                        '   num_preg  glucose_conc  diastolic_bp  thickness  insulin   bmi  diab_pred  \\\n',
-                                        '0         6           148            72         35        0  33.6      0.627   \n',
-                                        '1         1            85            66         29        0  26.6      0.351   \n',
-                                        '2         8           183            64          0        0  23.3      0.672   \n',
-                                        '3         1            89            66         23       94  28.1      0.167   \n',
-                                        '4         0           137            40         35      168  43.1      2.288   \n',
-                                        '\n',
-                                        '   age    skin  diabetes  \n',
-                                        '0   50  1.3790      True  \n',
-                                        '1   31  1.1426     False  \n',
-                                        '2   32  0.0000      True  \n',
-                                        '3   21  0.9062     False  \n',
-                                        '4   33  1.3790      True  '
-                                    ]
-                                },
-                                execution_count: 4,
-                                metadata: {},
-                                output_type: 'execute_result'
-                            }
-                        ],
-                        source: [
-                            'df',
-                            'df.head(5)'
-                        ]
-                    },
-                        id: '1',
-                        file: 'foo.py',
-                        line: 1,
-                        state: CellState.finished
-                    },
-                    {
-                        data : {
-                        'cell_type': 'markdown',
-                        'metadata': {},
-                        'source': [
-                         '## Cell 3\n',
-                         'Here\'s some markdown\n',
-                         '- A List\n',
-                         '- Of Items'
-                        ]
-                       },
-                       id : '33',
-                       file : 'foo.py',
-                       line: 2,
-                       state : CellState.finished
-                    },
-                    {
-                        data: {
-
-
-                        cell_type: 'code',
-                        execution_count: 1,
-                        metadata: {},
-                        outputs: [
-                         {
-                          ename: 'NameError',
-                          evalue: 'name "df" is not defined',
-                          output_type: 'error',
-                          traceback: [
-                           '\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
-                           '\u001b[1;31mNameError\u001b[0m                                 Traceback (most recent call last)',
-                           '\u001b[1;32m<ipython-input-1-00cf07b74dcd>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m()\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[0mdf\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m',
-                           '\u001b[1;31mNameError\u001b[0m: name "df" is not defined'
-                          ]
-                         }
-                        ],
-                        source: [
-                         'df'
-                        ]
-                    },
-                        id: '2',
-                        file: 'foo.py',
-                        line: 1,
-                        state: CellState.finished
-                       },
-                       {
-                           data : {
-                        cell_type: 'code',
-                        execution_count: 1,
-                        metadata: {},
-                        outputs: [
-                         {
-                          ename: 'NameError',
-                          evalue: 'name "df" is not defined',
-                          output_type: 'error',
-                          traceback: [
-                           '\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
-                           '\u001b[1;31mNameError\u001b[0m                                 Traceback (most recent call last)',
-                           '\u001b[1;32m<ipython-input-1-00cf07b74dcd>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m()\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[0mdf\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m',
-                           '\u001b[1;31mNameError\u001b[0m: name "df" is not defined'
-                          ]
-                         }
-                        ],
-                        source: [
-                         'df'
-                        ]
-                    },
-                        id: '2',
-                        file: 'foo.py',
-                        line: 1,
-                        state: CellState.init
-                       }
-            ]};
+            this.state = generateTestState(this.inputBlockToggled);
         }
     }
 
@@ -391,7 +264,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
     private addCell = (payload?: any) => {
         if (payload) {
             const cell = payload as ICell;
-            const cellVM: ICellViewModel = this.createCellVM(cell);
+            const cellVM: ICellViewModel = createCellVM(cell, this.inputBlockToggled);
             if (cellVM) {
                 this.setState({
                     cellVMs: [...this.state.cellVMs, cellVM],
@@ -402,22 +275,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                 });
             }
         }
-    }
-
-    private createCellVM = (inputCell: ICell) => {
-        let inputLinesCount = 0;
-        const inputText = this.extractInputText(inputCell);
-        if (inputText) {
-            inputLinesCount = inputText.split('\n').length;
-        }
-
-       return {
-           cell: inputCell,
-           inputBlockOpen: true,
-           inputBlockText: inputText,
-           inputBlockCollapseNeeded: inputLinesCount > 1,
-           inputBlockToggled: this.inputBlockToggled
-       };
     }
 
     private inputBlockToggled = (id: string) => {
@@ -442,13 +299,18 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
 
     // Toggle the input collapse state of a cell view model return a shallow copy with updated values
     private toggleCellVM = (cellVM: ICellViewModel) => {
-        const newCollapseState = !cellVM.inputBlockOpen;
-        let newText = this.extractInputText(cellVM.cell);
-        if (!newCollapseState) {
-            if (newText.length > 0) {
-                newText = newText.split('\n', 1)[0];
-                newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
-                newText = newText.concat('...');
+        let newCollapseState = cellVM.inputBlockOpen;
+        let newText = cellVM.inputBlockText;
+
+        if (cellVM.cell.data.cell_type === 'code') {
+            newCollapseState = !newCollapseState;
+            newText = this.extractInputText(cellVM.cell);
+            if (!newCollapseState) {
+                if (newText.length > 0) {
+                    newText = newText.split('\n', 1)[0];
+                    newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
+                    newText = newText.concat('...');
+                }
             }
         }
 
@@ -456,7 +318,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
     }
 
     private extractInputText = (cell: ICell) => {
-        return Cell.concatMultilineString(cell.source);
+        return Cell.concatMultilineString(cell.data.source);
     }
 
     // tslint:disable-next-line:no-any

@@ -87,8 +87,7 @@
         "onCommand:python.createTerminal",
         "onCommand:python.discoverTests",
         "onCommand:python.datascience.showhistorypane",
-        "onCommand:python.datascience.importnotebook",
-        "onCommand:python.datascience.importnotebookonfile"
+        "onCommand:python.datascience.importnotebook"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -251,11 +250,6 @@
                 "command": "python.datascience.importnotebook",
                 "title": "%python.command.python.datascience.importnotebook.title%",
                 "category": "Python"
-            },
-            {
-                "command": "python.datascience.importnotebookonfile",
-                "title": "%python.command.python.datascience.importnotebookonfile.title%",
-                "category": "Python"
             }
         ],
         "menus": {
@@ -305,7 +299,7 @@
                 },
                 {
                     "when": "resourceLangId == jupyter",
-                    "command": "python.datascience.importnotebookonfile",
+                    "command": "python.datascience.importnotebook",
                     "group": "Python"
                 }
             ],
@@ -327,7 +321,7 @@
                 },
                 {
                     "when": "resourceLangId == jupyter",
-                    "command": "python.datascience.importnotebookonfile",
+                    "command": "python.datascience.importnotebook",
                     "group": "Python"
                 }
             ]
@@ -1628,6 +1622,8 @@
         "@nteract/transform-model-debug": "^3.2.3",
         "@nteract/transform-plotly": "^3.2.3",
         "@nteract/transforms": "4.4.4",
+        "@types/prismjs": "^1.9.0",
+        "ansi-to-html": "^0.6.7",
         "arch": "2.1.0",
         "azure-storage": "2.10.1",
         "diff-match-patch": "1.0.0",
@@ -1647,6 +1643,7 @@
         "node-stream-zip": "1.6.0",
         "opn": "5.3.0",
         "pidusage": "1.2.0",
+        "prismjs": "^1.15.0",
         "promisify-node": "^0.5.0",
         "react-json-tree": "^0.11.0",
         "reflect-metadata": "0.1.12",
@@ -1715,6 +1712,7 @@
         "JSONStream": "^1.3.2",
         "babel-loader": "^8.0.3",
         "babel-plugin-inline-json-import": "^0.3.1",
+        "babel-plugin-prismjs": "^1.0.2",
         "babel-plugin-transform-runtime": "^6.23.0",
         "babel-polyfill": "^6.26.0",
         "chai": "^4.1.2",

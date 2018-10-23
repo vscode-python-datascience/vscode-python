@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
+
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { ILogger } from '../../client/common/types';
 import { JupyterServerProvider } from '../../client/datascience/jupyterServerProvider';
 import { IJupyterServerProvider } from '../../client/datascience/types';
 import { MockPythonExecutionService } from './executionServiceMock';
-import { nbformat } from '@jupyterlab/coreutils';
 
 suite('Jupyter server tests', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;

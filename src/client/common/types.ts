@@ -4,7 +4,6 @@
 import { Socket } from 'net';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
 import { EnvironmentVariables } from './variables/types';
-import { IDataScience } from '../datascience/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel { }
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');

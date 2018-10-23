@@ -4,15 +4,15 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ICommandManager, IApplicationEnvironment, IApplicationShell, IDocumentManager } from '../common/application/types';
-import { IDisposableRegistry, IConfigurationService } from '../common/types';
-import { IServiceContainer } from '../ioc/types';
-import { Commands } from './constants';
-import { IDataScienceCommandListener, IHistoryProvider } from './types';
-import { JupyterImporter } from './jupyterImporter';
-import * as localize from '../common/utils/localize';
-import { CommandSource } from '../unittests/common/constants';
 import { TextDocument, Uri } from 'vscode';
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
+import { IConfigurationService, IDisposableRegistry } from '../common/types';
+import * as localize from '../common/utils/localize';
+import { IServiceContainer } from '../ioc/types';
+import { CommandSource } from '../unittests/common/constants';
+import { Commands } from './constants';
+import { JupyterImporter } from './jupyterImporter';
+import { IDataScienceCommandListener, IHistoryProvider } from './types';
 
 @injectable()
 export class HistoryCommandListener implements IDataScienceCommandListener {
@@ -22,6 +22,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     private readonly documentManager: IDocumentManager;
     private readonly applicationShell : IApplicationShell;
     private readonly configuration : IConfigurationService;
+    private readonly logger : ILogger;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer)
     {
@@ -40,13 +41,21 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     public register(commandManager: ICommandManager): void {
         let disposable = commandManager.registerCommand(Commands.ShowHistoryPane, this.showHistoryPane);
         this.disposableRegistry.push(disposable);
-        disposable = commandManager.registerCommand(Commands.ImportNotebook, this.importNotebook);
-        this.disposableRegistry.push(disposable);
-        disposable = commandManager.registerCommand(Commands.ImportNotebookOnFile, (_, cmdSource: CommandSource = CommandSource.commandPalette, file: Uri) => { this.importNotebookOnFile(file.fsPath) });
+        disposable = commandManager.registerCommand(Commands.ImportNotebook, async (file: Uri, cmdSource: CommandSource = CommandSource.commandPalette) => {
+            try {
+                if (file) {
+                    await this.importNotebookOnFile(file.fsPath);
+                } else {
+                    await this.importNotebook();
+                }
+            } catch (err) {
+                this.applicationShell.showErrorMessage(err);
+            }
+        });
         this.disposableRegistry.push(disposable);
     }
 
-    private canImportFromOpenedFile= () => {
+    private canImportFromOpenedFile = () => {
         const settings = this.configuration.getSettings();
         return settings && (!settings.datascience || settings.datascience.allowImportFromNotebook);
     }
@@ -68,10 +77,14 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                 localize.DataScience.notebookCheckForImportTitle(),
                 yes, no, dontAskAgain);
 
-            if (answer === yes) {
-                await this.importNotebookOnFile(document.fileName);
-            } else if (answer == dontAskAgain) {
-                this.disableImportOnOpenedFile();
+            try {
+                if (answer === yes) {
+                    await this.importNotebookOnFile(document.fileName);
+                } else if (answer === dontAskAgain) {
+                    this.disableImportOnOpenedFile();
+                }
+            } catch (err) {
+                this.applicationShell.showErrorMessage(err);
             }
         }
 
@@ -95,14 +108,14 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
 
         if (uris && uris.length > 0) {
             const contents = await this.jupyterImporter.importFromFile(uris[0].fsPath);
-            const document = await this.documentManager.openTextDocument({language: 'python', content: contents});
+            await this.documentManager.openTextDocument({language: 'python', content: contents});
         }
     }
 
     private importNotebookOnFile = async (file: string) : Promise<void> => {
         if (file && file.length > 0) {
             const contents = await this.jupyterImporter.importFromFile(file);
-            const document = await this.documentManager.openTextDocument({language: 'python', content: contents});
+            await this.documentManager.openTextDocument({language: 'python', content: contents});
         }
     }
 }
