@@ -4,6 +4,7 @@
 import { Socket } from 'net';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
 import { EnvironmentVariables } from './variables/types';
+import { IDataScience } from '../datascience/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel { }
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
@@ -142,6 +143,7 @@ export interface IPythonSettings {
     readonly globalModuleInstallation: boolean;
     readonly analysis: IAnalysisSettings;
     readonly autoUpdateLanguageServer: boolean;
+    readonly datascience : IDataScienceSettings;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -258,6 +260,10 @@ export interface IAnalysisSettings {
     readonly disabled: string[];
     readonly traceLogging: boolean;
     readonly logLevel: LogLevel;
+}
+
+export interface IDataScienceSettings {
+    allowImportFromNotebook : boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

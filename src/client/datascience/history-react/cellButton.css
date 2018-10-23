@@ -1,10 +1,10 @@
 :root {
-    --button-size: 24px;
+    --button-size: 16px;
 }
 
 
 .cell-button {
-    border-width: 1px;
+    border-width: 0px;
     border-style: solid;
     cursor: pointer;
     text-align: center;

@@ -38,8 +38,8 @@ export class Cell extends React.Component<ICellProps, ICellState> {
 
         let inputLinesCount = 0;
 
-        // Don't show our collapses if the input block is just one line
-        const inputText = this.extractInputText();
+        // Don't show our collapses if the input block if just one line or markdown
+        const inputText = this.props.cell.data.cell_type === 'code' ? this.extractInputText() : undefined;
         if (inputText) {
             inputLinesCount = inputText.split('\n').length;
         }
@@ -51,7 +51,6 @@ export class Cell extends React.Component<ICellProps, ICellState> {
     }
 
     public render() {
-        const outputClassNames = `cell-output cell-output-${this.props.theme}`;
         const collapseInputPolygonClassNames = `collapse-input-svg ${this.state.inputBlockOpen ? ' collapse-input-svg-rotate' : ''} collapse-input-svg-${this.props.theme}`;
         const collapseInputClassNames = `collapse-input remove-style ${this.state.inputBlockCollapseNeeded ? '' : ' hide'}`;
         const clearButtonImage = this.props.theme !== 'vscode-dark' ? './images/Cancel/Cancel_16xMD_vscode.svg' :
@@ -72,7 +71,7 @@ export class Cell extends React.Component<ICellProps, ICellState> {
                 <div className='cell-outer'>
                     <div className='controls-div'>
                         <div className='controls-flex'>
-                            <ExecutionCount cell={this.props.cell} theme={this.props.theme} />
+                            <ExecutionCount cell={this.props.cell} theme={this.props.theme} visible={this.props.cell.data.cell_type === 'code'} />
                             <div className='collapse-button-container'>
                                 <button className={collapseInputClassNames} onClick={this.toggleInputBlock}>
                                     <svg version='1.1' baseProfile='full' width='8px' height='11px'>
@@ -84,10 +83,8 @@ export class Cell extends React.Component<ICellProps, ICellState> {
                     </div>
                     <div className='content-div'>
                         <div className='cell-result-container'>
-                            <div className='cell-input'>{this.state.inputBlockText}</div>
-                            <div className={outputClassNames}>
-                                {this.renderOutputs()}
-                            </div>
+                            {this.renderInputs()}
+                            {this.renderResults()}
                         </div>
                     </div>
                 </div>
@@ -125,15 +122,51 @@ export class Cell extends React.Component<ICellProps, ICellState> {
     }
 
     private extractInputText = () => {
-        return this.concatMultilineString(this.props.cell.source);
+        if (this.props.cell.data.cell_type === 'code') {
+            return this.concatMultilineString(this.props.cell.data.source);
+        }
+
+        return '';
     }
 
-    private renderOutputs = () => {
-        if (this.props.cell && (this.props.cell.state === CellState.finished || this.props.cell.state === CellState.error)) {
-            return this.props.cell.outputs.map((output: nbformat.IOutput, index: number) => {
+    private renderInputs = () => {
+        if (this.props.cell.data.cell_type === 'code') {
+            return <div className='cell-input'>{this.state.inputBlockText}</div>;
+        }
+    }
+
+    private renderResults = () => {
+        const outputClassNames = this.props.cell.data.cell_type === 'code' ?
+            `cell-output cell-output-${this.props.theme}` :
+            '';
+
+        // Results depend upon the type of cell
+        const results = this.props.cell.data.cell_type === 'code' ?
+            this.renderCodeOutputs() :
+            this.renderMarkdown(this.props.cell.data as nbformat.IMarkdownCell);
+
+        // Then combine them inside a div
+        return <div className={outputClassNames}>{results}</div>;
+    }
+    private renderCodeOutputs = () => {
+        if (this.props.cell &&
+            this.props.cell.data.cell_type === 'code' &&
+            (this.props.cell.state === CellState.finished || this.props.cell.state === CellState.error)) {
+
+            // Render the outputs
+            return this.props.cell.data.outputs.map((output: nbformat.IOutput, index: number) => {
                 return this.renderOutput(output, index);
             });
+
         }
+    }
+
+    private renderMarkdown = (markdown : nbformat.IMarkdownCell) => {
+        // React-markdown expects that the source is a string
+        const source = this.concatMultilineString(markdown.source);
+        const Transform = transforms['text/markdown'];
+
+        return <Transform data={source}/>
     }
 
     private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number) => {

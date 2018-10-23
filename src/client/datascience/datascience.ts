@@ -25,6 +25,8 @@ export class DataScience implements IDataScience {
         this.extensionContext = this.serviceContainer.get<IExtensionContext>(IExtensionContext);
         this.dataScienceCodeLensProvider = this.serviceContainer.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
         this.commandListeners = this.serviceContainer.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
+
+        // We could potentially register different commands if jupyter isn't installed.
     }
 
     public async activate(): Promise<void> {

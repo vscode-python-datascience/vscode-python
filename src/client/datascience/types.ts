@@ -6,8 +6,9 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import { CodeLens, CodeLensProvider, Event, Range, TextDocument } from 'vscode';
+import { CodeLens, CodeLensProvider, Event, Range, TextDocument, TextEditor } from 'vscode';
 import { ICommandManager } from '../common/application/types';
+import { IDisposable } from '@phosphor/disposable';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -29,11 +30,11 @@ export interface IJupyterServerProvider {
 
 // Talks to a jupyter kernel to retrieve data for cells
 export const IJupyterServer = Symbol('IJupyterServer');
-export interface IJupyterServer {
+export interface IJupyterServer extends IDisposable {
     onStatusChanged: Event<boolean>;
     getCurrentState() : Promise<ICell[]>;
-    executeObservable(code: string, file: string, line: number) : Observable<ICell>;
-    execute(code: string, file: string, line: number) : Promise<ICell>;
+    executeObservable(code: string, file: string, line: number) : Observable<ICell[]>;
+    execute(code: string, file: string, line: number) : Promise<ICell[]>;
     restartKernel();
     translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
     launchNotebook(file: string) : Promise<boolean>;
@@ -47,7 +48,7 @@ export interface IHistoryProvider {
 export const IHistory = Symbol('IHistory');
 export interface IHistory {
     show() : Promise<void>;
-    addCode(code: string, file: string, line: number) : Promise<void>;
+    addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview
@@ -84,9 +85,10 @@ export enum CellState {
 }
 
 // Basic structure for a cell from a notebook
-export interface ICell extends nbformat.ICodeCell {
+export interface ICell {
     id: string;
     file: string;
     line: number;
     state: CellState;
+    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell;
 }

@@ -21,11 +21,12 @@ import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { JupyterProcess } from './jupyterProcess';
 import { CellState, ICell, IJupyterServer } from './types';
+import { RegExpValues } from './constants';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
 
-export class JupyterServer implements IJupyterServer, IDisposable {
+export class JupyterServer implements IJupyterServer {
     private static trackingTemps: boolean = false;
     public isDisposed: boolean = false;
     private session: Session.ISession | undefined;
@@ -91,17 +92,17 @@ export class JupyterServer implements IJupyterServer, IDisposable {
         return Promise.resolve([]);
     }
 
-    public execute(code : string, file: string, line: number) : Promise<ICell> {
+    public execute(code : string, file: string, line: number) : Promise<ICell[]> {
         // Create a deferred that we'll fire when we're done
-        const deferred = createDeferred<ICell>();
+        const deferred = createDeferred<ICell[]>();
 
         // Attempt to evaluate this cell in the jupyter notebook
         const observable = this.executeObservable(code, file, line);
-        let output: ICell;
+        let output: ICell[];
 
         observable.subscribe(
-            (cell: ICell) => {
-                output = cell;
+            (cells: ICell[]) => {
+                output = cells;
             },
             (error) => {
                 deferred.resolve(output);
@@ -114,28 +115,40 @@ export class JupyterServer implements IJupyterServer, IDisposable {
         return deferred.promise;
     }
 
-    public executeObservable(code: string, file: string, line: number) : Observable<ICell> {
+    public executeObservable(code: string, file: string, line: number) : Observable<ICell[]> {
         // If we have a session, execute the code now.
         if (this.session) {
-            const id = uuid();
 
-            if (id) {
-                const request = this.session.kernel.requestExecute(
-                    {
-                        // Replace windows line endings with unix line endings.
-                        code : code.replace('\r\n', '\n'),
-                        stop_on_error: false,
-                        allow_stdin: false
-                    },
-                    true
-                );
+            // Replace windows line endings with unix line endings.
+            let copy = code.replace('\r\n', '\n');
 
-                return this.generateExecuteObservable(code, file, line, id, request);
+            // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
+            const split = copy.split('\n')
+            const firstLine = split[0];
+            if (RegExpValues.PythonMarkdownCellMarker.test(firstLine)) {
+                // We have at least one markdown. We might have to split it if there any lines that don't begin
+                // with #
+                const firstNonMarkdown = split.findIndex((l : string) => !l.trim().startsWith('#'));
+                if (firstNonMarkdown >= 0) {
+                    // We need to combine results
+                    return this.combineObservables(
+                        this.executeMarkdownObservable(split.slice(0, firstNonMarkdown).join('\n'), file, line),
+                        this.executeCodeObservable(split.slice(firstNonMarkdown).join('\n'), file, line + firstNonMarkdown));
+                }
+                else {
+                    // Just a normal markdown case
+                    return this.combineObservables(
+                        this.executeMarkdownObservable(code, file, line));
+                }
+            } else {
+                // Normal code case
+                return this.combineObservables(
+                    this.executeCodeObservable(code, file, line));
             }
         }
 
         // Can't run because no session
-        return new Observable<ICell>(subscriber => {
+        return new Observable<ICell[]>(subscriber => {
             subscriber.error(localize.DataScience.sessionDisposed());
             subscriber.complete();
         });
@@ -238,21 +251,81 @@ export class JupyterServer implements IJupyterServer, IDisposable {
         return false;
     }
 
-    private pruneCell(cell : ICell) : nbformat.ICodeCell {
-        const { file, id, line, state, ...pruned} = cell;
-        return pruned;
+    private pruneCell(cell : ICell) : nbformat.IBaseCell {
+        return cell.data;
+    }
+
+    private combineObservables = (...args : Observable<ICell>[]) : Observable<ICell[]> =>{
+        return new Observable<ICell[]>(subscriber => {
+            // When all complete, we have our results
+            const results : ICell[] = [];
+
+            args.forEach(o => {
+                o.subscribe(c => {
+                    results.push(c);
+                    if (results.length == args.length) {
+                        subscriber.next(results);
+                        subscriber.complete();
+                    }
+                },
+                e => {
+                    subscriber.error(e);
+                })
+            })
+        })
+    }
+
+    private executeCodeObservable = (code: string, file: string, line: number) : Observable<ICell> => {
+
+        // Send an execute request with this code
+        const id = uuid();
+        const request = this.session.kernel.requestExecute(
+            {
+                code : code,
+                stop_on_error: false,
+                allow_stdin: false
+            },
+            true
+        );
+
+        return this.generateExecuteObservable(code, file, line, id, request);
+    }
+
+    private executeMarkdownObservable = (code: string, file: string, line: number) : Observable<ICell> => {
+
+        return new Observable<ICell>(subscriber => {
+            // Generate markdown by stripping out the comment and markdown header
+            const markdown = code.split('\n').slice(1).map(s => `${s.trim().slice(1)}\n`);
+
+            const cell: ICell = {
+                id: uuid(),
+                file: file,
+                line: line,
+                state: CellState.finished,
+                data : {
+                    cell_type : 'markdown',
+                    source: markdown,
+                    metadata:{}
+                }
+            };
+
+            subscriber.next(cell);
+            subscriber.complete();
+        })
     }
 
     private generateExecuteObservable(code: string, file: string, line: number, id: string, request: Kernel.IFuture) : Observable<ICell> {
         return new Observable<ICell>(subscriber => {
             // Start out empty;
             const cell: ICell = {
-                source: code.split('\n'),
-                cell_type: 'code',
-                outputs: [],
-                metadata: {},
+                data : {
+                    source: code.split('\n'),
+                    cell_type: 'code',
+                    outputs: [],
+                    metadata: {},
+                    execution_count: 0,
+                },
                 id: id,
-                execution_count: 0,
                 file: file,
                 line: line,
                 state: CellState.init
@@ -285,7 +358,7 @@ export class JupyterServer implements IJupyterServer, IDisposable {
 
                 // Set execution count, all messages should have it
                 if (msg.content.execution_count) {
-                    cell.execution_count = msg.content.execution_count as number;
+                    cell.data.execution_count = msg.content.execution_count as number;
                 }
             };
 
@@ -306,12 +379,18 @@ export class JupyterServer implements IJupyterServer, IDisposable {
         });
     }
 
+    private addToCellData = (cell: ICell, output : nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError) => {
+        const data : nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
+        data.outputs = [...data.outputs, output];
+        cell.data = data;
+    }
+
     private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, cell: ICell) {
-        cell.outputs = [...cell.outputs, { output_type : 'execute_result', data: msg.content.data, metadata : msg.content.metadata, execution_count : msg.content.execution_count }];
+        this.addToCellData(cell, { output_type : 'execute_result', data: msg.content.data, metadata : msg.content.metadata, execution_count : msg.content.execution_count });
     }
 
     private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, cell: ICell) {
-        cell.execution_count = msg.content.execution_count;
+        cell.data.execution_count = msg.content.execution_count;
     }
 
     private handleStatusMessage(msg: KernelMessage.IStatusMsg) {
@@ -328,7 +407,7 @@ export class JupyterServer implements IJupyterServer, IDisposable {
             name : msg.content.name,
             text : msg.content.text
         };
-        cell.outputs = [...cell.outputs, output];
+        this.addToCellData(cell, output);
     }
 
     private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, cell: ICell) {
@@ -337,7 +416,7 @@ export class JupyterServer implements IJupyterServer, IDisposable {
             data: msg.content.data,
             metadata : msg.content.metadata
         };
-        cell.outputs = [...cell.outputs, output];
+        this.addToCellData(cell, output);
     }
 
     private handleError(msg: KernelMessage.IErrorMsg, cell: ICell) {
@@ -347,7 +426,7 @@ export class JupyterServer implements IJupyterServer, IDisposable {
             evalue : msg.content.evalue,
             traceback : msg.content.traceback
         };
-        cell.outputs = [...cell.outputs, output];
+        this.addToCellData(cell, output);
     }
 
     private async generateTempFile(notebookFile?: string) : Promise<temp.OpenFile> {

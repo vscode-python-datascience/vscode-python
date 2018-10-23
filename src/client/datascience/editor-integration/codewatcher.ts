@@ -98,7 +98,7 @@ export class CodeWatcher implements ICodeWatcher {
         const activeHistory = await this.historyProvider.getOrCreateHistory();
         if (this.document) {
             const code = this.document.getText(range);
-            await activeHistory.addCode(code, this.getFileName(), range.start.line);
+            await activeHistory.addCode(code, this.getFileName(), range.start.line, window.activeTextEditor);
         }
     }
 

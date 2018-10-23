@@ -47,7 +47,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                 redoStack: [],
                 cells: [
                     {
-                        cell_type: 'code',
+                        data : {
+                            cell_type: 'code',
                         execution_count: 4,
                         metadata: {
                             slideshow: {
@@ -57,107 +58,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                         outputs: [
                             {
                                 data: {
-                                    'text/html': [
-                                        '<div>\n',
-                                        '<style scoped>\n',
-                                        '    .dataframe tbody tr th:only-of-type {\n',
-                                        '        vertical-align: middle;\n',
-                                        '    }\n',
-                                        '\n',
-                                        '    .dataframe tbody tr th {\n',
-                                        '        vertical-align: top;\n',
-                                        '    }\n',
-                                        '\n',
-                                        '    .dataframe thead th {\n',
-                                        '        text-align: right;\n',
-                                        '    }\n',
-                                        '</style>\n',
-                                        '<table border=\'1\' class=\'dataframe\'>\n',
-                                        '  <thead>\n',
-                                        '    <tr style=\'text-align: right;\'>\n',
-                                        '      <th></th>\n',
-                                        '      <th>num_preg</th>\n',
-                                        '      <th>glucose_conc</th>\n',
-                                        '      <th>diastolic_bp</th>\n',
-                                        '      <th>thickness</th>\n',
-                                        '      <th>insulin</th>\n',
-                                        '      <th>bmi</th>\n',
-                                        '      <th>diab_pred</th>\n',
-                                        '      <th>age</th>\n',
-                                        '      <th>skin</th>\n',
-                                        '      <th>diabetes</th>\n',
-                                        '    </tr>\n',
-                                        '  </thead>\n',
-                                        '  <tbody>\n',
-                                        '    <tr>\n',
-                                        '      <th>0</th>\n',
-                                        '      <td>6</td>\n',
-                                        '      <td>148</td>\n',
-                                        '      <td>72</td>\n',
-                                        '      <td>35</td>\n',
-                                        '      <td>0</td>\n',
-                                        '      <td>33.6</td>\n',
-                                        '      <td>0.627</td>\n',
-                                        '      <td>50</td>\n',
-                                        '      <td>1.3790</td>\n',
-                                        '      <td>True</td>\n',
-                                        '    </tr>\n',
-                                        '    <tr>\n',
-                                        '      <th>1</th>\n',
-                                        '      <td>1</td>\n',
-                                        '      <td>85</td>\n',
-                                        '      <td>66</td>\n',
-                                        '      <td>29</td>\n',
-                                        '      <td>0</td>\n',
-                                        '      <td>26.6</td>\n',
-                                        '      <td>0.351</td>\n',
-                                        '      <td>31</td>\n',
-                                        '      <td>1.1426</td>\n',
-                                        '      <td>False</td>\n',
-                                        '    </tr>\n',
-                                        '    <tr>\n',
-                                        '      <th>2</th>\n',
-                                        '      <td>8</td>\n',
-                                        '      <td>183</td>\n',
-                                        '      <td>64</td>\n',
-                                        '      <td>0</td>\n',
-                                        '      <td>0</td>\n',
-                                        '      <td>23.3</td>\n',
-                                        '      <td>0.672</td>\n',
-                                        '      <td>32</td>\n',
-                                        '      <td>0.0000</td>\n',
-                                        '      <td>True</td>\n',
-                                        '    </tr>\n',
-                                        '    <tr>\n',
-                                        '      <th>3</th>\n',
-                                        '      <td>1</td>\n',
-                                        '      <td>89</td>\n',
-                                        '      <td>66</td>\n',
-                                        '      <td>23</td>\n',
-                                        '      <td>94</td>\n',
-                                        '      <td>28.1</td>\n',
-                                        '      <td>0.167</td>\n',
-                                        '      <td>21</td>\n',
-                                        '      <td>0.9062</td>\n',
-                                        '      <td>False</td>\n',
-                                        '    </tr>\n',
-                                        '    <tr>\n',
-                                        '      <th>4</th>\n',
-                                        '      <td>0</td>\n',
-                                        '      <td>137</td>\n',
-                                        '      <td>40</td>\n',
-                                        '      <td>35</td>\n',
-                                        '      <td>168</td>\n',
-                                        '      <td>43.1</td>\n',
-                                        '      <td>2.288</td>\n',
-                                        '      <td>33</td>\n',
-                                        '      <td>1.3790</td>\n',
-                                        '      <td>True</td>\n',
-                                        '    </tr>\n',
-                                        '  </tbody>\n',
-                                        '</table>\n',
-                                        '</div>'
-                                    ],
                                     'text/plain': [
                                         '   num_preg  glucose_conc  diastolic_bp  thickness  insulin   bmi  diab_pred  \\\n',
                                         '0         6           148            72         35        0  33.6      0.627   \n',
@@ -182,13 +82,33 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                         source: [
                             'df',
                             'df.head(5)'
-                        ],
+                        ]
+                    },
                         id: '1',
                         file: 'foo.py',
                         line: 1,
                         state: CellState.finished
                     },
                     {
+                        data : {
+                        'cell_type': 'markdown',
+                        'metadata': {},
+                        'source': [
+                         '## Cell 3\n',
+                         'Here\'s some markdown\n',
+                         '- A List\n',
+                         '- Of Items'
+                        ]
+                       },
+                       id : '33',
+                       file : 'foo.py',
+                       line: 2,
+                       state : CellState.finished
+                    },
+                    {
+                        data: {
+
+
                         cell_type: 'code',
                         execution_count: 1,
                         metadata: {},
@@ -207,13 +127,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                         ],
                         source: [
                          'df'
-                        ],
+                        ]
+                    },
                         id: '2',
                         file: 'foo.py',
                         line: 1,
                         state: CellState.finished
                        },
                        {
+                           data : {
                         cell_type: 'code',
                         execution_count: 1,
                         metadata: {},
@@ -232,7 +154,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                         ],
                         source: [
                          'df'
-                        ],
+                        ]
+                    },
                         id: '2',
                         file: 'foo.py',
                         line: 1,

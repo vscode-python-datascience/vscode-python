@@ -12,6 +12,7 @@ import { ILogger } from '../../client/common/types';
 import { JupyterServerProvider } from '../../client/datascience/jupyterServerProvider';
 import { IJupyterServerProvider } from '../../client/datascience/types';
 import { MockPythonExecutionService } from './executionServiceMock';
+import { nbformat } from '@jupyterlab/coreutils';
 
 suite('Jupyter server tests', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
@@ -65,7 +66,10 @@ suite('Jupyter server tests', () => {
             server.onStatusChanged((bool: boolean) => {
                 statusCount += 1;
             });
-            const cell = await server.execute('a = 1\r\na', 'foo.py', 2);
+            const cells = await server.execute('a = 1\r\na', 'foo.py', 2);
+            assert.equal(cells.length, 1, 'Wrong number of cells returned');
+            assert.equal(cells[0].data.cell_type, 'code', 'Wrong type of cell returned');
+            const cell = cells[0].data as nbformat.ICodeCell;
             assert.equal(cell.outputs.length, 1, 'Cell length not correct');
             const data = cell.outputs[0].data;
             assert.ok(data, 'No data object on the cell');

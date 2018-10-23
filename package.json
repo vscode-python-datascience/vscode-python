@@ -85,7 +85,10 @@
         "onCommand:python.setLinter",
         "onCommand:python.enableLinting",
         "onCommand:python.createTerminal",
-        "onCommand:python.discoverTests"
+        "onCommand:python.discoverTests",
+        "onCommand:python.datascience.showhistorypane",
+        "onCommand:python.datascience.importnotebook",
+        "onCommand:python.datascience.importnotebookonfile"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -240,12 +243,18 @@
                 "category": "Python"
             },
             {
-                "command": "python.datascience.testhistorypane",
-                "title": "%python.command.python.datascience.testhistorypane.title%"
-            },
-            {
                 "command": "python.datascience.runcell",
                 "title": "%python.command.python.datascience.runcell.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.importnotebook",
+                "title": "%python.command.python.datascience.importnotebook.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.importnotebookonfile",
+                "title": "%python.command.python.datascience.importnotebookonfile.title%",
                 "category": "Python"
             }
         ],
@@ -293,6 +302,11 @@
                     "when": "python.datascience.hascodecells",
                     "command": "python.datascience.runcurrentcell",
                     "group": "Python"
+                },
+                {
+                    "when": "resourceLangId == jupyter",
+                    "command": "python.datascience.importnotebookonfile",
+                    "group": "Python"
                 }
             ],
             "explorer/context": [
@@ -309,6 +323,11 @@
                 {
                     "when": "resourceLangId == python",
                     "command": "python.execInTerminal",
+                    "group": "Python"
+                },
+                {
+                    "when": "resourceLangId == jupyter",
+                    "command": "python.datascience.importnotebookonfile",
                     "group": "Python"
                 }
             ]
@@ -1536,6 +1555,12 @@
                 "aliases": [
                     "Jinja"
                 ]
+            },
+            {
+                "id": "jupyter",
+                "extensions": [
+                    ".ipynb"
+                ]
             }
         ],
         "grammars": [
@@ -1635,6 +1660,7 @@
         "tmp": "0.0.29",
         "tree-kill": "1.2.0",
         "typed-promisify": "0.4.0",
+        "typed-react-markdown": "^0.1.0",
         "typescript-char": "0.0.0",
         "uint64be": "1.0.1",
         "unicode": "10.0.0",
@@ -1688,6 +1714,7 @@
         "@types/xml2js": "^0.4.2",
         "JSONStream": "^1.3.2",
         "babel-loader": "^8.0.3",
+        "babel-plugin-inline-json-import": "^0.3.1",
         "babel-plugin-transform-runtime": "^6.23.0",
         "babel-polyfill": "^6.26.0",
         "chai": "^4.1.2",
@@ -1720,9 +1747,11 @@
         "is-running": "^2.1.0",
         "istanbul": "^0.4.5",
         "jsdom": "^12.2.0",
+        "json-loader": "^0.5.7",
         "mocha": "^5.0.4",
         "mocha-junit-reporter": "^1.17.0",
         "node-has-native-dependencies": "^1.0.2",
+        "raw-loader": "^0.5.1",
         "react": "^16.5.2",
         "react-dev-utils": "^5.0.2",
         "react-dom": "^16.5.2",

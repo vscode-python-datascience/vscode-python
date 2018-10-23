@@ -7,7 +7,8 @@ export namespace Commands {
     export const RunCell = 'python.datascience.runcell';
     export const RunCurrentCell = 'python.datascience.runcurrentcell';
     export const ShowHistoryPane = 'python.datascience.showhistorypane';
-    export const TestHistoryPane = 'python.datascience.testhistorypane';
+    export const ImportNotebook = 'python.datascience.importnotebook';
+    export const ImportNotebookOnFile = 'python.datascience.importnotebookonfile';
 }
 
 export namespace EditorContexts {
@@ -16,6 +17,7 @@ export namespace EditorContexts {
 
 export namespace RegExpValues {
     export const PythonCellMarker = new RegExp('^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])(.*)');
+    export const PythonMarkdownCellMarker = new RegExp('^#\\s*%%\\s*[markdown]');
 }
 
 export namespace HistoryMessages {

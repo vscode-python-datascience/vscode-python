@@ -33,7 +33,7 @@ import { PlatformService } from '../../client/common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { IDisposableRegistry, ILogger } from '../../client/common/types';
-import { Cell } from '../../client/datascience/history-react/Cell';
+import { Cell } from '../../client/datascience/history-react/cell';
 import { MainPanel } from '../../client/datascience/history-react/mainPanel';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
 import { JupyterServerProvider } from '../../client/datascience/jupyterServerProvider';

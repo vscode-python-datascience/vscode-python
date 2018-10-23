@@ -4,13 +4,15 @@
 'use strict';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
+import { Position, Range, Selection, TextEditor, Uri, ViewColumn, TextDocument } from 'vscode';
 import { IApplicationShell, IDocumentManager, IWebPanel, IWebPanelMessageListener, IWebPanelProvider  } from '../common/application/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
 import { HistoryMessages } from './constants';
 import { CellState, ICell, IJupyterServer, IJupyterServerProvider } from './types';
+import { IConfigurationService } from '../common/types';
+import { PythonSettings } from '../common/configSettings';
 
 export class History implements IWebPanelMessageListener {
     private static activeHistory: History;
@@ -20,14 +22,22 @@ export class History implements IWebPanelMessageListener {
     private loadPromise: Promise<void>;
     private documentManager : IDocumentManager;
     private applicationShell : IApplicationShell;
+    private configuration : IConfigurationService;
+    private serviceContainer : IServiceContainer;
 
     constructor(serviceContainer: IServiceContainer) {
+        this.serviceContainer = serviceContainer;
         // Load on a background thread.
         this.loadPromise = this.load(serviceContainer);
 
         // Save our services
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+
+        // Sign up for configuration changes
+        this.configuration = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
+
     }
 
     public static getOrCreateActive(serviceContainer: IServiceContainer) {
@@ -51,7 +61,7 @@ export class History implements IWebPanelMessageListener {
         }
     }
 
-    public async addCode(code: string, file: string, line: number) : Promise<void> {
+    public async addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
         // Make sure we're loaded first.
         await this.loadPromise;
 
@@ -64,24 +74,8 @@ export class History implements IWebPanelMessageListener {
 
             // Sign up for cell changes
             observable.subscribe(
-                (cell: ICell) => {
-                    if (this.webPanel) {
-                        switch (cell.state) {
-                            case CellState.init:
-                                // Tell the react controls we have a new cell
-                                this.webPanel.postMessage({ type: HistoryMessages.StartCell, payload: cell });
-                                break;
-
-                            case CellState.error:
-                            case CellState.finished:
-                                // Tell the react controls we're done
-                                this.webPanel.postMessage({ type: HistoryMessages.FinishCell, payload: cell });
-                                break;
-
-                            default:
-                                break; // might want to do a progress bar or something
-                        }
-                    }
+                (cells: ICell[]) => {
+                    this.onAddCodeEvent(cells, editor);
                 },
                 (error) => {
                     this.applicationShell.showErrorMessage(error);
@@ -116,8 +110,54 @@ export class History implements IWebPanelMessageListener {
         }
     }
 
-    // tslint:disable-next-line: no-any no-empty
     public onDisposed() {
+        (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged);
+        if (this.jupyterServer) {
+            this.jupyterServer.dispose();
+        }
+    }
+
+    private onAddCodeEvent = (cells : ICell[], editor?: TextEditor) => {
+        // Send each cell to the other side
+        cells.forEach((cell : ICell) => {
+            if (this.webPanel) {
+                switch (cell.state) {
+                    case CellState.init:
+                        // Tell the react controls we have a new cell
+                        this.webPanel.postMessage({ type: HistoryMessages.StartCell, payload: cell });
+                        break;
+
+                    case CellState.error:
+                    case CellState.finished:
+                        // Tell the react controls we're done
+                        this.webPanel.postMessage({ type: HistoryMessages.FinishCell, payload: cell });
+                        break;
+
+                    default:
+                        break; // might want to do a progress bar or something
+                }
+            }
+        });
+
+        // If we have more than one cell, the second one should be a code cell. After it finishes, we need to inject a new cell entry
+        if (cells.length > 1) {
+            // If we have an active editor, do the edit there so that the user can undo it, otherwise don't bother
+            if (editor) {
+                const edit = editor.edit((editBuilder) => {
+                    editBuilder.insert(new Position(cells[1].line, 0), '# %%');
+                });
+            }
+        }
+    }
+
+    private onSettingsChanged = async () => {
+        // Update our load promise. We need to restart the jupyter server
+        if (this.loadPromise) {
+            await this.loadPromise;
+            this.jupyterServer.dispose();
+            this.jupyterServer = undefined;
+        }
+        this.loadPromise = this.loadJupyterServer(this.serviceContainer);
     }
 
     private gotoCode = (file: string, line: number) => {

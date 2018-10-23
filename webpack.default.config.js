@@ -2,6 +2,7 @@
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 var path = require('path');
+var inlineCompiler = require('./scripts/inlinePlugin');
 
 module.exports = {
   entry: ['babel-polyfill'],
@@ -17,10 +18,27 @@ module.exports = {
   },
   plugins: [
       new HtmlWebpackPlugin({ template: '<unknown>' }),
-      new FixDefaultImportPlugin(),
-    ],
+      new FixDefaultImportPlugin()
+      //new inlineCompiler(/node_modules\/remark-parse\/lib\/default.js/)
+   ],
+//    resolve: {
+//        plugins : [
+//          new inlineResolver(/node_modules\/remark-parse\/lib\/default.js/)
+//        ]
+//    },
+  //stats: 'verbose',
   module: {
     rules: [
+        {
+            test: /\.js$/,
+            include: /node_modules.*remark.*default.*js/,
+            use: [
+                {
+                    loader: path.resolve('./scripts/remarkLoader.js'),
+                    options : {}
+                }
+            ]
+        },
         {
             test: /\.(js|jsx)$/,
             exclude: /node_modules/,
@@ -40,6 +58,23 @@ module.exports = {
             use: [
                 "style-loader",
                 "css-loader"
+            ]
+        },
+        // {
+        //     test: /\.json$/,
+        //     type: 'javascript/auto',
+        //     include: /node_modules.*remark.*/,
+        //     use: 'raw-loader'
+        // },
+        {
+            test: /\.json$/,
+            type: 'javascript/auto',
+            include: /node_modules.*remark.*/,
+            use: [
+                {
+                    loader: path.resolve('./scripts/jsonloader.js'),
+                    options : {}
+                }
             ]
         },
           // "file" loader makes sure those assets get served by WebpackDevServer.
