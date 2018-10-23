@@ -38,24 +38,44 @@ export class DataScience implements IDataScience {
     }
 
     public runAllCells(codeWatcher: ICodeWatcher): Promise<void> {
-        return codeWatcher.runAllCells();
+        let activeCodeWatcher: ICodeWatcher | undefined = codeWatcher;
+        if (!activeCodeWatcher) {
+            activeCodeWatcher = this.getCurrentCodeWatcher();
+        }
+        if (activeCodeWatcher) {
+            return activeCodeWatcher.runAllCells();
+        } else {
+            return Promise.resolve();
+        }
     }
 
     public runCell(codeWatcher: ICodeWatcher, range: vscode.Range): Promise<void> {
-        // Pass down to the code watcher to handle
-        return codeWatcher.runCell(range);
+        if (codeWatcher) {
+            return codeWatcher.runCell(range);
+        } else {
+            return this.runCurrentCell();
+        }
     }
 
     public runCurrentCell(): Promise<void> {
+        const activeCodeWatcher = this.getCurrentCodeWatcher();
+        if (activeCodeWatcher) {
+            return activeCodeWatcher.runCurrentCell();
+        } else {
+            return Promise.resolve();
+        }
+    }
+
+    // Get our matching code watcher for the active document
+    private getCurrentCodeWatcher(): ICodeWatcher | undefined {
         const activeEditor = vscode.window.activeTextEditor;
         if (!activeEditor || !activeEditor.document)
         {
-            return Promise.resolve();
+            return undefined;
         }
 
         // Ask our code lens provider to find the matching code watcher for the current document
-        const activeCodeWatcher = this.dataScienceCodeLensProvider.getCodeWatcher(activeEditor.document);
-        return activeCodeWatcher.runCurrentCell();
+        return this.dataScienceCodeLensProvider.getCodeWatcher(activeEditor.document);
     }
 
     private registerCommands(): void {
