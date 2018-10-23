@@ -65,5 +65,6 @@
 	"DataScience.exportDialogFilter" : "Jupyter Notebooks",
 	"DataScience.exportDialogComplete" : "Notebook written to {0}",
 	"DataScience.exportDialogFailed" : "Failed to export notebook. {0}",
-	"DataScience.exportOpenQuestion" : "Open in browser?"
+    "DataScience.exportOpenQuestion" : "Open in browser?",
+    "DataScience.collapseInputTooltip" : "Collapse input block"
 }
