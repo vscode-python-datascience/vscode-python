@@ -56,7 +56,31 @@ export class CodeWatcher implements ICodeWatcher {
                 command: Commands.RunCell
             };
             this.codeLenses.push(new CodeLens(cell.range, cmd));
+            const runAllCmd: Command = {
+                arguments: [this],
+                title: localize.DataScience.runAllCellsLensCommandTitle(),
+                command: Commands.RunAllCells
+            };
+            this.codeLenses.push(new CodeLens(cell.range, runAllCmd));
         });
+    }
+
+    public async runAllCells() {
+        const activeHistory = await this.historyProvider.getOrCreateHistory();
+
+        // Run all of our code lenses, they should always be ordered in the file so we can just
+        // run them one by one
+        for (const lens of this.codeLenses) {
+            if (this.document && lens.command && lens.command.arguments) {
+                if (lens.command.command === Commands.RunCell && lens.command.arguments.length >= 2) {
+                    const range: Range = lens.command.arguments[1];
+                    if (range) {
+                        const code = this.document.getText(range);
+                        await activeHistory.addCode(code, this.getFileName(), range.start.line);
+                    }
+                }
+            }
+        }
     }
 
     public async runCell(range: Range) {
@@ -73,8 +97,8 @@ export class CodeWatcher implements ICodeWatcher {
         }
 
         for (const lens of this.codeLenses) {
-            // Check to see which lens range overlaps the current selection start
-            if (lens.range.contains(window.activeTextEditor.selection.start)) {
+            // Check to see which RunCell lens range overlaps the current selection start
+            if (lens.range.contains(window.activeTextEditor.selection.start) && lens.command && lens.command.command === Commands.RunCell) {
                 await this.runCell(lens.range);
                 break;
             }
@@ -113,8 +137,9 @@ export class CodeWatcher implements ICodeWatcher {
             previousCell.range = new Range(previousCell.range.start, line.range.end);
         }
 
-        // Inform the editor context that we have cells
-        editorContext.set(cells.length > 0);
+        // Inform the editor context that we have cells, fire and forget is ok on the promise here
+        // as we don't care to wait for this context to be set and we can't do anything if it fails
+        editorContext.set(cells.length > 0).catch();
         return cells;
     }
 }

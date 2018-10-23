@@ -37,6 +37,10 @@ export class DataScience implements IDataScience {
         );
     }
 
+    public runAllCells(codeWatcher: ICodeWatcher): Promise<void> {
+        return codeWatcher.runAllCells();
+    }
+
     public runCell(codeWatcher: ICodeWatcher, range: vscode.Range): Promise<void> {
         // Pass down to the code watcher to handle
         return codeWatcher.runCell(range);
@@ -55,7 +59,9 @@ export class DataScience implements IDataScience {
     }
 
     private registerCommands(): void {
-        let disposable = this.commandManager.registerCommand(Commands.RunCell, this.runCell, this);
+        let disposable = this.commandManager.registerCommand(Commands.RunAllCells, this.runAllCells, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.RunCell, this.runCell, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.RunCurrentCell, this.runCurrentCell, this);
         this.disposableRegistry.push(disposable);
