@@ -242,6 +242,12 @@
                 "category": "Python"
             },
             {
+            {
+                "command": "python.datascience.runallcells",
+                "title": "%python.command.python.datascience.runallcells.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.runcell",
                 "title": "%python.command.python.datascience.runcell.title%",
                 "category": "Python"

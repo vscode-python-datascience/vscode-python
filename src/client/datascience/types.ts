@@ -73,6 +73,7 @@ export interface ICodeWatcher {
     getVersion() : number;
     getCodeLenses() : CodeLens[];
     addFile(document: TextDocument);
+    runAllCells();
     runCell(range: Range);
     runCurrentCell();
 }

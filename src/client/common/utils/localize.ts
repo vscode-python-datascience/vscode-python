@@ -35,6 +35,7 @@ export namespace DataScience {
     export const jupyterNbConvertNotSupported = localize('DataScience.jupyterNbConvertNotSupported', 'Jupyter nbconvert is not installed');
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
     export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter backend');
+    export const runAllCellsLensCommandTitle = localize('python.command.python.datascience.runallcells.title', 'Run all cells');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
