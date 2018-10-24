@@ -142,6 +142,7 @@ export interface IPythonSettings {
     readonly globalModuleInstallation: boolean;
     readonly analysis: IAnalysisSettings;
     readonly autoUpdateLanguageServer: boolean;
+    readonly datascience : IDataScienceSettings;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -258,6 +259,10 @@ export interface IAnalysisSettings {
     readonly disabled: string[];
     readonly traceLogging: boolean;
     readonly logLevel: LogLevel;
+}
+
+export interface IDataScienceSettings {
+    allowImportFromNotebook : boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

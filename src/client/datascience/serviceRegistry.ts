@@ -7,7 +7,7 @@ import { IServiceManager } from '../ioc/types';
 import { DataScience } from './datascience';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
-import { HistoryCommandListener } from './historycommandlistener';
+import { HistoryCommandListener } from './historyCommandListener';
 import { HistoryProvider } from './historyprovider';
 import { JupyterServerProvider } from './jupyterserverprovider';
 import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, IHistoryProvider, IJupyterServerProvider  } from './types';

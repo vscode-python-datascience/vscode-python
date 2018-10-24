@@ -85,7 +85,9 @@
         "onCommand:python.setLinter",
         "onCommand:python.enableLinting",
         "onCommand:python.createTerminal",
-        "onCommand:python.discoverTests"
+        "onCommand:python.discoverTests",
+        "onCommand:python.datascience.showhistorypane",
+        "onCommand:python.datascience.importnotebook"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -240,10 +242,6 @@
                 "category": "Python"
             },
             {
-                "command": "python.datascience.testhistorypane",
-                "title": "%python.command.python.datascience.testhistorypane.title%"
-            },
-            {
                 "command": "python.datascience.runallcells",
                 "title": "%python.command.python.datascience.runallcells.title%",
                 "category": "Python"
@@ -251,6 +249,11 @@
             {
                 "command": "python.datascience.runcell",
                 "title": "%python.command.python.datascience.runcell.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.importnotebook",
+                "title": "%python.command.python.datascience.importnotebook.title%",
                 "category": "Python"
             }
         ],
@@ -298,6 +301,11 @@
                     "when": "python.datascience.hascodecells",
                     "command": "python.datascience.runcurrentcell",
                     "group": "Python"
+                },
+                {
+                    "when": "resourceLangId == jupyter",
+                    "command": "python.datascience.importnotebook",
+                    "group": "Python"
                 }
             ],
             "explorer/context": [
@@ -314,6 +322,11 @@
                 {
                     "when": "resourceLangId == python",
                     "command": "python.execInTerminal",
+                    "group": "Python"
+                },
+                {
+                    "when": "resourceLangId == jupyter",
+                    "command": "python.datascience.importnotebook",
                     "group": "Python"
                 }
             ]
@@ -776,6 +789,12 @@
                     "default": true,
                     "description": "Automatically update the language server.",
                     "scope": "application"
+                },
+                "python.dataScience.allowImportFromNotebook": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
+                    "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
@@ -1539,6 +1558,12 @@
                 "aliases": [
                     "Jinja"
                 ]
+            },
+            {
+                "id": "jupyter",
+                "extensions": [
+                    ".ipynb"
+                ]
             }
         ],
         "grammars": [
@@ -1606,6 +1631,8 @@
         "@nteract/transform-model-debug": "^3.2.3",
         "@nteract/transform-plotly": "^3.2.3",
         "@nteract/transforms": "^4.4.4",
+        "@types/prismjs": "^1.9.0",
+        "ansi-to-html": "^0.6.7",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
         "diff-match-patch": "^1.0.0",
@@ -1625,6 +1652,7 @@
         "node-stream-zip": "^1.6.0",
         "opn": "^5.3.0",
         "pidusage": "^1.2.0",
+        "prismjs": "^1.15.0",
         "promisify-node": "^0.5.0",
         "react-json-tree": "^0.11.0",
         "reflect-metadata": "^0.1.12",
@@ -1638,6 +1666,7 @@
         "tmp": "^0.0.29",
         "tree-kill": "^1.2.0",
         "typed-promisify": "^0.4.0",
+        "typed-react-markdown": "^0.1.0",
         "typescript-char": "^0.0.0",
         "uint64be": "^1.0.1",
         "unicode": "^10.0.0",
@@ -1691,6 +1720,8 @@
         "@types/xml2js": "^0.4.2",
         "JSONStream": "^1.3.2",
         "babel-loader": "^8.0.3",
+        "babel-plugin-inline-json-import": "^0.3.1",
+        "babel-plugin-prismjs": "^1.0.2",
         "babel-plugin-transform-runtime": "^6.23.0",
         "babel-polyfill": "^6.26.0",
         "chai": "^4.1.2",
@@ -1723,9 +1754,11 @@
         "is-running": "^2.1.0",
         "istanbul": "^0.4.5",
         "jsdom": "^12.2.0",
+        "json-loader": "^0.5.7",
         "mocha": "^5.0.4",
         "mocha-junit-reporter": "^1.17.0",
         "node-has-native-dependencies": "^1.0.2",
+        "raw-loader": "^0.5.1",
         "react": "^16.5.2",
         "react-dev-utils": "^5.0.2",
         "react-dom": "^16.5.2",

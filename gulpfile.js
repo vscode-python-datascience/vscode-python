@@ -103,7 +103,7 @@ gulp.task('watchProblems', gulp.parallel('hygiene-modified', 'hygiene-watch'));
 
 gulp.task('debugger-coverage', buildDebugAdapterCoverage);
 
-gulp.task('hygiene-watch-branch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'diffMaster', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
+gulp.task('hygiene-watch-branch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'diffMaster' }), 100)));
 
 gulp.task('hygiene-all', () => run({ mode: 'all' }));
 

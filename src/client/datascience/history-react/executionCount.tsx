@@ -9,6 +9,7 @@ import './executionCount.css';
 interface IExecutionCountProps {
     cell: ICell;
     theme: string;
+    visible: boolean;
 }
 
 export class ExecutionCount extends React.Component<IExecutionCountProps> {
@@ -18,14 +19,18 @@ export class ExecutionCount extends React.Component<IExecutionCountProps> {
 
     public render() {
         const isBusy = this.props.cell.state === CellState.init || this.props.cell.state === CellState.executing;
+        if (this.props.visible) {
 
-        return isBusy ?
-            (
-                <div className='execution-count-busy-outer'>[<svg className='execution-count-busy-svg' viewBox='0 0 100 100'><polyline points='50,0, 50,50, 85,15, 50,50, 100,50, 50,50, 85,85, 50,50 50,100 50,50 15,85 50,50 0,50 50,50 15,15' className='execution-count-busy-polyline'/></svg>]</div>
-            ) :
-            (
-                <div className='execution-count'>{`[${this.props.cell.execution_count}]`}</div>
-            );
+            return isBusy ?
+                (
+                    <div className='execution-count-busy-outer'>[<svg className='execution-count-busy-svg' viewBox='0 0 100 100'><polyline points='50,0, 50,50, 85,15, 50,50, 100,50, 50,50, 85,85, 50,50 50,100 50,50 15,85 50,50 0,50 50,50 15,15' className='execution-count-busy-polyline' /></svg>]</div>
+                ) :
+                (
+                    <div className='execution-count'>{`[${this.props.cell.data.execution_count}]`}</div>
+                );
+        } else {
+            return null;
+        }
     }
 
 }

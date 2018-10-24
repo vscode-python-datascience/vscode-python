@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
+import './mainPanel.css';
+
 import { min } from 'lodash';
 import * as React from 'react';
+
 import { HistoryMessages } from '../constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
@@ -12,241 +14,26 @@ import { RelativeImage } from '../react-common/relativeImage';
 import { CellState, ICell } from '../types';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
-import './mainPanel.css';
+import { createCellVM, generateTestState, IMainPanelState } from './mainPanelState';
 import { MenuBar } from './menuBar';
-
-export interface IState {
-    cellVMs: ICellViewModel[];
-    busy: boolean;
-    skipNextScroll? : boolean;
-    undoStack : ICellViewModel[][];
-    redoStack : ICellViewModel[][];
-}
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
     theme: string;
 }
 
-export class MainPanel extends React.Component<IMainPanelProps, IState> implements IMessageHandler {
+export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private stackLimit = 10;
 
     private bottom: HTMLDivElement | undefined;
 
     // tslint:disable-next-line:max-func-body-length
-    constructor(props: IMainPanelProps, state: IState) {
+    constructor(props: IMainPanelProps, state: IMainPanelState) {
         super(props);
         this.state = { cellVMs: [], busy: false, undoStack: [], redoStack : [] };
 
         if (!this.props.skipDefault) {
-            const cellA: ICell = {
-                cell_type: 'code',
-                execution_count: 4,
-                metadata: {
-                    slideshow: {
-                        slide_type: '-'
-                    }
-                },
-                outputs: [
-                    {
-                        data: {
-                            'text/html': [
-                                '<div>\n',
-                                '<style scoped>\n',
-                                '    .dataframe tbody tr th:only-of-type {\n',
-                                '        vertical-align: middle;\n',
-                                '    }\n',
-                                '\n',
-                                '    .dataframe tbody tr th {\n',
-                                '        vertical-align: top;\n',
-                                '    }\n',
-                                '\n',
-                                '    .dataframe thead th {\n',
-                                '        text-align: right;\n',
-                                '    }\n',
-                                '</style>\n',
-                                '<table border=\'1\' class=\'dataframe\'>\n',
-                                '  <thead>\n',
-                                '    <tr style=\'text-align: right;\'>\n',
-                                '      <th></th>\n',
-                                '      <th>num_preg</th>\n',
-                                '      <th>glucose_conc</th>\n',
-                                '      <th>diastolic_bp</th>\n',
-                                '      <th>thickness</th>\n',
-                                '      <th>insulin</th>\n',
-                                '      <th>bmi</th>\n',
-                                '      <th>diab_pred</th>\n',
-                                '      <th>age</th>\n',
-                                '      <th>skin</th>\n',
-                                '      <th>diabetes</th>\n',
-                                '    </tr>\n',
-                                '  </thead>\n',
-                                '  <tbody>\n',
-                                '    <tr>\n',
-                                '      <th>0</th>\n',
-                                '      <td>6</td>\n',
-                                '      <td>148</td>\n',
-                                '      <td>72</td>\n',
-                                '      <td>35</td>\n',
-                                '      <td>0</td>\n',
-                                '      <td>33.6</td>\n',
-                                '      <td>0.627</td>\n',
-                                '      <td>50</td>\n',
-                                '      <td>1.3790</td>\n',
-                                '      <td>True</td>\n',
-                                '    </tr>\n',
-                                '    <tr>\n',
-                                '      <th>1</th>\n',
-                                '      <td>1</td>\n',
-                                '      <td>85</td>\n',
-                                '      <td>66</td>\n',
-                                '      <td>29</td>\n',
-                                '      <td>0</td>\n',
-                                '      <td>26.6</td>\n',
-                                '      <td>0.351</td>\n',
-                                '      <td>31</td>\n',
-                                '      <td>1.1426</td>\n',
-                                '      <td>False</td>\n',
-                                '    </tr>\n',
-                                '    <tr>\n',
-                                '      <th>2</th>\n',
-                                '      <td>8</td>\n',
-                                '      <td>183</td>\n',
-                                '      <td>64</td>\n',
-                                '      <td>0</td>\n',
-                                '      <td>0</td>\n',
-                                '      <td>23.3</td>\n',
-                                '      <td>0.672</td>\n',
-                                '      <td>32</td>\n',
-                                '      <td>0.0000</td>\n',
-                                '      <td>True</td>\n',
-                                '    </tr>\n',
-                                '    <tr>\n',
-                                '      <th>3</th>\n',
-                                '      <td>1</td>\n',
-                                '      <td>89</td>\n',
-                                '      <td>66</td>\n',
-                                '      <td>23</td>\n',
-                                '      <td>94</td>\n',
-                                '      <td>28.1</td>\n',
-                                '      <td>0.167</td>\n',
-                                '      <td>21</td>\n',
-                                '      <td>0.9062</td>\n',
-                                '      <td>False</td>\n',
-                                '    </tr>\n',
-                                '    <tr>\n',
-                                '      <th>4</th>\n',
-                                '      <td>0</td>\n',
-                                '      <td>137</td>\n',
-                                '      <td>40</td>\n',
-                                '      <td>35</td>\n',
-                                '      <td>168</td>\n',
-                                '      <td>43.1</td>\n',
-                                '      <td>2.288</td>\n',
-                                '      <td>33</td>\n',
-                                '      <td>1.3790</td>\n',
-                                '      <td>True</td>\n',
-                                '    </tr>\n',
-                                '  </tbody>\n',
-                                '</table>\n',
-                                '</div>'
-                            ],
-                            'text/plain': [
-                                '   num_preg  glucose_conc  diastolic_bp  thickness  insulin   bmi  diab_pred  \\\n',
-                                '0         6           148            72         35        0  33.6      0.627   \n',
-                                '1         1            85            66         29        0  26.6      0.351   \n',
-                                '2         8           183            64          0        0  23.3      0.672   \n',
-                                '3         1            89            66         23       94  28.1      0.167   \n',
-                                '4         0           137            40         35      168  43.1      2.288   \n',
-                                '\n',
-                                '   age    skin  diabetes  \n',
-                                '0   50  1.3790      True  \n',
-                                '1   31  1.1426     False  \n',
-                                '2   32  0.0000      True  \n',
-                                '3   21  0.9062     False  \n',
-                                '4   33  1.3790      True  '
-                            ]
-                        },
-                        execution_count: 4,
-                        metadata: {},
-                        output_type: 'execute_result'
-                    }
-                ],
-                source: [
-                    'df',
-                    'df.head(5)'
-                ],
-                id: '1',
-                file: 'foo.py',
-                line: 1,
-                state: CellState.finished
-            }
-            const cellAVM = this.createCellVM(cellA);
-
-            const cellB: ICell = {
-                cell_type: 'code',
-                execution_count: 1,
-                metadata: {},
-                outputs: [
-                    {
-                    ename: 'NameError',
-                    evalue: 'name "df" is not defined',
-                    output_type: 'error',
-                    traceback: [
-                    '\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
-                    '\u001b[1;31mNameError\u001b[0m                                 Traceback (most recent call last)',
-                    '\u001b[1;32m<ipython-input-1-00cf07b74dcd>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m()\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[0mdf\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m',
-                    '\u001b[1;31mNameError\u001b[0m: name "df" is not defined'
-                    ]
-                    }
-                ],
-                source: [
-                    'df'
-                ],
-                id: '2',
-                file: 'foo.py',
-                line: 1,
-                state: CellState.finished
-            }
-            const cellBVM = this.createCellVM(cellB);
-
-            const cellC: ICell = {
-                cell_type: 'code',
-                execution_count: 1,
-                metadata: {},
-                outputs: [
-                    {
-                    ename: 'NameError',
-                    evalue: 'name "df" is not defined',
-                    output_type: 'error',
-                    traceback: [
-                    '\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
-                    '\u001b[1;31mNameError\u001b[0m                                 Traceback (most recent call last)',
-                    '\u001b[1;32m<ipython-input-1-00cf07b74dcd>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m()\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[0mdf\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m',
-                    '\u001b[1;31mNameError\u001b[0m: name "df" is not defined'
-                    ]
-                    }
-                ],
-                source: [
-                    'df'
-                ],
-                id: '2',
-                file: 'foo.py',
-                line: 1,
-                state: CellState.init
-            }
-            const cellCVM = this.createCellVM(cellC);
-
-            this.state = {
-                busy: false,
-                undoStack: [],
-                redoStack: [],
-                cellVMs: [
-                    cellAVM,
-                    cellBVM,
-                    cellCVM
-                ]
-            }
+            this.state = generateTestState(this.inputBlockToggled);
         }
     }
 
@@ -274,11 +61,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
         './images/CollapseAll/CollapseAll_16x_vscode_dark.svg';
         const expandAllImage = this.props.theme !== 'vscode-dark' ? './images/ExpandAll/ExpandAll_16x_vscode.svg' :
         './images/ExpandAll/ExpandAll_16x_vscode_dark.svg';
+        this.scrollToBottom();
 
         return (
             <div className='main-panel'>
                 <PostOffice messageHandlers={[this]} />
                 <MenuBar theme={this.props.theme} stylePosition='top-fixed'>
+                    {this.renderExtraButtons()}
                     <CellButton theme={this.props.theme} onClick={this.collapseAll} disabled={!this.canCollapseAll()} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
                         <RelativeImage class='cell-button-image' path={collapseAllImage}/>
                     </CellButton>
@@ -303,7 +92,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                 </MenuBar>
                 <div className='top-spacing'/>
                 {this.renderCells()}
-                <div ref={this.updateBottom} />
+                <div ref={this.updateBottom}/>
             </div>
         );
     }
@@ -326,6 +115,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
         return false;
     }
 
+    private renderExtraButtons = () => {
+        if (!this.props.skipDefault) {
+            return <CellButton theme={this.props.theme} onClick={this.addMarkdown} tooltip='Add Markdown Test'>M</CellButton>;
+        }
+
+        return null;
+    }
+
     private renderCells = () => {
         return this.state.cellVMs.map((cellVM: ICellViewModel, index: number) =>
             <ErrorBoundary key={index}>
@@ -336,6 +133,25 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                     delete={() => this.deleteCell(index)}/>
             </ErrorBoundary>
         );
+    }
+
+    private addMarkdown = () => {
+        this.addCell({
+            data :         {
+                cell_type: 'markdown',
+                metadata: {},
+                source: [
+                    '## Cell 3\n',
+                    'Here\'s some markdown\n',
+                    '- A List\n',
+                    '- Of Items'
+                ]
+            },
+            id : '1111',
+            file : 'foo.py',
+            line : 0,
+            state : CellState.finished
+        });
     }
 
     private collapseAll = () => {
@@ -466,19 +282,27 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
 
     private scrollToBottom = () => {
         if (this.bottom && this.bottom.scrollIntoView && !this.state.skipNextScroll) {
-            this.bottom.scrollIntoView({behavior: 'smooth'});
+            // Delay this until we are about to render. React hasn't setup the size of the bottom element
+            // yet so we need to delay. 10ms looks good from a user point of view
+            setTimeout(() => {
+                if (this.bottom) {
+                    this.bottom.scrollIntoView({behavior: 'smooth', block : 'end', inline: 'end'});
+                }
+            }, 10);
         }
     }
 
     private updateBottom = (newBottom: HTMLDivElement) => {
-        this.bottom = newBottom;
+        if (newBottom !== this.bottom) {
+            this.bottom = newBottom;
+        }
     }
 
     // tslint:disable-next-line:no-any
     private addCell = (payload?: any) => {
         if (payload) {
             const cell = payload as ICell;
-            const cellVM: ICellViewModel = this.createCellVM(cell);
+            const cellVM: ICellViewModel = createCellVM(cell, this.inputBlockToggled);
             if (cellVM) {
                 this.setState({
                     cellVMs: [...this.state.cellVMs, cellVM],
@@ -489,22 +313,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                 });
             }
         }
-    }
-
-    private createCellVM = (inputCell: ICell) => {
-        let inputLinesCount = 0;
-        const inputText = this.extractInputText(inputCell);
-        if (inputText) {
-            inputLinesCount = inputText.split('\n').length;
-        }
-
-       return {
-           cell: inputCell,
-           inputBlockOpen: true,
-           inputBlockText: inputText,
-           inputBlockCollapseNeeded: inputLinesCount > 1,
-           inputBlockToggled: this.inputBlockToggled
-       };
     }
 
     private inputBlockToggled = (id: string) => {
@@ -529,13 +337,18 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
 
     // Toggle the input collapse state of a cell view model return a shallow copy with updated values
     private toggleCellVM = (cellVM: ICellViewModel) => {
-        const newCollapseState = !cellVM.inputBlockOpen;
-        let newText = this.extractInputText(cellVM.cell);
-        if (!newCollapseState) {
-            if (newText.length > 0) {
-                newText = newText.split('\n', 1)[0];
-                newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
-                newText = newText.concat('...');
+        let newCollapseState = cellVM.inputBlockOpen;
+        let newText = cellVM.inputBlockText;
+
+        if (cellVM.cell.data.cell_type === 'code') {
+            newCollapseState = !newCollapseState;
+            newText = this.extractInputText(cellVM.cell);
+            if (!newCollapseState) {
+                if (newText.length > 0) {
+                    newText = newText.split('\n', 1)[0];
+                    newText = newText.slice(0, 255); // Slice to limit length of string, slicing past the string length is fine
+                    newText = newText.concat('...');
+                }
             }
         }
 
@@ -543,7 +356,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
     }
 
     private extractInputText = (cell: ICell) => {
-        return Cell.concatMultilineString(cell.source);
+        return Cell.concatMultilineString(cell.data.source);
     }
 
     // tslint:disable-next-line:no-any
@@ -558,6 +371,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IState> implemen
                     // Update this cell
                     this.state.cellVMs[index].cell = cell;
                     this.forceUpdate();
+                } else {
+                    // This is an entirely new cell (it may have started out as finished)
+                    this.addCell(cell);
                 }
             }
         }

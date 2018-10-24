@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
+
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { ILogger } from '../../client/common/types';
@@ -65,7 +66,10 @@ suite('Jupyter server tests', () => {
             server.onStatusChanged((bool: boolean) => {
                 statusCount += 1;
             });
-            const cell = await server.execute('a = 1\r\na', 'foo.py', 2);
+            const cells = await server.execute('a = 1\r\na', 'foo.py', 2);
+            assert.equal(cells.length, 1, 'Wrong number of cells returned');
+            assert.equal(cells[0].data.cell_type, 'code', 'Wrong type of cell returned');
+            const cell = cells[0].data as nbformat.ICodeCell;
             assert.equal(cell.outputs.length, 1, 'Cell length not correct');
             const data = cell.outputs[0].data;
             assert.ok(data, 'No data object on the cell');

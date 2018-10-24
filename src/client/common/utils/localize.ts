@@ -15,7 +15,7 @@ export namespace LanguageServiceSurveyBanner {
 }
 
 export namespace DataScience {
-    export const historyTitle = localize('DataScience.historyTitle', 'History - (beta)');
+    export const historyTitle = localize('DataScience.historyTitle', 'Python Interactive');
     export const badWebPanelFormatString = localize('DataScience.badWebPanelFormatString', '<html><body><h1>{0} is not a valid file name</h1></body></html>');
     export const sessionDisposed = localize('DataScience.sessionDisposed', 'Cannot execute code, session has been disposed.');
     export const unknownMimeType = localize('DataScience.unknownMimeType', 'Unknown mime type for data');
@@ -25,6 +25,16 @@ export namespace DataScience {
     export const exportDialogFailed = localize('DataScience.exportDialogFailed', 'Failed to export notebook. {0}');
     export const exportOpenQuestion = localize('DataScience.exportOpenQuestion', 'Open in browser?');
     export const runCellLensCommandTitle = localize('python.command.python.datascience.runcell.title', 'Run cell');
+    export const importDialogTitle = localize('DataScience.importDialogTitle', 'Import Jupyter Notebook');
+    export const importDialogFilter = localize('DataScience.importDialogFilter', 'Jupyter Notebooks');
+    export const notebookCheckForImportTitle = localize('DataScience.notebookCheckForImportTitle', 'Do you want to import the Jupyter Notebook into Python code?');
+    export const notebookCheckForImportYes = localize('DataScience.notebookCheckForImportYes', 'Import');
+    export const notebookCheckForImportNo = localize('DataScience.notebookCheckForImportNo', 'Later');
+    export const notebookCheckForImportDontAskAgain = localize('DataScience.notebookCheckForImportDontAskAgain', 'Don\'t Ask Again');
+    export const jupyterNotSupported = localize('DataScience.jupyterNotSupported', 'Jupyter is not installed');
+    export const jupyterNbConvertNotSupported = localize('DataScience.jupyterNbConvertNotSupported', 'Jupyter nbconvert is not installed');
+    export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
+    export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter backend');
     export const runAllCellsLensCommandTitle = localize('python.command.python.datascience.runallcells.title', 'Run all cells');
 }
 

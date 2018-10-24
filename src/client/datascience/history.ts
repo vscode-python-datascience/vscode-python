@@ -1,13 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
-import { IApplicationShell, IDocumentManager, IWebPanel, IWebPanelMessageListener, IWebPanelProvider  } from '../common/application/types';
+import { Disposable } from 'vscode-jsonrpc';
+
+import {
+    IApplicationShell,
+    IDocumentManager,
+    IWebPanel,
+    IWebPanelMessageListener,
+    IWebPanelProvider
+} from '../common/application/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
+import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { HistoryMessages } from './constants';
 import { CellState, ICell, IJupyterServer, IJupyterServerProvider } from './types';
@@ -17,28 +25,38 @@ export class History implements IWebPanelMessageListener {
     private webPanel : IWebPanel | undefined;
     // tslint:disable-next-line: no-unused-variable
     private jupyterServer: IJupyterServer | undefined;
-    private loadPromise: Promise<void>;
+    // tslint:disable-next-line: no-any
+    private loadPromise: Promise<any>;
     private documentManager : IDocumentManager;
     private applicationShell : IApplicationShell;
+    private interpreterService : IInterpreterService;
+    private serviceContainer : IServiceContainer;
+    private settingsChangedDisposable : Disposable;
 
     constructor(serviceContainer: IServiceContainer) {
-        // Load on a background thread.
-        this.loadPromise = this.load(serviceContainer);
+        this.serviceContainer = serviceContainer;
 
         // Save our services
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+
+        // Sign up for configuration changes
+        this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+        this.settingsChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
+
+        // Load on a background thread.
+        this.loadPromise = this.load(serviceContainer);
     }
 
     public static getOrCreateActive(serviceContainer: IServiceContainer) {
-        if (!(this.activeHistory)) {
-            this.activeHistory = new History(serviceContainer);
+        if (!(History.activeHistory)) {
+            History.activeHistory = new History(serviceContainer);
         }
-        return this.activeHistory;
+        return History.activeHistory;
     }
 
     public static setActive(active: History) {
-        this.activeHistory = active;
+        History.activeHistory = active;
     }
 
     public async show() : Promise<void> {
@@ -51,7 +69,7 @@ export class History implements IWebPanelMessageListener {
         }
     }
 
-    public async addCode(code: string, file: string, line: number) : Promise<void> {
+    public async addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
         // Make sure we're loaded first.
         await this.loadPromise;
 
@@ -64,24 +82,8 @@ export class History implements IWebPanelMessageListener {
 
             // Sign up for cell changes
             observable.subscribe(
-                (cell: ICell) => {
-                    if (this.webPanel) {
-                        switch (cell.state) {
-                            case CellState.init:
-                                // Tell the react controls we have a new cell
-                                this.webPanel.postMessage({ type: HistoryMessages.StartCell, payload: cell });
-                                break;
-
-                            case CellState.error:
-                            case CellState.finished:
-                                // Tell the react controls we're done
-                                this.webPanel.postMessage({ type: HistoryMessages.FinishCell, payload: cell });
-                                break;
-
-                            default:
-                                break; // might want to do a progress bar or something
-                        }
-                    }
+                (cells: ICell[]) => {
+                    this.onAddCodeEvent(cells, editor);
                 },
                 (error) => {
                     this.applicationShell.showErrorMessage(error);
@@ -116,8 +118,59 @@ export class History implements IWebPanelMessageListener {
         }
     }
 
-    // tslint:disable-next-line: no-any no-empty
     public onDisposed() {
+        this.settingsChangedDisposable.dispose();
+        if (this.jupyterServer) {
+            this.jupyterServer.dispose();
+        }
+        if (History.activeHistory === this) {
+            delete History.activeHistory;
+        }
+    }
+
+    private onAddCodeEvent = (cells : ICell[], editor?: TextEditor) => {
+        // Send each cell to the other side
+        cells.forEach((cell : ICell) => {
+            if (this.webPanel) {
+                switch (cell.state) {
+                    case CellState.init:
+                        // Tell the react controls we have a new cell
+                        this.webPanel.postMessage({ type: HistoryMessages.StartCell, payload: cell });
+                        break;
+
+                    case CellState.error:
+                    case CellState.finished:
+                        // Tell the react controls we're done
+                        this.webPanel.postMessage({ type: HistoryMessages.FinishCell, payload: cell });
+                        break;
+
+                    default:
+                        break; // might want to do a progress bar or something
+                }
+            }
+        });
+
+        // If we have more than one cell, the second one should be a code cell. After it finishes, we need to inject a new cell entry
+        if (cells.length > 1 && cells[1].state === CellState.finished) {
+            // If we have an active editor, do the edit there so that the user can undo it, otherwise don't bother
+            if (editor) {
+                editor.edit((editBuilder) => {
+                    editBuilder.insert(new Position(cells[1].line, 0), '#%%\n');
+                });
+            }
+        }
+    }
+
+    private onSettingsChanged = async () => {
+        // Update our load promise. We need to restart the jupyter server
+        if (this.loadPromise) {
+            await this.loadPromise;
+            if (this.jupyterServer) {
+                this.jupyterServer.dispose();
+                this.jupyterServer = undefined;
+            }
+        }
+        this.loadPromise = this.loadJupyterServer(this.serviceContainer);
     }
 
     private gotoCode = (file: string, line: number) => {
@@ -179,13 +232,20 @@ export class History implements IWebPanelMessageListener {
         }
     }
 
-    private async loadJupyterServer(serviceContainer: IServiceContainer) : Promise<void> {
+    private loadJupyterServer = async (serviceContainer: IServiceContainer) : Promise<void> => {
         // Startup our jupyter server
-        const provider = serviceContainer.get<IJupyterServerProvider>(IJupyterServerProvider);
-        this.jupyterServer = await provider.start();
+        const status = this.applicationShell.setStatusBarMessage(localize.DataScience.startingJupyter());
+        try {
+            const provider = serviceContainer.get<IJupyterServerProvider>(IJupyterServerProvider);
+            this.jupyterServer = await provider.start();
+        } catch (err) {
+            throw err;
+        } finally {
+            status.dispose();
+        }
     }
 
-    private async loadWebPanel(serviceContainer: IServiceContainer) : Promise<void> {
+    private loadWebPanel = async (serviceContainer: IServiceContainer) : Promise<void> => {
         // Create our web panel (it's the UI that shows up for the history)
         const provider = serviceContainer.get<IWebPanelProvider>(IWebPanelProvider);
 
@@ -197,9 +257,8 @@ export class History implements IWebPanelMessageListener {
         this.webPanel = provider.create(this, localize.DataScience.historyTitle(), mainScriptPath);
     }
 
-    private async load(serviceContainer: IServiceContainer) : Promise<void> {
-        // Wait for the jupyter server to startup and create our panel
-        await Promise.all([
+    private load = (serviceContainer: IServiceContainer) : Promise<[void, void]> => {
+        return Promise.all([
             this.loadWebPanel(serviceContainer),
             this.loadJupyterServer(serviceContainer)
         ]);
