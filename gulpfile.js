@@ -107,9 +107,7 @@ gulp.task('hygiene-watch-branch', () => gulp.watch(tsFilter, debounce(() => run(
 
 gulp.task('hygiene-all', () => run({ mode: 'all' }));
 
-gulp.task('hygiene-modified', ['compile'], () => run({ mode: 'changes' }));
-
-gulp.task('hygiene-branch', ['compile'], () => run({ mode: 'diffMaster' }));
+gulp.task('hygiene-branch', () => run({ mode: 'diffMaster' }));
 
 gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
 
