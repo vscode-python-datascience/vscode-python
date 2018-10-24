@@ -787,6 +787,12 @@
                     "description": "Automatically update the language server.",
                     "scope": "application"
                 },
+                "python.dataScience.allowImportFromNotebook": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
+                    "scope": "resource"
+                },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
                     "default": false,
