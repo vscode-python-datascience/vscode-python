@@ -25,6 +25,7 @@ export namespace DataScience {
     export const exportDialogFailed = localize('DataScience.exportDialogFailed', 'Failed to export notebook. {0}');
     export const exportOpenQuestion = localize('DataScience.exportOpenQuestion', 'Open in browser?');
     export const runCellLensCommandTitle = localize('python.command.python.datascience.runcell.title', 'Run cell');
+    export const runAllCellsLensCommandTitle = localize('python.command.python.datascience.runallcells.title', 'Run all cells');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
