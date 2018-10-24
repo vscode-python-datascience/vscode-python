@@ -152,7 +152,7 @@ gulp.task('inlinesource', () => {
                 .pipe(gulp.dest('./coverage/lcov-report-inline'));
 });
 
-gulp.task('compile-webviews', () => {
+gulp.task('compile-webviews', (done) => {
     // First copy the files/css/svg/png files to the output folder
     gulp.src('./src/**/*.{png,svg,css}')
         .pipe(gulp.dest('./out'));
@@ -160,6 +160,8 @@ gulp.task('compile-webviews', () => {
     // Then run webpack on the output files
     gulp.src('./out/**/*react/index.js')
         .pipe(es.through(file => webify(file, false)));
+
+    done();
 });
 
 gulp.task('compile-webviews-watch', () => {
