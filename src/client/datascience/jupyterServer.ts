@@ -125,7 +125,7 @@ export class JupyterServer implements IJupyterServer {
             if (RegExpValues.PythonMarkdownCellMarker.test(firstLine)) {
                 // We have at least one markdown. We might have to split it if there any lines that don't begin
                 // with #
-                const firstNonMarkdown = split.findIndex((l : string) => !l.trim().startsWith('#'));
+                const firstNonMarkdown = split.findIndex((l : string) => l.trim().length > 0 && !l.trim().startsWith('#'));
                 if (firstNonMarkdown >= 0) {
                     // We need to combine results
                     return this.combineObservables(
@@ -268,11 +268,11 @@ export class JupyterServer implements IJupyterServer {
                     // Update our subscriber of our total results if we have that many
                     if (array.length === args.length) {
                         subscriber.next(array);
-                    }
 
-                    // Complete when everybody is finished
-                    if (array.every(a => a.state === CellState.finished || a.state === CellState.error)) {
-                        subscriber.complete();
+                        // Complete when everybody is finished
+                        if (array.every(a => a.state === CellState.finished || a.state === CellState.error)) {
+                            subscriber.complete();
+                        }
                     }
                 },
                 e => {

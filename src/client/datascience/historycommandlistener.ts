@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
 import { inject, injectable } from 'inversify';
-import { TextDocument, Uri } from 'vscode';
+import { Position, TextDocument, Uri, ViewColumn } from 'vscode';
+
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
-import { IConfigurationService, IDisposableRegistry } from '../common/types';
+import { IConfigurationService, IDisposableRegistry, ILogger } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
 import { CommandSource } from '../unittests/common/constants';
@@ -32,6 +31,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         this.disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.jupyterImporter = new JupyterImporter(serviceContainer);
+        this.logger = this.serviceContainer.get<ILogger>(ILogger);
 
         // Listen to document open commands. We want to ask the user if they want to import.
         const disposable = this.documentManager.onDidOpenTextDocument(this.onOpenedDocument);
@@ -49,6 +49,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                     await this.importNotebook();
                 }
             } catch (err) {
+                this.logger.logError(err);
                 this.applicationShell.showErrorMessage(err);
             }
         });
@@ -107,15 +108,41 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             });
 
         if (uris && uris.length > 0) {
-            const contents = await this.jupyterImporter.importFromFile(uris[0].fsPath);
-            await this.documentManager.openTextDocument({language: 'python', content: contents});
+            const status = this.applicationShell.setStatusBarMessage(localize.DataScience.importingFormat().format(uris[0].fsPath));
+            try {
+                const contents = await this.jupyterImporter.importFromFile(uris[0].fsPath);
+                await this.viewDocument(contents);
+            } catch (err) {
+                throw err;
+            } finally {
+                status.dispose();
+            }
+
         }
     }
 
     private importNotebookOnFile = async (file: string) : Promise<void> => {
         if (file && file.length > 0) {
-            const contents = await this.jupyterImporter.importFromFile(file);
-            await this.documentManager.openTextDocument({language: 'python', content: contents});
+            const status = this.applicationShell.setStatusBarMessage(localize.DataScience.importingFormat().format(file));
+            try {
+                const contents = await this.jupyterImporter.importFromFile(file);
+                await this.viewDocument(contents);
+            } catch (err) {
+                throw err;
+            } finally {
+                status.dispose();
+            }
         }
+    }
+
+    private viewDocument = async (contents: string) : Promise<void> => {
+        const doc = await this.documentManager.openTextDocument({language: 'python', content: contents});
+        const editor = await this.documentManager.showTextDocument(doc, ViewColumn.One);
+
+        // Edit the document so that it is dirty (add a space at the end)
+        editor.edit((editBuilder) => {
+            editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
+        });
+
     }
 }

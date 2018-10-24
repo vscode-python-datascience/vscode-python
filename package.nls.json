@@ -66,5 +66,15 @@
 	"DataScience.exportDialogComplete" : "Notebook written to {0}",
 	"DataScience.exportDialogFailed" : "Failed to export notebook. {0}",
     "DataScience.exportOpenQuestion" : "Open in browser?",
-    "DataScience.collapseInputTooltip" : "Collapse input block"
+    "DataScience.collapseInputTooltip" : "Collapse input block",
+    "DataScience.importDialogTitle" : "Import Jupyter Notebook",
+    "DataScience.importDialogFilter" : "Jupyter Notebooks",
+    "DataScience.notebookCheckForImportYes" : "Import",
+    "DataScience.notebookCheckForImportNo" : "Later",
+    "DataScience.notebookCheckForImportDontAskAgain" : "Don't Ask Again",
+    "DataScience.notebookCheckForImportTitle" : "Do you want to import the Jupyter Notebook into Python code?",
+    "DataScience.jupyterNotSupported" : "Jupyter is not installed",
+    "DataScience.jupyterNbConvertNotSupported" : "Jupyter nbconvert is not installed",
+    "DataScience.importingFormat" : "Importing {0}",
+    "DataScience.startingJupyter" : "Starting Jupyter backend"
 }

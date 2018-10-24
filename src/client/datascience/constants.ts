@@ -16,7 +16,7 @@ export namespace EditorContexts {
 
 export namespace RegExpValues {
     export const PythonCellMarker = new RegExp('^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])(.*)');
-    export const PythonMarkdownCellMarker = new RegExp('^#\\s*%%\\s*[markdown]');
+    export const PythonMarkdownCellMarker = /^#\s*%%\s*\[markdown\]/;
 }
 
 export namespace HistoryMessages {

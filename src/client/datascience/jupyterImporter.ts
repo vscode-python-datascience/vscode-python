@@ -18,19 +18,16 @@ export class JupyterImporter implements IDisposable {
     public isDisposed : boolean = false;
     // Template that changes markdown cells to have # %% [markdown] in the comments
     // tslint:disable-next-line:no-multiline-string
-    private readonly nbconvertTemplate = `
-    {%- extends 'null.tpl' -%}
-    {% block in_prompt %}
-    {% endblock in_prompt %}
-
-    {% block input %}
-    {{ cell.source | ipython2python }}
-    {% endblock input %}
-
-    {% block markdowncell scoped %}
-    #%% [markdown]
-    {{ cell.source | comment_lines }}
-    {% endblock markdowncell %}`;
+    private readonly nbconvertTemplate = `{%- extends 'null.tpl' -%}
+{% block in_prompt %}
+{% endblock in_prompt %}
+{% block input %}
+{{ cell.source | ipython2python }}
+{% endblock input %}
+{% block markdowncell scoped %}
+#%% [markdown]
+{{ cell.source | comment_lines }}
+{% endblock markdowncell %}`;
 
     private pythonExecutionService : Deferred<IPythonExecutionService> | undefined;
     private templatePromise : Promise<string>;
@@ -52,7 +49,7 @@ export class JupyterImporter implements IDisposable {
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (await this.isSupported()) {
             const executionService = await this.getExecutionService();
-            const result = await executionService.execModule('jupyter', ['nbconvert', file, '--to', 'python', '--stdout', '--template', template], { throwOnStdErr: true, encoding: 'utf8' });
+            const result = await executionService.execModule('jupyter', ['nbconvert', file, '--to', 'python', '--stdout', '--template', template], { throwOnStdErr: false, encoding: 'utf8' });
             return result.stdout;
         }
 
@@ -107,6 +104,6 @@ export class JupyterImporter implements IDisposable {
         this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
             .create({})
             .then((p : IPythonExecutionService) => { if (this.pythonExecutionService) { this.pythonExecutionService.resolve(p); } })
-            .catch(err => this.pythonExecutionService.reject(err));
+            .catch(err => { if (this.pythonExecutionService) { this.pythonExecutionService.reject(err); } });
     }
 }

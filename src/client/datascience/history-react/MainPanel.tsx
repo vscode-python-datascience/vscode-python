@@ -1,18 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
+import './mainPanel.css';
+
 import { min } from 'lodash';
 import * as React from 'react';
+
 import { HistoryMessages } from '../constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { RelativeImage } from '../react-common/relativeImage';
-import { ICell } from '../types';
+import { CellState, ICell } from '../types';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
-import './mainPanel.css';
 import { createCellVM, generateTestState, IMainPanelState } from './mainPanelState';
 import { MenuBar } from './menuBar';
 
@@ -60,11 +61,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         './images/CollapseAll/CollapseAll_16x_vscode_dark.svg';
         const expandAllImage = this.props.theme !== 'vscode-dark' ? './images/ExpandAll/ExpandAll_16x_vscode.svg' :
         './images/ExpandAll/ExpandAll_16x_vscode_dark.svg';
+        this.scrollToBottom();
 
         return (
             <div className='main-panel'>
                 <PostOffice messageHandlers={[this]} />
                 <MenuBar theme={this.props.theme} stylePosition='top-fixed'>
+                    {this.renderExtraButtons()}
                     <CellButton theme={this.props.theme} onClick={this.collapseAll} disabled={!this.canCollapseAll()} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
                         <RelativeImage class='cell-button-image' path={collapseAllImage}/>
                     </CellButton>
@@ -89,7 +92,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 </MenuBar>
                 <div className='top-spacing'/>
                 {this.renderCells()}
-                <div ref={this.updateBottom} />
+                <div ref={this.updateBottom}/>
             </div>
         );
     }
@@ -112,6 +115,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return false;
     }
 
+    private renderExtraButtons = () => {
+        if (!this.props.skipDefault) {
+            return <CellButton theme={this.props.theme} onClick={this.addMarkdown} tooltip='Add Markdown Test'>M</CellButton>;
+        }
+
+        return null;
+    }
+
     private renderCells = () => {
         return this.state.cellVMs.map((cellVM: ICellViewModel, index: number) =>
             <ErrorBoundary key={index}>
@@ -122,6 +133,25 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     delete={() => this.deleteCell(index)}/>
             </ErrorBoundary>
         );
+    }
+
+    private addMarkdown = () => {
+        this.addCell({
+            data :         {
+                cell_type: 'markdown',
+                metadata: {},
+                source: [
+                    '## Cell 3\n',
+                    'Here\'s some markdown\n',
+                    '- A List\n',
+                    '- Of Items'
+                ]
+            },
+            id : '1111',
+            file : 'foo.py',
+            line : 0,
+            state : CellState.finished
+        });
     }
 
     private collapseAll = () => {
@@ -252,12 +282,20 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private scrollToBottom = () => {
         if (this.bottom && this.bottom.scrollIntoView && !this.state.skipNextScroll) {
-            this.bottom.scrollIntoView({behavior: 'smooth'});
+            // Delay this until we are about to render. React hasn't setup the size of the bottom element
+            // yet so we need to delay. 10ms looks good from a user point of view
+            setTimeout(() => {
+                if (this.bottom) {
+                    this.bottom.scrollIntoView({behavior: 'smooth', block : 'end', inline: 'end'});
+                }
+            }, 10);
         }
     }
 
     private updateBottom = (newBottom: HTMLDivElement) => {
-        this.bottom = newBottom;
+        if (newBottom !== this.bottom) {
+            this.bottom = newBottom;
+        }
     }
 
     // tslint:disable-next-line:no-any
@@ -333,6 +371,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     // Update this cell
                     this.state.cellVMs[index].cell = cell;
                     this.forceUpdate();
+                } else {
+                    // This is an entirely new cell (it may have started out as finished)
+                    this.addCell(cell);
                 }
             }
         }

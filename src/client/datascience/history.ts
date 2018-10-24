@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
@@ -26,7 +25,8 @@ export class History implements IWebPanelMessageListener {
     private webPanel : IWebPanel | undefined;
     // tslint:disable-next-line: no-unused-variable
     private jupyterServer: IJupyterServer | undefined;
-    private loadPromise: Promise<void>;
+    // tslint:disable-next-line: no-any
+    private loadPromise: Promise<any>;
     private documentManager : IDocumentManager;
     private applicationShell : IApplicationShell;
     private interpreterService : IInterpreterService;
@@ -35,8 +35,6 @@ export class History implements IWebPanelMessageListener {
 
     constructor(serviceContainer: IServiceContainer) {
         this.serviceContainer = serviceContainer;
-        // Load on a background thread.
-        this.loadPromise = this.load(serviceContainer);
 
         // Save our services
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
@@ -45,6 +43,9 @@ export class History implements IWebPanelMessageListener {
         // Sign up for configuration changes
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.settingsChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
+
+        // Load on a background thread.
+        this.loadPromise = this.load(serviceContainer);
     }
 
     public static getOrCreateActive(serviceContainer: IServiceContainer) {
@@ -150,11 +151,11 @@ export class History implements IWebPanelMessageListener {
         });
 
         // If we have more than one cell, the second one should be a code cell. After it finishes, we need to inject a new cell entry
-        if (cells.length > 1) {
+        if (cells.length > 1 && cells[1].state === CellState.finished) {
             // If we have an active editor, do the edit there so that the user can undo it, otherwise don't bother
             if (editor) {
                 editor.edit((editBuilder) => {
-                    editBuilder.insert(new Position(cells[1].line, 0), '# %%');
+                    editBuilder.insert(new Position(cells[1].line, 0), '#%%\n');
                 });
             }
         }
@@ -231,13 +232,20 @@ export class History implements IWebPanelMessageListener {
         }
     }
 
-    private async loadJupyterServer(serviceContainer: IServiceContainer) : Promise<void> {
+    private loadJupyterServer = async (serviceContainer: IServiceContainer) : Promise<void> => {
         // Startup our jupyter server
-        const provider = serviceContainer.get<IJupyterServerProvider>(IJupyterServerProvider);
-        this.jupyterServer = await provider.start();
+        const status = this.applicationShell.setStatusBarMessage(localize.DataScience.startingJupyter());
+        try {
+            const provider = serviceContainer.get<IJupyterServerProvider>(IJupyterServerProvider);
+            this.jupyterServer = await provider.start();
+        } catch (err) {
+            throw err;
+        } finally {
+            status.dispose();
+        }
     }
 
-    private async loadWebPanel(serviceContainer: IServiceContainer) : Promise<void> {
+    private loadWebPanel = async (serviceContainer: IServiceContainer) : Promise<void> => {
         // Create our web panel (it's the UI that shows up for the history)
         const provider = serviceContainer.get<IWebPanelProvider>(IWebPanelProvider);
 
@@ -249,9 +257,8 @@ export class History implements IWebPanelMessageListener {
         this.webPanel = provider.create(this, localize.DataScience.historyTitle(), mainScriptPath);
     }
 
-    private async load(serviceContainer: IServiceContainer) : Promise<void> {
-        // Wait for the jupyter server to startup and create our panel
-        await Promise.all([
+    private load = (serviceContainer: IServiceContainer) : Promise<[void, void]> => {
+        return Promise.all([
             this.loadWebPanel(serviceContainer),
             this.loadJupyterServer(serviceContainer)
         ]);

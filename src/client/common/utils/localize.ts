@@ -28,11 +28,13 @@ export namespace DataScience {
     export const importDialogTitle = localize('DataScience.importDialogTitle', 'Import Jupyter Notebook');
     export const importDialogFilter = localize('DataScience.importDialogFilter', 'Jupyter Notebooks');
     export const notebookCheckForImportTitle = localize('DataScience.notebookCheckForImportTitle', 'Do you want to import the Jupyter Notebook into Python code?');
-    export const notebookCheckForImportYes = localize('DataScience.notebookCheckForImportTitle', 'Import');
-    export const notebookCheckForImportNo = localize('DataScience.notebookCheckForImportTitle', 'Later');
-    export const notebookCheckForImportDontAskAgain = localize('DataScience.notebookCheckForImportTitle', 'Don\'t Ask Again');
+    export const notebookCheckForImportYes = localize('DataScience.notebookCheckForImportYes', 'Import');
+    export const notebookCheckForImportNo = localize('DataScience.notebookCheckForImportNo', 'Later');
+    export const notebookCheckForImportDontAskAgain = localize('DataScience.notebookCheckForImportDontAskAgain', 'Don\'t Ask Again');
     export const jupyterNotSupported = localize('DataScience.jupyterNotSupported', 'Jupyter is not installed');
     export const jupyterNbConvertNotSupported = localize('DataScience.jupyterNbConvertNotSupported', 'Jupyter nbconvert is not installed');
+    export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
+    export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter backend');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

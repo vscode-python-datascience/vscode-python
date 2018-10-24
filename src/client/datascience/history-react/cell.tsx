@@ -175,6 +175,8 @@ export class Cell extends React.Component<ICellProps> {
             const colorized = Prism.highlight(this.props.cellVM.inputBlockText, pythonGrammar);
             const Transform = transforms['text/html'];
             return <div className='cell-input'><Transform data={colorized}/></div>;
+        } else {
+            return null;
         }
     }
 
