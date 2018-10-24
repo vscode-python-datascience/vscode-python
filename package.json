@@ -409,12 +409,10 @@
                             "env": {
                                 "FLASK_APP": "app.py",
                                 "FLASK_ENV": "development",
-                                "FLASK_DEBUG": "0"
+                                "FLASK_DEBUG": "1"
                             },
                             "args": [
-                                "run",
-                                "--no-debugger",
-                                "--no-reload"
+                                "run"
                             ],
                             "jinja": true
                         }
@@ -736,12 +734,12 @@
                         "request": "launch",
                         "module": "flask",
                         "env": {
-                            "FLASK_APP": "app.py"
+                            "FLASK_APP": "app.py",
+                            "FLASK_ENV": "development",
+                            "FLASK_DEBUG": "1"
                         },
                         "args": [
-                            "run",
-                            "--no-debugger",
-                            "--no-reload"
+                            "run"
                         ],
                         "jinja": true
                     },
@@ -1627,7 +1625,7 @@
         "cover:inlinesource": "gulp inlinesource"
     },
     "dependencies": {
-        "@jupyterlab/services": "3.1.4",
+        "@jupyterlab/services": "^3.1.4",
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
@@ -1657,13 +1655,13 @@
         "prismjs": "^1.15.0",
         "promisify-node": "^0.5.0",
         "react-json-tree": "^0.11.0",
-        "reflect-metadata": "0.1.12",
-        "request": "2.87.0",
-        "request-progress": "3.0.0",
-        "rxjs": "5.5.9",
-        "semver": "5.5.0",
-        "styled-jsx": "3.1.0",
-        "sudo-prompt": "8.2.0",
+        "reflect-metadata": "^0.1.12",
+        "request": "^2.87.0",
+        "request-progress": "^3.0.0",
+        "rxjs": "^5.5.9",
+        "semver": "^5.5.0",
+        "styled-jsx": "^3.1.0",
+        "sudo-prompt": "^8.2.0",
         "temp": "^0.8.3",
         "tmp": "0.0.29",
         "tree-kill": "1.2.0",
@@ -1742,7 +1740,7 @@
         "event-stream": "^3.3.4",
         "file-loader": "^2.0.0",
         "flat": "^4.0.0",
-        "gulp": "^3.9.1",
+        "gulp": "^4.0.0",
         "gulp-debounced-watch": "^1.0.4",
         "gulp-filter": "^5.1.0",
         "gulp-gitmodified": "^1.1.1",
@@ -1771,11 +1769,12 @@
         "sinon": "^4.4.5",
         "style-loader": "^0.23.0",
         "svg-inline-loader": "^0.8.0",
+        "ts-mockito": "^2.3.1",
         "tslint": "^5.9.1",
         "tslint-eslint-rules": "^5.1.0",
         "tslint-microsoft-contrib": "^5.0.3",
         "typemoq": "^2.1.0",
-        "typescript": "^2.9.1",
+        "typescript": "^3.1.3",
         "typescript-formatter": "^7.1.0",
         "url-loader": "^1.1.1",
         "uuid": "^3.3.2",

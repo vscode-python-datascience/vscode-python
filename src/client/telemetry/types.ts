@@ -15,8 +15,17 @@ export type FormatTelemetry = {
     formatSelection: boolean;
 };
 
-export type LanguageServerTelemetry = {
+export type LanguageServerVersionTelemetry = {
     success: boolean;
+    lsVersion?: string;
+};
+
+export type LanguageServerErrorTelemetry = {
+    error: string;
+};
+
+export type LanguageServerTelemetry = {
+    [key: string]: string;
 };
 
 export type LinterTrigger = 'auto' | 'save';
@@ -30,20 +39,13 @@ export type LintingTelemetry = {
 export type PythonInterpreterTelemetry = {
     trigger: 'ui' | 'shebang' | 'load';
     failed: boolean;
-    version?: string;
+    pythonVersion?: string;
     pipVersion?: string;
 };
 export type CodeExecutionTelemetry = {
     scope: 'file' | 'selection';
 };
 export type DebuggerTelemetry = {
-    trigger: 'launch' | 'attach';
-    console?: 'none' | 'integratedTerminal' | 'externalTerminal';
-    debugOptions?: string;
-    pyspark?: boolean;
-    hasEnvVars?: boolean;
-};
-export type DebuggerTelemetryV2 = {
     trigger: 'launch' | 'attach';
     console?: 'none' | 'integratedTerminal' | 'externalTerminal';
     hasEnvVars: boolean;
@@ -88,6 +90,8 @@ export type TerminalTelemetry = {
 };
 export type TelemetryProperties = FormatTelemetry
     | LanguageServerTelemetry
+    | LanguageServerVersionTelemetry
+    | LanguageServerErrorTelemetry
     | LintingTelemetry
     | EditorLoadTelemetry
     | PythonInterpreterTelemetry
@@ -96,5 +100,5 @@ export type TelemetryProperties = FormatTelemetry
     | TestDiscoverytTelemetry
     | FeedbackTelemetry
     | TerminalTelemetry
-    | DebuggerTelemetryV2
+    | DebuggerTelemetry
     | SettingsTelemetry;
