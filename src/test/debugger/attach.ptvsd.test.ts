@@ -16,7 +16,7 @@ import '../../client/common/extensions';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { IPlatformService } from '../../client/common/platform/types';
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
-import { PythonV2DebugConfigurationProvider } from '../../client/debugger/extension';
+import { PythonV2DebugConfigurationProvider } from '../../client/debugger/extension/configProviders/pythonV2Provider';
 import { AttachRequestArguments, DebugOptions } from '../../client/debugger/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { PYTHON_PATH, sleep } from '../common';
@@ -57,7 +57,7 @@ suite('Attach Debugger', () => {
         // Set the path for PTVSD to be picked up.
         // tslint:disable-next-line:no-string-literal
         env['PYTHONPATH'] = PTVSD_PATH;
-        const pythonArgs = ['-m', 'ptvsd', '--server', '--wait', '--port', `${port}`, '--file', fileToDebug.fileToCommandArgument()];
+        const pythonArgs = ['-m', 'ptvsd', '--host', 'localhost', '--wait', '--port', `${port}`, '--file', fileToDebug.fileToCommandArgument()];
         proc = spawn(PYTHON_PATH, pythonArgs, { env: env, cwd: path.dirname(fileToDebug) });
         await sleep(3000);
 
