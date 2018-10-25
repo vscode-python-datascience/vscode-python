@@ -28,7 +28,7 @@ export function generateTestState(inputBlockToggled : (id: string) => void) : IM
 
 export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) => void) {
     let inputLinesCount = 0;
-    const inputText = inputCell.data.cell_type === 'code' ? Cell.concatMultilineString(inputCell.data.source) : '';
+    const inputText = inputCell.data.cell_type === 'code' ? Cell.concatMultilineString(inputCell.data.source).trim() : '';
     if (inputText) {
         inputLinesCount = inputText.split('\n').length;
     }
