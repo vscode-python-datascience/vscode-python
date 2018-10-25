@@ -42,16 +42,6 @@ matrix:
         - os: linux
           python: "3.7-dev"
           env: MULTIROOT_WORKSPACE_TEST=true
-    allow_failures:
-        - os: linux
-          python: "2.7"
-          env: DEBUGGER_TEST_RELEASE=true
-        - os: linux
-          python: "3.6-dev"
-          env: DEBUGGER_TEST_RELEASE=true
-        - os: linux
-          python: "3.7-dev"
-          env: DEBUGGER_TEST_RELEASE=true
 before_install: |
   if [ $TRAVIS_OS_NAME == "linux" ]; then
     export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
@@ -67,14 +57,15 @@ before_install: |
   npm install -g azure-cli
   export CI_PYTHON_PATH=`which python`
 install:
+  - npm ci
+  - npm run clean
+  - npm run vscode:prepublish
+  - npx gulp hygiene-modified
   - python -m pip install --upgrade -r requirements.txt
   - python -m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
-  - npm ci
 
 script:
   - if [ $DEBUGGER_TEST == "true" ]; then
-        npm run clean;
-        npm run vscode:prepublish;
         npm run cover:enable;
         npm run testDebugger --silent;
     fi
@@ -85,8 +76,6 @@ script:
   - npm run clean:ptvsd
   - pip install -t ./pythonFiles/experimental/ptvsd ptvsd --no-cache-dir;
   - if [ $DEBUGGER_TEST_RELEASE == "true" ]; then
-        npm run clean;
-        npm run vscode:prepublish;
         npm run cover:enable;
         npm run testDebugger --silent;
     fi
@@ -95,8 +84,6 @@ script:
         bash <(curl -s https://codecov.io/bash);
     fi
   - if [ $SINGLE_WORKSPACE_TEST == "true" ]; then
-        npm run clean;
-        npm run vscode:prepublish;
         npm run cover:enable;
         npm run testSingleWorkspace --silent;
     fi
@@ -104,8 +91,6 @@ script:
         bash <(curl -s https://codecov.io/bash);
     fi
   - if [ $MULTIROOT_WORKSPACE_TEST == "true" ]; then
-        npm run clean;
-        npm run vscode:prepublish;
         npm run cover:enable;
         npm run testMultiWorkspace --silent;
     fi
@@ -113,9 +98,7 @@ script:
         bash <(curl -s https://codecov.io/bash);
     fi
   - if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" && "$PERFORMANCE_TEST" == "true" ]]; then
-        yarn run clean;
-        yarn run vscode:prepublish;
-        yarn run testPerformance --silent;
+        npm run testPerformance --silent;
     fi
   - if [ "$TRAVIS_PYTHON_VERSION" == "3.7" ]; then
         python3 -m pip install --upgrade -r news/requirements.txt;

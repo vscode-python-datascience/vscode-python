@@ -39,6 +39,9 @@ const formatWebpackMessages = require('react-dev-utils/formatWebpackMessages');
 const chalk = require('chalk');
 const printBuildError = require('react-dev-utils/printBuildError');
 
+const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
+
+const noop = function () { };
 /**
 * Hygiene works by creating cascading subsets of all our files and
 * passing them through a sequence of checks. Here are the current subsets,
@@ -86,17 +89,15 @@ const copyrightHeader = [
 ];
 const copyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n')];
 
-gulp.task('hygiene-modified', () => gulp.series('compile', 'changes'));
+gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done));
 
 gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
 
-gulp.task('changes', () => run({ mode: 'changes' }));
+gulp.task('hygiene', (done) => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }, done));
 
-gulp.task('precommit', () => run({ exitOnError: true, mode: 'staged' }));
+gulp.task('compile', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }, done));
 
-gulp.task('hygiene', () => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }));
-
-gulp.task('compile', () => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }));
+gulp.task('hygiene-modified', gulp.series('compile', (done) => run({ mode: 'changes' }, done)));
 
 gulp.task('watch', gulp.parallel('hygiene-modified', 'hygiene-watch'));
 
@@ -105,7 +106,7 @@ gulp.task('watchProblems', gulp.parallel('hygiene-modified', 'hygiene-watch'));
 
 gulp.task('debugger-coverage', buildDebugAdapterCoverage);
 
-gulp.task('hygiene-watch-branch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'diffMaster' }), 100)));
+gulp.task('hygiene-watch-branch', (done) => gulp.watch(tsFilter, () => run({ mode: 'diffMaster' }, done)));
 
 gulp.task('hygiene-all', () => run({ mode: 'all' }));
 
@@ -127,7 +128,7 @@ gulp.task('checkNativeDependencies', (done) => {
 });
 
 gulp.task('cover:enable', () => {
-    return gulp.src("./coverconfig.json")
+    return gulp.src("./build/coverconfig.json")
         .pipe(jeditor((json) => {
             json.enabled = true;
             return json;
@@ -136,7 +137,7 @@ gulp.task('cover:enable', () => {
 });
 
 gulp.task('cover:disable', () => {
-    return gulp.src("./coverconfig.json")
+    return gulp.src("./build/coverconfig.json")
         .pipe(jeditor((json) => {
             json.enabled = false;
             return json;
@@ -150,8 +151,8 @@ gulp.task('cover:disable', () => {
  */
 gulp.task('inlinesource', () => {
     return gulp.src('./coverage/lcov-report/*.html')
-                .pipe(inlinesource({attribute: false}))
-                .pipe(gulp.dest('./coverage/lcov-report-inline'));
+        .pipe(inlinesource({ attribute: false }))
+        .pipe(gulp.dest('./coverage/lcov-report-inline'));
 });
 
 gulp.task('compile-webviews', (done) => {
@@ -316,15 +317,15 @@ let reRunCompilation = false;
  * @param {hygieneOptions} options
  * @returns {NodeJS.ReadWriteStream}
  */
-const hygiene = (options) => {
+const hygiene = (options, done) => {
     if (compilationInProgress) {
         reRunCompilation = true;
-        return;
+        return done();
     }
     const fileListToProcess = options.mode === 'compile' ? undefined : getFileListToProcess(options);
     if (Array.isArray(fileListToProcess) && fileListToProcess !== all
         && fileListToProcess.filter(item => item.endsWith('.ts')).length === 0) {
-        return;
+        return done();
     }
 
     const started = new Date().getTime();
@@ -332,7 +333,6 @@ const hygiene = (options) => {
     options = options || {};
     let errorCount = 0;
     const addedFiles = options.skipCopyrightCheck ? [] : getAddedFilesSync();
-    console.log(colors.blue('Hygiene started.'));
     const copyrights = es.through(function (file) {
         if (addedFiles.indexOf(file.path) !== -1) {
             const contents = file.contents.toString('utf8');
@@ -539,9 +539,13 @@ const hygiene = (options) => {
                     hygiene(options);
                 }, 10);
             }
+            done();
             this.emit('end');
         }))
-        .on('error', exitHandler.bind(this, options));
+        .on('error', ex => {
+            exitHandler(options, ex);
+            done();
+        });
 
     return result;
 };
@@ -579,14 +583,16 @@ function exitHandler(options, ex) {
 * Run the linters.
 * @param {runOptions} options
 */
-function run(options) {
+function run(options, done) {
+    done = done || noop;
     options = options ? options : {};
+    options.exitOnError = typeof options.exitOnError === 'undefined' ? isCI : options.exitOnError;
     process.once('unhandledRejection', (reason, p) => {
         console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
         exitHandler(options);
     });
 
-    return hygiene(options);
+    hygiene(options, done);
 }
 
 function git(args) {
@@ -608,14 +614,47 @@ function getAddedFilesSync() {
         .filter(l => _.intersection(['A', '?', 'U'], l.substring(0, 2).trim().split('')).length > 0)
         .map(l => path.join(__dirname, l.substring(2).trim()));
 }
-function getModifiedFilesSync() {
-    const out = git(['status','-u','-s']);
-    return out
-        .split(/\r?\n/)
-        .filter(l => !!l)
-        .filter(l => _.intersection(['M', 'A', 'R', 'C', 'U', '?'], l.substring(0, 2).trim().split('')).length > 0)
-        .map(l => path.join(__dirname, l.substring(2).trim()));
+function getAzureDevOpsVarValue(varName) {
+    return process.env[varName.replace(/\./g, '_').toUpperCase()]
 }
+function getModifiedFilesSync() {
+    if (isCI) {
+        const isAzurePR = getAzureDevOpsVarValue('System.PullRequest.SourceBranch') !== undefined;
+        const isTravisPR = process.env.TRAVIS_PULL_REQUEST !== undefined && process.env.TRAVIS_PULL_REQUEST !== 'true';
+        if (!isAzurePR && !isTravisPR) {
+            return [];
+        }
+        const targetBranch = process.env.TRAVIS_BRANCH || getAzureDevOpsVarValue('System.PullRequest.TargetBranch');
+        if (targetBranch !== 'master') {
+            return [];
+        }
+
+        const repo = process.env.TRAVIS_REPO_SLUG || getAzureDevOpsVarValue('Build.Repository.Name');
+        const originOrUpstream = (repo.toUpperCase() === 'MICROSOFT/VSCODE-PYTHON' || repo.toUpperCase() === 'VSCODE-PYTHON-DATASCIENCE/VSCODE-PYTHON') ? 'origin' : 'upstream';
+
+        // If on CI, get a list of modified files comparing against
+        // PR branch and master of current (assumed 'origin') repo.
+        cp.execSync(`git remote set-branches --add ${originOrUpstream} master`, { encoding: 'utf8', cwd: __dirname });
+        cp.execSync('git fetch', { encoding: 'utf8', cwd: __dirname });
+        const cmd = `git diff --name-only HEAD ${originOrUpstream}/master`;
+        console.info(cmd);
+        const out = cp.execSync(cmd, { encoding: 'utf8', cwd: __dirname });
+        return out
+            .split(/\r?\n/)
+            .filter(l => !!l)
+            .filter(l => l.length > 0)
+            .map(l => l.trim())
+            .map(l => path.join(__dirname, l));
+    } else {
+        const out = cp.execSync('git status -u -s', { encoding: 'utf8' });
+        return out
+            .split(/\r?\n/)
+            .filter(l => !!l)
+            .filter(l => _.intersection(['M', 'A', 'R', 'C', 'U', '?'], l.substring(0, 2).trim().split('')).length > 0)
+            .map(l => path.join(__dirname, l.substring(2).trim()));
+    }
+}
+
 function getDifferentFromMasterFilesSync() {
     const out = git(['diff','--name-status','master']);
     return out
@@ -654,9 +693,17 @@ function getFileListToProcess(options) {
 
     return all;
 }
+
 exports.hygiene = hygiene;
 
-// this allows us to run hygiene as a git pre-commit hook.
+// this allows us to run hygiene via CLI (e.g. `node gulfile.js`).
 if (require.main === module) {
+    const args = process.argv0.length > 2 ? process.argv.slice(2) : [];
+    const isPreCommit = args.findIndex(arg => arg.startsWith('precommit='));
+    const performPreCommitCheck = isPreCommit >= 0 ? args[isPreCommit].split('=')[1].trim().toUpperCase().startsWith('T') : false;
+    // Allow precommit hooks for those with a file `./out/precommit.hook`.
+    if (args.length > 0 && (!performPreCommitCheck || !fs.existsSync(path.join(__dirname, 'precommit.hook')))) {
+        return;
+    }
     run({ exitOnError: true, mode: 'staged' });
 }

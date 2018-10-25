@@ -124,6 +124,7 @@ export async function deleteDirectory(dir: string) {
         await fs.remove(dir);
     }
 }
+
 export async function deleteFile(file: string) {
     const exists = await fs.pathExists(file);
     if (exists) {
@@ -242,8 +243,8 @@ export function isVersionInList(version: SemVer, ...searchVersions: string[]): b
  * If you don't need to specify the environment (ie. the workspace) that the Python
  * interpreter is running under, use the simpler `isPythonVersion` instead.
  *
- * @param {skipForVersions} string[] List of versions of python that are to be skipped.
- * @param {resource} vscode.Uri Current workspace resource Uri or undefined.
+ * @param {procService} IProcessService Optionally, use this process service to call out to python with.
+ * @param {versions} string[] Python versions to test for, specified as described above.
  * @return true if the current Python version matches a version in the skip list, false otherwise.
  */
 export async function isPythonVersionInProcess(procService?: IProcessService, ...versions: string[]): Promise<boolean> {
@@ -274,7 +275,7 @@ export async function isPythonVersionInProcess(procService?: IProcessService, ..
  * If you need to specify the environment (ie. the workspace) that the Python
  * interpreter is running under, use `isPythonVersionInProcess` instead.
  *
- * @param {skipForVersions} string[] List of versions of python that are to be skipped.
+ * @param {versions} string[] List of versions of python that are to be skipped.
  * @param {resource} vscode.Uri Current workspace resource Uri or undefined.
  * @return true if the current Python version matches a version in the skip list, false otherwise.
  */
