@@ -87,11 +87,16 @@ const copyrightHeader = [
     '',
     '\'use strict\';'
 ];
-const copyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n')];
+const copyrightHeaderNoSpace = [
+    '// Copyright (c) Microsoft Corporation. All rights reserved.',
+    '// Licensed under the MIT License.',
+    '\'use strict\';'
+];
+const copyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n'), copyrightHeaderNoSpace.join('\n'), copyrightHeaderNoSpace.join('\r\n')];
 
 gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done));
 
-gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
+gulp.task('hygiene-watch', () => gulp.watch(tsFilter, gulp.series('hygiene-modified')));
 
 gulp.task('hygiene', (done) => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }, done));
 
@@ -106,11 +111,11 @@ gulp.task('watchProblems', gulp.parallel('hygiene-modified', 'hygiene-watch'));
 
 gulp.task('debugger-coverage', buildDebugAdapterCoverage);
 
-gulp.task('hygiene-watch-branch', (done) => gulp.watch(tsFilter, () => run({ mode: 'diffMaster' }, done)));
+gulp.task('hygiene-watch-branch', () => gulp.watch(tsFilter, gulp.series('hygiene-branch')));
 
-gulp.task('hygiene-all', () => run({ mode: 'all' }));
+gulp.task('hygiene-all', (done) => run({ mode: 'all' }, done));
 
-gulp.task('hygiene-branch', () => run({ mode: 'diffMaster' }));
+gulp.task('hygiene-branch', (done) => run({ mode: 'diffMaster' }, done));
 
 gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
 
@@ -536,7 +541,7 @@ const hygiene = (options, done) => {
             if (reRunCompilation) {
                 reRunCompilation = false;
                 setTimeout(() => {
-                    hygiene(options);
+                    hygiene(options, done);
                 }, 10);
             }
             done();
@@ -591,6 +596,12 @@ function run(options, done) {
         console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
         exitHandler(options);
     });
+
+    // Clear screen each time
+    console.log('\x1Bc');
+    const startMessage = `Hygiene starting`;
+    console.log(colors.blue(startMessage));
+
 
     hygiene(options, done);
 }
@@ -680,15 +691,15 @@ function getFileListToProcess(options) {
 
     // If we need only modified files, then filter the glob.
     if (options && options.mode === 'changes') {
-        return getModifiedFilesSync();
+        return getModifiedFilesSync().filter(f => fs.existsSync(f));
     }
 
     if (options && options.mode === 'staged') {
-        return getStagedFilesSync();
+        return getStagedFilesSync().filter(f => fs.existsSync(f));;
     }
 
     if (options && options.mode === 'diffMaster') {
-        return getDifferentFromMasterFilesSync();
+        return getDifferentFromMasterFilesSync().filter(f => fs.existsSync(f));;
     }
 
     return all;
@@ -705,5 +716,5 @@ if (require.main === module) {
     if (args.length > 0 && (!performPreCommitCheck || !fs.existsSync(path.join(__dirname, 'precommit.hook')))) {
         return;
     }
-    run({ exitOnError: true, mode: 'staged' });
+    run({ exitOnError: true, mode: 'staged' }, () => {});
 }

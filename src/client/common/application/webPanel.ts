@@ -21,7 +21,13 @@ export class WebPanel implements IWebPanel {
     private disposableRegistry: IDisposableRegistry;
     private rootPath: string;
 
-    constructor(serviceContainer: IServiceContainer, listener: IWebPanelMessageListener, title: string, mainScriptPath: string) {
+    constructor(
+        serviceContainer: IServiceContainer,
+        listener: IWebPanelMessageListener,
+        title: string,
+        mainScriptPath: string,
+        embeddedCss?: string) {
+
         this.disposableRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.listener = listener;
         this.rootPath = path.dirname(mainScriptPath);
@@ -34,7 +40,7 @@ export class WebPanel implements IWebPanel {
                 retainContextWhenHidden: true,
                 localResourceRoots: [Uri.file(this.rootPath)]
             });
-        this.loadPromise = this.load(mainScriptPath);
+        this.loadPromise = this.load(mainScriptPath, embeddedCss);
     }
 
     public async show() {
@@ -54,13 +60,13 @@ export class WebPanel implements IWebPanel {
         }
     }
 
-    private async load(mainScriptPath: string) {
+    private async load(mainScriptPath: string, embeddedCss?: string) {
         if (this.panel) {
             if (await fs.pathExists(mainScriptPath)) {
 
                 // Call our special function that sticks this script inside of an html page
                 // and translates all of the paths to vscode-resource URIs
-                this.panel.webview.html = this.generateReactHtml(mainScriptPath);
+                this.panel.webview.html = this.generateReactHtml(mainScriptPath, embeddedCss);
 
                 // Reset when the current panel is closed
                 this.disposableRegistry.push(this.panel.onDidDispose(() => {
@@ -80,12 +86,13 @@ export class WebPanel implements IWebPanel {
         }
     }
 
-    private generateReactHtml(mainScriptPath: string) {
+    private generateReactHtml(mainScriptPath: string, embeddedCss?: string) {
         const uriBasePath = Uri.file(`${path.dirname(mainScriptPath)}/`);
         const uriPath = Uri.file(mainScriptPath);
         const uriBase = uriBasePath.with({ scheme: 'vscode-resource'});
         const uri = uriPath.with({ scheme: 'vscode-resource' });
         const locDatabase = JSON.stringify(localize.getCollection());
+        const style = embeddedCss ? embeddedCss : '';
 
         return `<!doctype html>
         <html lang="en">
@@ -95,6 +102,9 @@ export class WebPanel implements IWebPanel {
                 <meta name="theme-color" content="#000000">
                 <title>React App</title>
                 <base href="${uriBase}"/>
+                <style type="text/css">
+                ${style}
+                </style>
             </head>
             <body>
                 <noscript>You need to enable JavaScript to run this app.</noscript>

@@ -17,6 +17,7 @@ import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
+import { CodeCssGenerator } from './codeCssGenerator';
 import { HistoryMessages } from './constants';
 import { CellState, ICell, IJupyterServer, IJupyterServerProvider } from './types';
 
@@ -95,6 +96,9 @@ export class History implements IWebPanelMessageListener {
 
             // Wait for the execution to finish
             await deferred.promise;
+
+            // Then show our webpanel
+            await this.show();
         }
     }
 
@@ -252,9 +256,13 @@ export class History implements IWebPanelMessageListener {
         // Figure out the name of our main bundle. Should be in our output directory
         const mainScriptPath = path.join(__dirname, 'history-react', 'index_bundle.js');
 
+        // Generate a css to put into the webpanel for viewing code
+        const codeCssGenerator = new CodeCssGenerator(serviceContainer);
+        const css = await codeCssGenerator.generateThemeCss();
+
         // Use this script to create our web view panel. It should contain all of the necessary
         // script to communicate with this class.
-        this.webPanel = provider.create(this, localize.DataScience.historyTitle(), mainScriptPath);
+        this.webPanel = provider.create(this, localize.DataScience.historyTitle(), mainScriptPath, css);
     }
 
     private load = (serviceContainer: IServiceContainer) : Promise<[void, void]> => {
