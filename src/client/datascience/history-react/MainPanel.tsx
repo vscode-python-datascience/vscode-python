@@ -356,7 +356,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private extractInputText = (cell: ICell) => {
-        return Cell.concatMultilineString(cell.data.source).trim();
+        return Cell.concatMultilineString(cell.data.source);
     }
 
     // tslint:disable-next-line:no-any

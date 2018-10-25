@@ -96,7 +96,7 @@ export class Cell extends React.Component<ICellProps> {
             }
             return result;
         }
-        return str.toString();
+        return str.toString().trim();
     }
 
     public render() {
