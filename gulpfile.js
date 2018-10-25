@@ -598,7 +598,7 @@ function run(options, done) {
     });
 
     // Clear screen each time
-    process.stdout.write('\x1Bc');
+    console.log('\x1Bc');
     const startMessage = `Hygiene starting`;
     console.log(colors.blue(startMessage));
 

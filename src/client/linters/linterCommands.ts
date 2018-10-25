@@ -54,6 +54,7 @@ export class LinterCommands implements vscode.Disposable {
         if (selection !== undefined) {
             const index = linters.findIndex(x => x.id === selection);
             if (activeLinters.length > 1) {
+                // tslint:disable-next-line:messages-must-be-localized
                 const response = await this.appShell.showWarningMessage(`Multiple linters are enabled in settings. Replace with '${selection}'?`, 'Yes', 'No');
                 if (response !== 'Yes') {
                     return;
