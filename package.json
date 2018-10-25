@@ -104,7 +104,7 @@
                 "when": "editorFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed"
             },
             {
-                "command": "python.datascience.runcurrentcell",
+                "command": "python.datascience.runcurrentcelladvance",
                 "key": "ctrl+shift+enter",
                 "when": "python.datascience.hascodecells"
             }
@@ -237,6 +237,12 @@
                 "when": "python.datascience.hascodecells"
             },
             {
+                "command": "python.datascience.runcurrentcelladvance",
+                "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
+                "category": "Python",
+                "when": "python.datascience.hascodecells"
+            },
+            {
                 "command": "python.datascience.showhistorypane",
                 "title": "%python.command.python.datascience.showhistorypane.title%",
                 "category": "Python"
@@ -300,6 +306,11 @@
                 {
                     "when": "python.datascience.hascodecells",
                     "command": "python.datascience.runcurrentcell",
+                    "group": "Python"
+                },
+                {
+                    "when": "python.datascience.hascodecells",
+                    "command": "python.datascience.runcurrentcelladvance",
                     "group": "Python"
                 },
                 {
