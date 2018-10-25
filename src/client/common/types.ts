@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+'use strict';
 
 import { Socket } from 'net';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';

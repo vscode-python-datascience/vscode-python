@@ -47,7 +47,7 @@
         {
             "label": "Hygiene",
             "type": "gulp",
-            "task": "hygiene-watch",
+            "task": "watch",
             "isBackground": true,
             "presentation": {
                 "echo": true,

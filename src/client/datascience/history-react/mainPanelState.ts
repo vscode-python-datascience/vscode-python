@@ -26,7 +26,7 @@ export function generateTestState(inputBlockToggled : (id: string) => void) : IM
     };
 }
 
-export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) => void) {
+export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) => void) : ICellViewModel {
     let inputLinesCount = 0;
     let source = inputCell.data.cell_type === 'code' ? inputCell.data.source : [];
 
@@ -35,7 +35,7 @@ export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) 
         source = source.slice(1);
     }
 
-    const inputText = inputCell.data.cell_type === 'code' ? Cell.concatMultilineString(source) : undefined;
+    const inputText = inputCell.data.cell_type === 'code' ? Cell.concatMultilineString(source) : '';
     if (inputText) {
         inputLinesCount = inputText.split('\n').length;
     }

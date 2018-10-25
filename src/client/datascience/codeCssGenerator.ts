@@ -54,19 +54,26 @@ export class CodeCssGenerator {
     private getScopeColor = (tokenColors: JSONArray, scope: string) : string => {
         // Search through the scopes on the json object
         const match = tokenColors.findIndex(entry => {
-            const scopes = entry['scope'] as JSONValue;
-            if (Array.isArray(scopes)) {
-                if (scopes.find((v : JSONValue) => v.toString() === scope)) {
+            if (entry) {
+                const scopes = entry['scope'] as JSONValue;
+                if (scopes && Array.isArray(scopes)) {
+                    if (scopes.find(v => v !== null && v.toString() === scope)) {
+                        return true;
+                    }
+                } else if (scopes && scopes.toString() === scope) {
                     return true;
                 }
-            } else if (scopes.toString() === scope) {
-                return true;
             }
 
             return false;
         });
-        if (match >= 0) {
-            return tokenColors[match]['settings']['foreground'];
+
+        const found = match >= 0 ? tokenColors[match] : null;
+        if (found !== null) {
+            const settings = found['settings'];
+            if (settings && settings !== null) {
+                return settings['foreground'];
+            }
         }
 
         // Default to editor foreground
@@ -256,14 +263,15 @@ export class CodeCssGenerator {
             const themes = contributes['themes'] as JSONArray;
 
             // One of these (it's an array), should have our matching theme entry
-            const index = themes.findIndex((e: JSONObject) => {
-                return e['id'] === theme;
+            const index = themes.findIndex(e => {
+                return e !== null && e['id'] === theme;
             });
 
-            if (index >= 0) {
+            const found = index >= 0 ? themes[index] : null;
+            if (found !== null) {
                 // Then the path entry should contain a relative path to the json file with
                 // the tokens in it
-                const themeFile = path.join(path.dirname(results[0]), themes[index]['path']);
+                const themeFile = path.join(path.dirname(results[0]), found['path']);
                 const tokenContent = await fs.readFile(themeFile, 'utf8');
                 return JSON.parse(tokenContent) as JSONObject;
             }
