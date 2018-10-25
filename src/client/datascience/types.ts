@@ -76,6 +76,7 @@ export interface ICodeWatcher {
     runAllCells();
     runCell(range: Range);
     runCurrentCell();
+    runCurrentCellAndAdvance();
 }
 
 export enum CellState {
