@@ -392,10 +392,10 @@
                             "program": "^\"\\${workspaceFolder}/manage.py\"",
                             "args": [
                                 "runserver",
-                                "--noreload",
                                 "--nothreading"
                             ],
-                            "django": true
+                            "django": true,
+                            "subProcess": true
                         }
                     },
                     {
@@ -414,7 +414,8 @@
                             "args": [
                                 "run"
                             ],
-                            "jinja": true
+                            "jinja": true,
+                            "subProcess": true
                         }
                     },
                     {
@@ -618,6 +619,11 @@
                                 "type": "boolean",
                                 "description": "Whether debugging Pyramid applications",
                                 "default": false
+                            },
+                            "subProcess": {
+                                "type": "boolean",
+                                "description": "Whether to enable Sub Process debugging",
+                                "default": false
                             }
                         }
                     },
@@ -689,6 +695,11 @@
                                 ],
                                 "description": "Jinja template debugging (e.g. Flask).",
                                 "default": null
+                            },
+                            "subProcess": {
+                                "type": "boolean",
+                                "description": "Whether to enable Sub Process debugging",
+                                "default": false
                             }
                         }
                     }
@@ -723,10 +734,10 @@
                         "console": "integratedTerminal",
                         "args": [
                             "runserver",
-                            "--noreload",
                             "--nothreading"
                         ],
-                        "django": true
+                        "django": true,
+                        "subProcess": true
                     },
                     {
                         "name": "Python: Flask",
@@ -741,7 +752,8 @@
                         "args": [
                             "run"
                         ],
-                        "jinja": true
+                        "jinja": true,
+                        "subProcess": true
                     },
                     {
                         "name": "Python: Current File (External Terminal)",
@@ -1615,7 +1627,7 @@
         "testMultiWorkspace": "node ./out/test/multiRootTest.js",
         "testAnalysisEngine": "node ./out/test/analysisEngineTest.js",
         "testPerformance": "node ./out/test/performanceTest.js",
-        "precommit": "node gulpfile.js",
+        "precommit": "node gulpfile.js precommit=true",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "clean": "gulp clean",
@@ -1674,7 +1686,7 @@
         "untildify": "^3.0.2",
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
-        "vscode-extension-telemetry": "^0.0.22",
+        "vscode-extension-telemetry": "^0.1.0",
         "vscode-languageclient": "^4.4.0",
         "vscode-languageserver": "^4.4.0",
         "vscode-languageserver-protocol": "^3.10.3",
@@ -1750,7 +1762,7 @@
         "gulp-typescript": "^4.0.1",
         "gulp-watch": "^5.0.0",
         "html-webpack-plugin": "^3.2.0",
-        "husky": "^0.14.3",
+        "husky": "^1.1.2",
         "is-running": "^2.1.0",
         "istanbul": "^0.4.5",
         "jsdom": "^12.2.0",
