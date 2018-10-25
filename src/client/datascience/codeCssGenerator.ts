@@ -13,7 +13,9 @@ import { IServiceContainer } from '../ioc/types';
 // This class generates css using the current theme in order to colorize code.
 //
 // NOTE: This is all a big hack. It's relying on the theme json files to have a certain format
-// in order for this to work
+// in order for this to work.
+// See this vscode issue for the real way we think this should happen:
+// https://github.com/Microsoft/vscode/issues/32813
 export class CodeCssGenerator {
     private workspaceService : IWorkspaceService;
     private currentProcess : ICurrentProcess;
