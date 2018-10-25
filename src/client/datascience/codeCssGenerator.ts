@@ -98,7 +98,7 @@ export class CodeCssGenerator {
         pre[class*="language-"] {
             color: ${def};
             background: none;
-            text-shadow: 0 1px white;
+            text-shadow: none;
             font-family: ${fontFamily};
             text-align: left;
             white-space: pre;

@@ -96,6 +96,9 @@ export class History implements IWebPanelMessageListener {
 
             // Wait for the execution to finish
             await deferred.promise;
+
+            // Then show our webpanel
+            await this.show();
         }
     }
 
