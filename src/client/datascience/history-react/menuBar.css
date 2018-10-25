@@ -43,16 +43,8 @@
     border-left-width: 0px;
     margin-bottom: 1px;
     border-style:solid;
-}
-
-.menuBar-top-fixed-vscode-light {
-    background-color: white;
-    border-color: black;
-}
-
-.menuBar-top-fixed-vscode-dark {
-    background-color: black;
-    border-color: white;
+    background-color: var(--vscode-editor-background);
+    border-color: var(--vscode-editor-foreground);
 }
 
 .menuBar-top-fixed:after{
