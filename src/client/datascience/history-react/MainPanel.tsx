@@ -108,11 +108,24 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.finishCell(payload);
                 return true;
 
+            case HistoryMessages.GetAllCells:
+                this.getAllCells();
+                return true;
+
             default:
                 break;
         }
 
         return false;
+    }
+
+    private getAllCells = () => {
+        // Send all of our cells back to the other side
+        const cells = this.state.cellVMs.map((cellVM : ICellViewModel) => {
+            return cellVM.cell;
+        }) ;
+
+        PostOffice.sendMessage({type: HistoryMessages.ReturnAllCells, payload : cells});
     }
 
     private renderExtraButtons = () => {

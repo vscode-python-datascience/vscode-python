@@ -28,7 +28,14 @@ export function generateTestState(inputBlockToggled : (id: string) => void) : IM
 
 export function createCellVM(inputCell: ICell, inputBlockToggled : (id: string) => void) {
     let inputLinesCount = 0;
-    const inputText = inputCell.data.cell_type === 'code' ? Cell.concatMultilineString(inputCell.data.source) : '';
+    let source = inputCell.data.cell_type === 'code' ? inputCell.data.source : [];
+
+    // Eliminate the #%% on the front if it has nothing else on the line
+    if (source.length > 0 && /^\s*#\s*%%\s*$/.test(source[0].trim())) {
+        source = source.slice(1);
+    }
+
+    const inputText = inputCell.data.cell_type === 'code' ? Cell.concatMultilineString(source) : undefined;
     if (inputText) {
         inputLinesCount = inputText.split('\n').length;
     }
@@ -99,6 +106,8 @@ function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbf
                 }
             ],
             source: [
+                '# comment',
+
                 'df',
                 'df.head(5)'
             ]

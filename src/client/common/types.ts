@@ -117,6 +117,7 @@ export interface ICurrentProcess {
     readonly argv: string[];
     readonly stdout: NodeJS.WriteStream;
     readonly stdin: NodeJS.ReadStream;
+    readonly execPath: string;
     on(event: string | symbol, listener: Function): this;
 }
 

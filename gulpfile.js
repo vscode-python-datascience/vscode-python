@@ -86,9 +86,11 @@ const copyrightHeader = [
 ];
 const copyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n')];
 
-gulp.task('hygiene-modified', () => gulp.series('compile', run({ mode: 'changes' })));
+gulp.task('hygiene-modified', () => gulp.series('compile', 'changes'));
 
 gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
+
+gulp.task('changes', () => run({ mode: 'changes' }));
 
 gulp.task('precommit', () => run({ exitOnError: true, mode: 'staged' }));
 
@@ -168,7 +170,7 @@ gulp.task('compile-webviews-watch', () => {
     // Watch all files that are written by the compile task, except for the bundle generated
     // by compile-webviews. Watch the css files too, but in the src directory because webpack
     // will modify the output ones.
-    gulp.watch(['./out/**/*react*/*.js', './src/**/*react*/*.{png,svg,css}', './out/**/react*/*.js', '!./out/**/*react*/*_bundle.js'], ['compile-webviews']);
+    gulp.watch(['./out/**/*react*/*.js', './src/**/*react*/*.{png,svg,css}', './out/**/react*/*.js', '!./out/**/*react*/*_bundle.js'], gulp.series('compile-webviews'));
 });
 
 const webify = (file) => {
