@@ -30,4 +30,5 @@ export namespace HistoryMessages {
     export const Export = 'export_to_ipynb';
     export const GetAllCells = 'get_all_cells';
     export const ReturnAllCells = 'return_all_cells';
+    export const ToggleInline = 'toggle_inline';
 }

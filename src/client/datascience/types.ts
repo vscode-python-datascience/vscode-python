@@ -36,6 +36,7 @@ export interface IJupyterServer extends IDisposable {
     executeObservable(code: string, file: string, line: number) : Observable<ICell[]>;
     execute(code: string, file: string, line: number) : Promise<ICell[]>;
     restartKernel();
+    toggleInline();
     translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
     launchNotebook(file: string) : Promise<boolean>;
 }

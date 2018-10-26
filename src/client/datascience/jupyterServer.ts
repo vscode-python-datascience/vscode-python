@@ -35,6 +35,7 @@ export class JupyterServer implements IJupyterServer {
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
     private logger: ILogger;
     private pythonService : IPythonExecutionService;
+    private isInline: boolean;
 
     constructor(logger: ILogger, pythonService: IPythonExecutionService) {
         this.logger = logger;
@@ -77,6 +78,7 @@ export class JupyterServer implements IJupyterServer {
             this.executeSilently(
                 'import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt'
             ).ignoreErrors();
+            this.isInline = true;
 
             return true;
         } else {
@@ -194,6 +196,45 @@ export class JupyterServer implements IJupyterServer {
         if (this.session && this.session.kernel) {
             this.session.kernel.restart().ignoreErrors();
         }
+    }
+
+    public toggleInline = () => {
+        if (this.session && this.session.kernel) {
+            //let paramString = '%matplotlib qt\r\nimport matplotlib.pyplot as plt'
+            //this.executeSilently(paramString).catch (() => {
+                //let x = 1;
+                //x = x + 1;
+            //});
+            //this.executeSilently(paramString).catch (() => {
+                //let x = 1;
+                //x = x + 1;
+            //});
+            //let paramString = "from IPython import get_ipython\r\nget_ipython().run_line_magic('matplotlib', 'qt')\r\nimport matplotlib.pyplot as plt";
+            //this.executeSilently(paramString).catch (() => {
+                //let x = 1;
+                //x = x + 1;
+            //});
+
+            //this.executeSilently('%matplotlib qt').then(async () => {
+                //await this.delay(1000);
+                //this.executeSilently('import matplotlib.pyplot as plt').ignoreErrors();
+            //}).ignoreErrors();
+
+            //let paramString = '%matplotlib qt\r\n%matplotlib qt\r\nimport matplotlib.pyplot as plt'
+            //this.executeSilently(paramString).catch (() => {
+                //let x = 1;
+                //x = x + 1;
+            //});
+
+            let paramString = `%matplotlib ${this.isInline ? 'qt' : 'inline'}\r\n%matplotlib ${this.isInline ? 'qt' : 'inline'}\r\nimport matplotlib.pyplot as plt`
+            this.executeSilently(paramString).ignoreErrors();
+
+            this.isInline = !this.isInline;
+        }
+    }
+
+    private async delay(ms:number) {
+        return new Promise(resolve => setTimeout(resolve,ms));
     }
 
     public async translateToNotebook (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> {

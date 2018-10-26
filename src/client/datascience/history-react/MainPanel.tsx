@@ -68,6 +68,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 <PostOffice messageHandlers={[this]} />
                 <MenuBar theme={this.props.theme} stylePosition='top-fixed'>
                     {this.renderExtraButtons()}
+                    <CellButton theme={this.props.theme} onClick={this.showInline} disabled={!this.canShowInline()} tooltip='Show inline'>
+                        <RelativeImage class='cell-button-image' path={collapseAllImage}/>
+                    </CellButton>
                     <CellButton theme={this.props.theme} onClick={this.collapseAll} disabled={!this.canCollapseAll()} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
                         <RelativeImage class='cell-button-image' path={collapseAllImage}/>
                     </CellButton>
@@ -195,6 +198,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.setState({
             cellVMs: newCells
         });
+    }
+    
+    private showInline = () => {
+        PostOffice.sendMessage({ type: HistoryMessages.ToggleInline, payload: { }});
+    }
+    private canShowInline = () => {
+        return true;
     }
 
     private canCollapseAll = () => {

@@ -117,6 +117,10 @@ export class History implements IWebPanelMessageListener {
                 this.export(payload);
                 break;
 
+            case HistoryMessages.ToggleInline:
+                this.toggleInline();
+                break;
+
             default:
                 break;
         }
@@ -187,6 +191,12 @@ export class History implements IWebPanelMessageListener {
     private restartKernel = () => {
         if (this.jupyterServer) {
             this.jupyterServer.restartKernel();
+        }
+    }
+
+    private toggleInline = () => {
+        if (this.jupyterServer) {
+            this.jupyterServer.toggleInline();
         }
     }
 
