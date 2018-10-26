@@ -334,7 +334,7 @@ export class JupyterServer implements IJupyterServer {
 
         return new Observable<ICell>(subscriber => {
             // Generate markdown by stripping out the comment and markdown header
-            const markdown = this.appendLineFeed(code.split('\n').slice(1), s => s.trim().slice(1));
+            const markdown = this.appendLineFeed(code.split('\n').slice(1), s => s.trim().slice(1).trim());
 
             const cell: ICell = {
                 id: uuid(),
