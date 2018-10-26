@@ -10,17 +10,20 @@ import { Disposable } from 'vscode';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { ILogger } from '../../client/common/types';
-import { JupyterServerProvider } from '../../client/datascience/jupyterServerProvider';
-import { IJupyterServerProvider } from '../../client/datascience/types';
 import { MockPythonExecutionService } from './executionServiceMock';
+import { JupyterServer } from '../../client/datascience/jupyterServer';
+import { JupyterProcess } from '../../client/datascience/jupyterProcess';
+import { JupyterAvailability } from '../../client/datascience/jupyterAvailability';
 
-suite('Jupyter server tests', () => {
+suite('Jupyter notebook tests', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let logger: TypeMoq.IMock<ILogger>;
     const disposables: Disposable[] = [];
-    let serverProvider: IJupyterServerProvider;
+    let availability: JupyterAvailability;
     let pythonExecutionService : IPythonExecutionService;
     let factory : TypeMoq.IMock<IPythonExecutionFactory>;
+    let jupyterServer : JupyterServer;
+    let jupyterProcess : JupyterProcess;
 
     setup(() => {
         pythonExecutionService = new MockPythonExecutionService();
@@ -33,7 +36,8 @@ suite('Jupyter server tests', () => {
 
         // tslint:disable-next-line:no-empty
         logger.setup(l => l.logInformation(TypeMoq.It.isAny())).returns((m) => {}); // console.log(m)); // REnable this to debug the server
-        serverProvider = new JupyterServerProvider(disposables, logger.object, factory.object);
+        jupyterProcess = new JupyterProcess(pythonExecutionService);
+        jupyterServer = new JupyterServer(logger.object, jupyterProcess, availability);
     });
 
     teardown(() => {
@@ -45,7 +49,7 @@ suite('Jupyter server tests', () => {
     });
 
     test('Creation', async () => {
-        if (await serverProvider.isSupported()) {
+        if (await availability.isNotebookSupported()) {
             const server = await serverProvider.start();
             if (!server) {
                 assert.fail('Server not created');

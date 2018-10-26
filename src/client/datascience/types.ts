@@ -9,6 +9,8 @@ import { Observable } from 'rxjs/Observable';
 import { CodeLens, CodeLensProvider, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
+import { IConnectionInfo } from './jupyterProcess';
+import { ExecutionResult } from '../common/process/types';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -21,17 +23,11 @@ export interface IDataScienceCommandListener {
     register(commandManager: ICommandManager);
 }
 
-// Factory for jupyter servers
-export const IJupyterServerProvider = Symbol('IJupyterServerFactory');
-export interface IJupyterServerProvider {
-    start(notebookFile? : string): Promise<IJupyterServer>;
-    isSupported() : Promise<boolean>;
-}
-
-// Talks to a jupyter kernel to retrieve data for cells
-export const IJupyterServer = Symbol('IJupyterServer');
-export interface IJupyterServer extends IDisposable {
+// Talks to a jupyter ipython kernel to retrieve data for cells
+export const INotebookServer = Symbol('INotebookServer');
+export interface INotebookServer extends IDisposable {
     onStatusChanged: Event<boolean>;
+    start(notebookFile? : string) : Promise<boolean>;
     getCurrentState() : Promise<ICell[]>;
     executeObservable(code: string, file: string, line: number) : Observable<ICell[]>;
     execute(code: string, file: string, line: number) : Promise<ICell[]>;
@@ -40,9 +36,30 @@ export interface IJupyterServer extends IDisposable {
     launchNotebook(file: string) : Promise<boolean>;
 }
 
+export const INotebookProcess = Symbol('INotebookProcess');
+export interface INotebookProcess extends IDisposable {
+    start(notebookFile: string) : Promise<void>;
+    waitForConnectionInformation() : Promise<IConnectionInfo>;
+    waitForPythonVersionString() : Promise<string>;
+    spawn(notebookFile: string) : Promise<ExecutionResult<string>>;
+}
+
+export const IJupyterAvailability = Symbol('IJupyterAvailablity');
+export interface IJupyterAvailability {
+    isNotebookSupported() : Promise<boolean>;
+    isImportSupported() : Promise<boolean>;
+}
+
+export const INotebookImporter = Symbol('INotebookImporter');
+export interface INotebookImporter extends IDisposable {
+
+}
+
 export const IHistoryProvider = Symbol('IHistoryProvider');
 export interface IHistoryProvider {
-    getOrCreateHistory() : Promise<IHistory>;
+    getActive() : IHistory;
+    setActive(history : IHistory);
+    create() : IHistory;
 }
 
 export const IHistory = Symbol('IHistory');
@@ -92,4 +109,9 @@ export interface ICell {
     line: number;
     state: CellState;
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell;
+}
+
+export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
+export interface ICodeCssGenerator {
+    generateThemeCss() : Promise<string>;
 }

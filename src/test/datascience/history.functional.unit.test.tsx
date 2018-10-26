@@ -134,7 +134,7 @@ suite('History output tests', () => {
             const updatePromise = waitForUpdate(wrapper, MainPanel);
 
             // Send some code to the history and make sure it ends up in the html returned from our render
-            const history = await historyProvider.getOrCreateHistory();
+            const history = await historyProvider.getActive();
             await history.addCode('a=1\na', 'foo.py', 2);
 
             // Wait for the render to go through

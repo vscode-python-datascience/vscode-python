@@ -21,39 +21,38 @@ import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { RegExpValues } from './constants';
 import { JupyterProcess } from './jupyterProcess';
-import { CellState, ICell, IJupyterServer } from './types';
+import { CellState, ICell, INotebookServer, INotebookProcess, IJupyterAvailability } from './types';
+import { injectable, inject } from 'inversify';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
 
-export class JupyterServer implements IJupyterServer {
+@injectable()
+export class JupyterServer implements INotebookServer {
     private static trackingTemps: boolean = false;
     public isDisposed: boolean = false;
     private session: Session.ISession | undefined;
     private tempFile: temp.OpenFile | undefined;
-    private process: JupyterProcess;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
-    private logger: ILogger;
-    private pythonService : IPythonExecutionService;
 
-    constructor(logger: ILogger, pythonService: IPythonExecutionService) {
-        this.logger = logger;
-        this.pythonService = pythonService;
-        this.process = new JupyterProcess(pythonService);
+    constructor(
+        @inject(ILogger) private logger: ILogger,
+        @inject(INotebookProcess) private process: INotebookProcess,
+        @inject(IJupyterAvailability) private availability : IJupyterAvailability) {
     }
 
     public async start(notebookFile? : string) : Promise<boolean> {
 
-        if (await JupyterProcess.exists(this.pythonService)) {
+        if (await this.availability.isNotebookSupported()) {
 
             // First generate a temporary notebook. We need this as input to the session
             this.tempFile = await this.generateTempFile(notebookFile);
 
             // start our process in the same directory as our ipynb file.
-            this.process.start(path.dirname(this.tempFile.path), this.logger);
+            this.process.start(path.dirname(this.tempFile.path));
 
             // Wait for connection information. We'll stick that into the options
-            const connInfo = await this.process.getConnectionInformation();
+            const connInfo = await this.process.waitForConnectionInformation();
 
             // Create our session options using this temporary notebook and our connection info
             const options: Session.IOptions = {
@@ -201,7 +200,7 @@ export class JupyterServer implements IJupyterServer {
         if (this.process) {
 
             // First we need the python version we're running
-            const pythonVersion = await this.process.getPythonVersionString();
+            const pythonVersion = await this.process.waitForPythonVersionString();
 
             // Pull off the first number. Should be  3 or a 2
             const first = pythonVersion.substr(0, 1);

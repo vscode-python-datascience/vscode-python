@@ -67,7 +67,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     public async runAllCells() {
-        const activeHistory = await this.historyProvider.getOrCreateHistory();
+        const activeHistory = await this.historyProvider.getActive();
 
         // Run all of our code lenses, they should always be ordered in the file so we can just
         // run them one by one
@@ -84,7 +84,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     public async runCell(range: Range) {
-        const activeHistory = await this.historyProvider.getOrCreateHistory();
+        const activeHistory = await this.historyProvider.getActive();
         if (this.document) {
             const code = this.document.getText(range);
 
