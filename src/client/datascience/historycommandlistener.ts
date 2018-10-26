@@ -49,8 +49,13 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
                     await this.importNotebook();
                 }
             } catch (err) {
-                this.logger.logError(err);
-                this.applicationShell.showErrorMessage(err);
+                if (err.message) {
+                    this.logger.logError(err.message);
+                    this.applicationShell.showErrorMessage(err.message);
+                } else {
+                    this.logger.logError(err.toString());
+                    this.applicationShell.showErrorMessage(err.toString());
+                }
             }
         });
         this.disposableRegistry.push(disposable);

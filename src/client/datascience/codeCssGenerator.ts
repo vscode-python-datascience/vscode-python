@@ -7,6 +7,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 
 import { IWorkspaceService } from '../common/application/types';
+import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { ICurrentProcess, ILogger } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 
@@ -38,11 +39,11 @@ export class CodeCssGenerator {
         // Then we have to find where the theme resources are loaded from
         try {
             if (theme) {
-                const tokens = await this.findTokensJson(theme);
+                const tokenColors = await this.findTokenColors(theme);
 
                 // The tokens object then contains the necessary data to generate our css
-                if (tokens && font && fontSize) {
-                    return this.generateCss(tokens, font, fontSize);
+                if (tokenColors && font && fontSize) {
+                    return this.generateCss(tokenColors, font, fontSize);
                 }
             }
         } catch (err) {
@@ -83,8 +84,7 @@ export class CodeCssGenerator {
     }
 
     // tslint:disable-next-line:max-func-body-length
-    private generateCss = (tokens : JSONObject, fontFamily : string, fontSize: number) : string => {
-        const tokenColors = tokens['tokenColors'] as JSONArray;
+    private generateCss = (tokenColors : JSONArray, fontFamily : string, fontSize: number) : string => {
 
         // There's a set of values that need to be found
         const comment = this.getScopeColor(tokenColors, 'comment');
@@ -92,6 +92,7 @@ export class CodeCssGenerator {
         const stringColor = this.getScopeColor(tokenColors, 'string');
         const keyword = this.getScopeColor(tokenColors, 'keyword');
         const operator = this.getScopeColor(tokenColors, 'keyword.operator');
+        const variable = this.getScopeColor(tokenColors, 'variable');
         const def = 'var(--vscode-editor-foreground)';
 
         // Use these values to fill in our format string
@@ -214,7 +215,7 @@ export class CodeCssGenerator {
         .token.regex,
         .token.important,
         .token.variable {
-            color: ${def};
+            color: ${variable};
         }
 
         .token.important,
@@ -232,7 +233,29 @@ export class CodeCssGenerator {
 
     }
 
-    private findTokensJson = async (theme : string) : Promise<JSONObject | undefined> => {
+    private mergeColors = (colors1 : JSONArray, colors2 : JSONArray) : JSONArray => {
+        return [...colors1, ...colors2];
+    }
+
+    private readTokenColors = async (themeFile: string) : Promise<JSONArray> => {
+        const tokenContent = await fs.readFile(themeFile, 'utf8');
+        const theme = JSON.parse(tokenContent) as JSONObject;
+        const tokenColors = theme['tokenColors'] as JSONArray;
+        if (tokenColors && tokenColors.length > 0) {
+            // This theme may include others. If so we need to combine the two together
+            if (theme['include']) {
+                const include = path.join(path.dirname(themeFile), theme['include'].toString());
+                return this.mergeColors(tokenColors, await this.readTokenColors(include));
+            }
+
+            // Theme is a root, don't need to include others
+            return tokenColors;
+        }
+
+        return [];
+    }
+
+    private findTokenColors = async (theme : string) : Promise<JSONArray> => {
         const currentExe = this.currentProcess.execPath;
         const currentPath = path.dirname(currentExe);
 
@@ -240,45 +263,53 @@ export class CodeCssGenerator {
         const extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions');
 
         // Search through all of the json files for the theme name
+        const escapedThemeName = theme.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
         const searchOptions : fm.FindOptions = {
             path: extensionsPath,
             recursiveSearch: true,
             fileFilter : {
                 fileNamePattern : '**/*.json',
-                content: new RegExp(`id[',"]:\\s*[',"]${theme}[',"]`)
+                content: new RegExp(`id[',"]:\\s*[',"]${escapedThemeName}[',"]`)
             }
         };
 
         const matcher = new fm.FileMatcher();
-        const results = await matcher.find(searchOptions);
 
-        // Use the first result if we have one
-        if (results && results.length > 0) {
-            // This should be the path to the file. Load it as a json object
-            const contents = await fs.readFile(results[0], 'utf8');
-            const json = JSON.parse(contents) as JSONObject;
+        try {
+            const results = await matcher.find(searchOptions);
 
-            // There should be a contributes section
-            const contributes = json['contributes'] as JSONObject;
+            // Use the first result if we have one
+            if (results && results.length > 0) {
+                // This should be the path to the file. Load it as a json object
+                const contents = await fs.readFile(results[0], 'utf8');
+                const json = JSON.parse(contents) as JSONObject;
 
-            // This should have a themes section
-            const themes = contributes['themes'] as JSONArray;
+                // There should be a contributes section
+                const contributes = json['contributes'] as JSONObject;
 
-            // One of these (it's an array), should have our matching theme entry
-            const index = themes.findIndex(e => {
-                return e !== null && e['id'] === theme;
-            });
+                // This should have a themes section
+                const themes = contributes['themes'] as JSONArray;
 
-            const found = index >= 0 ? themes[index] : null;
-            if (found !== null) {
-                // Then the path entry should contain a relative path to the json file with
-                // the tokens in it
-                const themeFile = path.join(path.dirname(results[0]), found['path']);
-                const tokenContent = await fs.readFile(themeFile, 'utf8');
-                return JSON.parse(tokenContent) as JSONObject;
+                // One of these (it's an array), should have our matching theme entry
+                const index = themes.findIndex(e => {
+                    return e !== null && e['id'] === theme;
+                });
+
+                const found = index >= 0 ? themes[index] : null;
+                if (found !== null) {
+                    // Then the path entry should contain a relative path to the json file with
+                    // the tokens in it
+                    const themeFile = path.join(path.dirname(results[0]), found['path']);
+                    return await this.readTokenColors(themeFile);
+                }
             }
+        } catch (err) {
+            // Swallow any exceptions with searching or parsing
+            this.logger.logError(err);
         }
 
-        return undefined;
+        // We should return a default. The vscode-light theme
+        const defaultThemeFile = path.join(EXTENSION_ROOT_DIR, 'src', 'client', 'datascience', 'defaultTheme.json');
+        return this.readTokenColors(defaultThemeFile);
     }
 }

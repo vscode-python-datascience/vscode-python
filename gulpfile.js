@@ -161,6 +161,9 @@ gulp.task('inlinesource', () => {
 });
 
 gulp.task('compile-webviews', (done) => {
+    // Clear screen before starting
+    console.log('\x1Bc');
+
     // First copy the files/css/svg/png files to the output folder
     gulp.src('./src/**/*.{png,svg,css}')
         .pipe(gulp.dest('./out'));

@@ -2,7 +2,6 @@
     margin: 5px;
     padding: 2px;
     display: block;
-    white-space: pre;
 }
 
 .cell-wrapper:after {
@@ -37,6 +36,11 @@
 
 .cell-input {
     margin: 0;
+}
+
+.cell-input pre{
+    margin: 0px;
+    padding: 0px;
 }
 
 .cell-output {

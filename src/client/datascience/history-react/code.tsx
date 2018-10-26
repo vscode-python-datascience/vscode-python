@@ -51,7 +51,6 @@ const pythonGrammar = {
 
 export interface ICodeProps {
     code : string;
-    font : string;
     theme: string;
 }
 
@@ -63,10 +62,6 @@ export class Code extends React.Component<ICodeProps> {
     public render() {
         const colorized = Prism.highlight(this.props.code, pythonGrammar);
         const Transform = transforms['text/html'];
-        return (<pre>
-                    <code className='language-python'>
-                        <Transform data={colorized}/>
-                    </code>
-                </pre>);
+        return (<pre><code className='language-python'><Transform data={colorized}/></code></pre>);
     }
 }

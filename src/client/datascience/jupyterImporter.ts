@@ -17,15 +17,16 @@ import { IServiceContainer } from '../ioc/types';
 export class JupyterImporter implements IDisposable {
     public isDisposed : boolean = false;
     // Template that changes markdown cells to have # %% [markdown] in the comments
+    private readonly nbconvertTemplate =
     // tslint:disable-next-line:no-multiline-string
-    private readonly nbconvertTemplate = `{%- extends 'null.tpl' -%}
-{% block in_prompt %}
-{% endblock in_prompt %}
-{% block input %}
-{{ cell.source | ipython2python }}
-{% endblock input %}
-{% block markdowncell scoped %}
-#%% [markdown]
+`{%- extends 'null.tpl' -%}
+{% block codecell %}
+#%%
+{{ super() }}
+{% endblock codecell %}
+{% block in_prompt %}{% endblock in_prompt %}
+{% block input %}{{ cell.source | ipython2python }}{% endblock input %}
+{% block markdowncell scoped %}#%% [markdown]
 {{ cell.source | comment_lines }}
 {% endblock markdowncell %}`;
 
@@ -50,6 +51,9 @@ export class JupyterImporter implements IDisposable {
         if (await this.isSupported()) {
             const executionService = await this.getExecutionService();
             const result = await executionService.execModule('jupyter', ['nbconvert', file, '--to', 'python', '--stdout', '--template', template], { throwOnStdErr: false, encoding: 'utf8' });
+            if (result.stdout.trim().length === 0) {
+                throw result.stderr;
+            }
             return result.stdout;
         }
 
