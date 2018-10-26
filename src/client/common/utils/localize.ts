@@ -23,7 +23,7 @@ export namespace DataScience {
     export const exportDialogFilter = localize('DataScience.exportDialogFilter', 'Jupyter Notebooks');
     export const exportDialogComplete = localize('DataScience.exportDialogComplete', 'Notebook written to {0}');
     export const exportDialogFailed = localize('DataScience.exportDialogFailed', 'Failed to export notebook. {0}');
-    export const exportOpenQuestion = localize('DataScience.exportOpenQuestion', 'Open in browser?');
+    export const exportOpenQuestion = localize('DataScience.exportOpenQuestion', 'Open in browser');
     export const runCellLensCommandTitle = localize('python.command.python.datascience.runcell.title', 'Run cell');
     export const importDialogTitle = localize('DataScience.importDialogTitle', 'Import Jupyter Notebook');
     export const importDialogFilter = localize('DataScience.importDialogFilter', 'Jupyter Notebooks');

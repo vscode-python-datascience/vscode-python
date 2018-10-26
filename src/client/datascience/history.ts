@@ -222,7 +222,7 @@ export class History implements IWebPanelMessageListener {
 
             try {
                 // tslint:disable-next-line: no-any
-                await fs.writeFile(file, JSON.stringify(notebook, (k: string, v: any) => v, '\n'), {encoding: 'utf8', flag: 'w'});
+                await fs.writeFile(file, JSON.stringify(notebook), {encoding: 'utf8', flag: 'w'});
                 this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), localize.DataScience.exportOpenQuestion()).then((str : string | undefined) => {
                     if (str && file && this.jupyterServer) {
                         // If the user wants to, open the notebook they just generated.

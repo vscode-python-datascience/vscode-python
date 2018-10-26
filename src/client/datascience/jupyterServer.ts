@@ -117,7 +117,7 @@ export class JupyterServer implements IJupyterServer {
         if (this.session) {
 
             // Replace windows line endings with unix line endings.
-            const copy = code.replace('\r\n', '\n');
+            const copy = code.replace(/\r\n/g, '\n');
 
             // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
             const split = copy.split('\n');
@@ -134,12 +134,12 @@ export class JupyterServer implements IJupyterServer {
                 } else {
                     // Just a normal markdown case
                     return this.combineObservables(
-                        this.executeMarkdownObservable(code, file, line));
+                        this.executeMarkdownObservable(copy, file, line));
                 }
             } else {
                 // Normal code case
                 return this.combineObservables(
-                    this.executeCodeObservable(code, file, line));
+                    this.executeCodeObservable(copy, file, line));
             }
         }
 
@@ -248,7 +248,25 @@ export class JupyterServer implements IJupyterServer {
     }
 
     private pruneCell(cell : ICell) : nbformat.IBaseCell {
-        return cell.data;
+        // Remove the #%% of the top of the source if there is any. We don't need
+        // this to end up in the exported ipynb file.
+        return {...cell.data, source : this.pruneSource(cell.data.source)};
+    }
+
+    private pruneSource(source : nbformat.MultilineString) : nbformat.MultilineString {
+
+        if (Array.isArray(source) && source.length > 0) {
+            if (RegExpValues.PythonCellMarker.test(source[0])) {
+                return source.slice(1);
+            }
+        } else {
+            const array = source.toString().split('\n').map(s => `${s}\n`);
+            if (array.length > 0 && RegExpValues.PythonCellMarker.test(array[0])) {
+                return array.slice(1);
+            }
+        }
+
+        return source;
     }
 
     private combineObservables = (...args : Observable<ICell>[]) : Observable<ICell[]> => {
@@ -305,11 +323,18 @@ export class JupyterServer implements IJupyterServer {
         });
     }
 
+    private appendLineFeed(arr : string[], modifier? : (s : string) => string) {
+        return arr.map((s: string, i: number) => {
+            const out = modifier ? modifier(s) : s;
+            return i === arr.length - 1 ? `${out}` : `${out}\n`;
+        });
+    }
+
     private executeMarkdownObservable = (code: string, file: string, line: number) : Observable<ICell> => {
 
         return new Observable<ICell>(subscriber => {
             // Generate markdown by stripping out the comment and markdown header
-            const markdown = code.split('\n').slice(1).map(s => `${s.trim().slice(1)}\n`);
+            const markdown = this.appendLineFeed(code.split('\n').slice(1), s => s.trim().slice(1).trim());
 
             const cell: ICell = {
                 id: uuid(),
@@ -333,7 +358,7 @@ export class JupyterServer implements IJupyterServer {
             // Start out empty;
             const cell: ICell = {
                 data : {
-                    source: code.split('\n'),
+                    source: this.appendLineFeed(code.split('\n')),
                     cell_type: 'code',
                     outputs: [],
                     metadata: {},

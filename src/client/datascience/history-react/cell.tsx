@@ -128,7 +128,7 @@ export class Cell extends React.Component<ICellProps> {
     private renderInputs = () => {
         if (this.isCodeCell()) {
             // Colorize our text
-            return (<div className='cell-input'><Code code={this.props.cellVM.inputBlockText} theme={this.props.theme} font={'foo'}/></div>);
+            return (<div className='cell-input'><Code code={this.props.cellVM.inputBlockText} theme={this.props.theme}/></div>);
         } else {
             return null;
         }
