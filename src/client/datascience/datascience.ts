@@ -68,6 +68,15 @@ export class DataScience implements IDataScience {
         }
     }
 
+    public runCurrentCellAndAdvance(): Promise<void> {
+        const activeCodeWatcher = this.getCurrentCodeWatcher();
+        if (activeCodeWatcher) {
+            return activeCodeWatcher.runCurrentCellAndAdvance();
+        } else {
+            return Promise.resolve();
+        }
+    }
+
     // Get our matching code watcher for the active document
     private getCurrentCodeWatcher(): ICodeWatcher | undefined {
         const activeEditor = vscode.window.activeTextEditor;
@@ -86,6 +95,8 @@ export class DataScience implements IDataScience {
         disposable = this.commandManager.registerCommand(Commands.RunCell, this.runCell, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.RunCurrentCell, this.runCurrentCell, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.RunCurrentCellAdvance, this.runCurrentCellAndAdvance, this);
         this.disposableRegistry.push(disposable);
         this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
             listener.register(this.commandManager);

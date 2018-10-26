@@ -6,14 +6,12 @@
 import { IServiceManager } from '../ioc/types';
 import { DataScience } from './datascience';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
-import { CodeWatcher } from './editor-integration/codewatcher';
 import { HistoryCommandListener } from './historyCommandListener';
 import { HistoryProvider } from './historyprovider';
 import { JupyterServerProvider } from './jupyterserverprovider';
-import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, IHistoryProvider, IJupyterServerProvider  } from './types';
+import { IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, IHistoryProvider, IJupyterServerProvider  } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
     serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, JupyterServerProvider);

@@ -50,9 +50,9 @@ export class Cell extends React.Component<ICellProps> {
                     result = result.concat(s);
                 }
             }
-            return result;
+            return result.trim();
         }
-        return str.toString();
+        return str.toString().trim();
     }
 
     public render() {

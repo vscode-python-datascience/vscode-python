@@ -7,6 +7,7 @@ export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
     export const RunCell = 'python.datascience.runcell';
     export const RunCurrentCell = 'python.datascience.runcurrentcell';
+    export const RunCurrentCellAdvance = 'python.datascience.runcurrentcelladvance';
     export const ShowHistoryPane = 'python.datascience.showhistorypane';
     export const ImportNotebook = 'python.datascience.importnotebook';
 }

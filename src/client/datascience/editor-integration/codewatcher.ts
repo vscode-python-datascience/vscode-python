@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable } from 'inversify';
-import { CodeLens, Command, Range, TextDocument, window } from 'vscode';
-
+import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditorRevealType, window} from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import * as localize from '../../common/utils/localize';
+import { IServiceContainer } from '../../ioc/types';
 import { Commands, EditorContexts, RegExpValues } from '../constants';
 import { ICodeWatcher, IHistoryProvider } from '../types';
 
@@ -15,30 +14,20 @@ export interface ICell {
     title: string;
 }
 
-@injectable()
 export class CodeWatcher implements ICodeWatcher {
     private document?: TextDocument;
     private version: number = -1;
     private fileName: string = '';
     private codeLenses: CodeLens[] = [];
-    constructor(@inject(IHistoryProvider) private historyProvider: IHistoryProvider,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell) {
-    }
+    private historyProvider: IHistoryProvider;
+    private commandManager: ICommandManager;
+    private applicationShell: IApplicationShell;
 
-    public getFileName() {
-        return this.fileName;
-    }
+    constructor(serviceContainer: IServiceContainer, document: TextDocument) {
+        this.historyProvider = serviceContainer.get<IHistoryProvider>(IHistoryProvider);
+        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
+        this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
 
-    public getVersion() {
-        return this.version;
-    }
-
-    public getCodeLenses() {
-        return this.codeLenses;
-    }
-
-    public addFile(document: TextDocument) {
         this.document = document;
 
         // Cache these, we don't want to pull an old version if the document is updated
@@ -63,6 +52,18 @@ export class CodeWatcher implements ICodeWatcher {
             };
             this.codeLenses.push(new CodeLens(cell.range, runAllCmd));
         });
+    }
+
+    public getFileName() {
+        return this.fileName;
+    }
+
+    public getVersion() {
+        return this.version;
+    }
+
+    public getCodeLenses() {
+        return this.codeLenses;
     }
 
     public async runAllCells() {
@@ -107,6 +108,69 @@ export class CodeWatcher implements ICodeWatcher {
                 await this.runCell(lens.range);
                 break;
             }
+        }
+    }
+
+    public async runCurrentCellAndAdvance() {
+        if (!window.activeTextEditor || !window.activeTextEditor.document) {
+            return;
+        }
+
+        let currentRunCellLens: CodeLens | undefined;
+        let nextRunCellLens: CodeLens | undefined;
+
+        for (const lens of this.codeLenses) {
+            // If we have already found the current code lens, then the next run cell code lens will give us the next cell
+            if (currentRunCellLens && lens.command && lens.command.command === Commands.RunCell) {
+                nextRunCellLens = lens;
+                break;
+            }
+
+            // Check to see which RunCell lens range overlaps the current selection start
+            if (lens.range.contains(window.activeTextEditor.selection.start) && lens.command && lens.command.command === Commands.RunCell) {
+                currentRunCellLens = lens;
+            }
+        }
+
+        if (currentRunCellLens) {
+            await this.runCell(currentRunCellLens.range);
+
+            // Either use the next cell that we found, or add a new one into the document
+            let nextRange: Range;
+            if (!nextRunCellLens) {
+                nextRange = this.createNewCell(currentRunCellLens.range);
+            } else {
+                nextRange = nextRunCellLens.range;
+            }
+
+            if (nextRange) {
+                this.advanceToRange(nextRange);
+            }
+        }
+    }
+
+    // User has picked run and advance on the last cell of a document
+    // Create a new cell at the bottom and put their selection there, ready to type
+    private createNewCell(currentRange: Range): Range {
+        const editor = window.activeTextEditor;
+        const newPosition = new Position(currentRange.end.line + 3, 0); // +3 to account for the added spaces and to position after the new mark
+
+        if (editor) {
+            editor.edit((editBuilder) => {
+                editBuilder.insert(new Position(currentRange.end.line + 1, 0), '\n\n#%%\n');
+            });
+        }
+
+        return new Range(newPosition, newPosition);
+    }
+
+    // Advance the cursor to the selected range
+    private advanceToRange(targetRange: Range) {
+        const editor = window.activeTextEditor;
+        const newSelection = new Selection(targetRange.start, targetRange.start);
+        if (editor) {
+            editor.selection = newSelection;
+            editor.revealRange(targetRange, TextEditorRevealType.Default);
         }
     }
 
