@@ -168,6 +168,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private collapseAll = () => {
+        PostOffice.sendMessage({ type: HistoryMessages.CollapseAll, payload: { }});
+
         const newCells = this.state.cellVMs.map((value: ICellViewModel) => {
             if (value.inputBlockOpen) {
                 return this.toggleCellVM(value);
@@ -183,6 +185,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private expandAll = () => {
+        PostOffice.sendMessage({ type: HistoryMessages.ExpandAll, payload: { }});
+
         const newCells = this.state.cellVMs.map((value: ICellViewModel) => {
             if (!value.inputBlockOpen) {
                 return this.toggleCellVM(value);
@@ -234,6 +238,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private deleteCell = (index: number) => {
+        PostOffice.sendMessage({ type: HistoryMessages.DeleteCell, payload: { }});
+
         // Update our state
         this.setState({
             cellVMs: this.state.cellVMs.filter((c : ICellViewModel, i: number) => {
@@ -246,6 +252,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private clearAll = () => {
+        PostOffice.sendMessage({ type: HistoryMessages.DeleteAllCells, payload: { }});
+
         // Update our state
         this.setState({
             cellVMs: [],
@@ -259,6 +267,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const cells = this.state.redoStack[this.state.redoStack.length - 1];
         const redoStack = this.state.redoStack.slice(0, this.state.redoStack.length - 1);
         const undoStack = this.pushStack(this.state.undoStack, this.state.cellVMs);
+        PostOffice.sendMessage({ type: HistoryMessages.Redo, payload: { }});
         this.setState({
             cellVMs: cells,
             undoStack: undoStack,
@@ -273,6 +282,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const cells = this.state.undoStack[this.state.undoStack.length - 1];
         const undoStack = this.state.undoStack.slice(0, this.state.undoStack.length - 1);
         const redoStack = this.pushStack(this.state.redoStack, this.state.cellVMs);
+        PostOffice.sendMessage({ type: HistoryMessages.Undo, payload: { }});
         this.setState({
             cellVMs: cells,
             undoStack : undoStack,
