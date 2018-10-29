@@ -864,7 +864,7 @@
                 "python.dataScience.enabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enable the experiemental data science features in the python extension.",
+                    "description": "Enable the experimental data science features in the python extension.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
