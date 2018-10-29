@@ -9,7 +9,6 @@ import * as fssync from 'fs';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
-import { Subscriber } from 'rxjs/Subscriber';
 import * as temp from 'temp';
 import * as tp from 'typed-promisify';
 import * as uuid from 'uuid/v4';
@@ -250,7 +249,9 @@ export class JupyterServer implements IJupyterServer {
     private pruneCell(cell : ICell) : nbformat.IBaseCell {
         // Remove the #%% of the top of the source if there is any. We don't need
         // this to end up in the exported ipynb file.
-        return {...cell.data, source : this.pruneSource(cell.data.source)};
+        const copy = {...cell.data};
+        copy.source = this.pruneSource(cell.data.source);
+        return copy;
     }
 
     private pruneSource(source : nbformat.MultilineString) : nbformat.MultilineString {
@@ -316,7 +317,7 @@ export class JupyterServer implements IJupyterServer {
     private chainObservables<T>(first : Observable<T>, second : () => Observable<ICell>) : Observable<ICell> {
         return new Observable<ICell>(subscriber => {
             first.subscribe(
-                () => {},
+                () => { return; },
                 (err) => subscriber.error(err),
                 () => {
                     // When the first completes, tell the second to go
@@ -328,10 +329,10 @@ export class JupyterServer implements IJupyterServer {
                     },
                     () => {
                         subscriber.complete();
-                    })
+                    });
                 }
             );
-        })
+        });
     }
 
     private executeCodeObservable = (code: string, file: string, line: number) : Observable<ICell> => {
@@ -357,14 +358,14 @@ export class JupyterServer implements IJupyterServer {
     private executeCodeObservableInternal = (code: string, file: string, line: number) : Observable<ICell> => {
         // Send an execute request with this code
         const id = uuid();
-        const request = this.session.kernel.requestExecute(
+        const request = this.session ? this.session.kernel.requestExecute(
             {
                 code: code,
                 stop_on_error: false,
                 allow_stdin: false
             },
             true
-        );
+        ) : undefined;
 
         return this.generateExecuteObservable(code, file, line, id, request);
     }
@@ -399,7 +400,7 @@ export class JupyterServer implements IJupyterServer {
         });
     }
 
-    private generateExecuteObservable(code: string, file: string, line: number, id: string, request: Kernel.IFuture) : Observable<ICell> {
+    private generateExecuteObservable(code: string, file: string, line: number, id: string, request: Kernel.IFuture | undefined) : Observable<ICell> {
         return new Observable<ICell>(subscriber => {
             // Start out empty;
             const cell: ICell = {
@@ -424,43 +425,48 @@ export class JupyterServer implements IJupyterServer {
             subscriber.next(cell);
 
             // Listen to the reponse messages and update state as we go
-            request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
-                if (KernelMessage.isExecuteResultMsg(msg)) {
-                    this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
-                } else if (KernelMessage.isExecuteInputMsg(msg)) {
-                    this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
-                } else if (KernelMessage.isStatusMsg(msg)) {
-                    this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
-                } else if (KernelMessage.isStreamMsg(msg)) {
-                    this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
-                } else if (KernelMessage.isDisplayDataMsg(msg)) {
-                    this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
-                } else if (KernelMessage.isErrorMsg(msg)) {
-                    this.handleError(msg as KernelMessage.IErrorMsg, cell);
-                } else {
-                    this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
-                }
+            if (request) {
+                request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+                    if (KernelMessage.isExecuteResultMsg(msg)) {
+                        this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
+                    } else if (KernelMessage.isExecuteInputMsg(msg)) {
+                        this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
+                    } else if (KernelMessage.isStatusMsg(msg)) {
+                        this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
+                    } else if (KernelMessage.isStreamMsg(msg)) {
+                        this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
+                    } else if (KernelMessage.isDisplayDataMsg(msg)) {
+                        this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
+                    } else if (KernelMessage.isErrorMsg(msg)) {
+                        this.handleError(msg as KernelMessage.IErrorMsg, cell);
+                    } else {
+                        this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+                    }
 
-                // Set execution count, all messages should have it
-                if (msg.content.execution_count) {
-                    cell.data.execution_count = msg.content.execution_count as number;
-                }
-            };
+                    // Set execution count, all messages should have it
+                    if (msg.content.execution_count) {
+                        cell.data.execution_count = msg.content.execution_count as number;
+                    }
+                };
 
-            // Create completion and error functions so we can bind our cell object
-            const completion = () => {
-                cell.state = CellState.finished;
-                subscriber.next(cell);
-                subscriber.complete();
-            };
-            const error = () => {
-                cell.state = CellState.error;
-                subscriber.next(cell);
-                subscriber.complete();
-            };
+                // Create completion and error functions so we can bind our cell object
+                const completion = () => {
+                    cell.state = CellState.finished;
+                    subscriber.next(cell);
+                    subscriber.complete();
+                };
+                const error = () => {
+                    cell.state = CellState.error;
+                    subscriber.next(cell);
+                    subscriber.complete();
+                };
 
-            // When the request finishes we are done
-            request.done.then(completion, error);
+                // When the request finishes we are done
+                request.done.then(completion, error);
+            } else {
+                subscriber.error(localize.DataScience.sessionDisposed());
+            }
+
         });
     }
 
