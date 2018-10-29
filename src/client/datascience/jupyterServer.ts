@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
 import '../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
@@ -10,6 +9,7 @@ import * as fssync from 'fs';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
+import { Subscriber } from 'rxjs/Subscriber';
 import * as temp from 'temp';
 import * as tp from 'typed-promisify';
 import * as uuid from 'uuid/v4';
@@ -164,7 +164,7 @@ export class JupyterServer implements IJupyterServer {
                     true
                 );
 
-                await this.generateExecuteObservable(code, 'file', 0, '0', request).toPromise();
+                await this.generateExecuteObservable(code, 'file', -1, '0', request).toPromise();
 
                 return;
         }
@@ -300,27 +300,73 @@ export class JupyterServer implements IJupyterServer {
         });
     }
 
+    private changeDirectoryObservable = (file: string) : Observable<boolean> => {
+        return new Observable<boolean>(subscriber => {
+            // Execute some code and when its done, finish our subscriber
+            const dir = path.dirname(file);
+            this.executeSilently(`%cd "${dir}"`)
+                .then(() => {
+                    subscriber.next(true);
+                    subscriber.complete();
+                })
+                .catch(err => subscriber.error(err));
+        });
+    }
+
+    private chainObservables<T>(first : Observable<T>, second : () => Observable<ICell>) : Observable<ICell> {
+        return new Observable<ICell>(subscriber => {
+            first.subscribe(
+                () => {},
+                (err) => subscriber.error(err),
+                () => {
+                    // When the first completes, tell the second to go
+                    second().subscribe((cell : ICell) => {
+                        subscriber.next(cell);
+                    },
+                    (err) => {
+                        subscriber.error(err);
+                    },
+                    () => {
+                        subscriber.complete();
+                    })
+                }
+            );
+        })
+    }
+
     private executeCodeObservable = (code: string, file: string, line: number) : Observable<ICell> => {
 
         if (this.session) {
-            // Send an execute request with this code
-            const id = uuid();
-            const request = this.session.kernel.requestExecute(
-                {
-                    code: code,
-                    stop_on_error: false,
-                    allow_stdin: false
-                },
-                true
-            );
-
-            return this.generateExecuteObservable(code, file, line, id, request);
+            // Send a magic that changes the current directory if we aren't already sending a magic
+            if (line >= 0 && fs.existsSync(file)) {
+                return this.chainObservables(
+                    this.changeDirectoryObservable(file),
+                    () => this.executeCodeObservableInternal(code, file, line));
+            } else {
+                // We're inside of an execute silently already, don't recurse
+                return this.executeCodeObservableInternal(code, file, line);
+            }
         }
 
         return new Observable<ICell>(subscriber => {
             subscriber.error(localize.DataScience.sessionDisposed());
             subscriber.complete();
         });
+    }
+
+    private executeCodeObservableInternal = (code: string, file: string, line: number) : Observable<ICell> => {
+        // Send an execute request with this code
+        const id = uuid();
+        const request = this.session.kernel.requestExecute(
+            {
+                code: code,
+                stop_on_error: false,
+                allow_stdin: false
+            },
+            true
+        );
+
+        return this.generateExecuteObservable(code, file, line, id, request);
     }
 
     private appendLineFeed(arr : string[], modifier? : (s : string) => string) {
@@ -357,7 +403,7 @@ export class JupyterServer implements IJupyterServer {
         return new Observable<ICell>(subscriber => {
             // Start out empty;
             const cell: ICell = {
-                data : {
+                data: {
                     source: this.appendLineFeed(code.split('\n')),
                     cell_type: 'code',
                     outputs: [],

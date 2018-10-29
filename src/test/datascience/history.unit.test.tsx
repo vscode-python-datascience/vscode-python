@@ -162,4 +162,5 @@ suite('History output tests', () => {
     // 1) Cell output works on different mime types. Could just use a notebook to drive
     // 2) History commands work (export/restart/clear all)
     // 3) Jupyter server commands work (open notebook)
+    // 4) Changing directories or loading from different directories
 });
