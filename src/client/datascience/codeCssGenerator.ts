@@ -258,10 +258,15 @@ export class CodeCssGenerator {
 
     private findTokenColors = async (theme : string) : Promise<JSONArray> => {
         const currentExe = this.currentProcess.execPath;
-        const currentPath = path.dirname(currentExe);
+        let currentPath = path.dirname(currentExe);
 
         // Should be somewhere under currentPath/resources/app/extensions inside of a json file
-        const extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions');
+        let extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions');
+        if (!(await fs.pathExists(extensionsPath))) {
+            // Might be on mac or linux. try a different path
+            currentPath = path.resolve(currentPath, '../../../..');
+            extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions');
+        }
 
         // Search through all of the json files for the theme name
         const escapedThemeName = theme.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
