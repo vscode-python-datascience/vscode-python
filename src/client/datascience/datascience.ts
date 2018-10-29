@@ -7,9 +7,10 @@ import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { ICommandManager } from '../common/application/types';
 import { PYTHON } from '../common/constants';
-import { IDisposableRegistry, IExtensionContext } from '../common/types';
+import { ContextKey } from '../common/contextKey';
+import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { Commands } from './constants';
+import { Commands, EditorContexts } from './constants';
 import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
 @injectable()
 export class DataScience implements IDataScience {
@@ -18,6 +19,7 @@ export class DataScience implements IDataScience {
     private readonly extensionContext: IExtensionContext;
     private readonly dataScienceCodeLensProvider: IDataScienceCodeLensProvider;
     private readonly commandListeners: IDataScienceCommandListener[];
+    private readonly configuration: IConfigurationService;
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer)
     {
         this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
@@ -25,12 +27,17 @@ export class DataScience implements IDataScience {
         this.extensionContext = this.serviceContainer.get<IExtensionContext>(IExtensionContext);
         this.dataScienceCodeLensProvider = this.serviceContainer.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
         this.commandListeners = this.serviceContainer.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
-
-        // We could potentially register different commands if jupyter isn't installed.
+        this.configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
     public async activate(): Promise<void> {
         this.registerCommands();
+
+        // Check if data science is disabled, if so, turn off our editor context to hide commands
+        const settings = this.configuration.getSettings();
+        const enabled = settings.datascience.enabled;
+        const editorContext = new ContextKey(EditorContexts.DataScienceEnabled, this.commandManager);
+        editorContext.set(enabled).catch();
 
         this.extensionContext.subscriptions.push(
             vscode.languages.registerCodeLensProvider(
