@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
 
 // Custom module loader so we skip .css files that break non webpack wrapped compiles
@@ -28,18 +27,24 @@ import { mount } from 'enzyme';
 import * as React from 'react';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
-import { IWebPanel, IWebPanelMessage, IWebPanelMessageListener, IWebPanelProvider  } from '../../client/common/application/types';
+
+import {
+    IWebPanel,
+    IWebPanelMessage,
+    IWebPanelMessageListener,
+    IWebPanelProvider
+} from '../../client/common/application/types';
 import { PlatformService } from '../../client/common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { IDisposableRegistry, ILogger } from '../../client/common/types';
-import { Cell } from '../../client/datascience/history-react/cell';
-import { MainPanel } from '../../client/datascience/history-react/mainPanel';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
 import { JupyterServerProvider } from '../../client/datascience/jupyterServerProvider';
-import { IVsCodeApi } from '../../client/datascience/react-common/postOffice';
-import { IHistoryProvider, IJupyterServerProvider  } from '../../client/datascience/types';
+import { IHistoryProvider, IJupyterServerProvider } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
+import { IVsCodeApi } from '../../datascience-ui//react-common/postOffice';
+import { Cell } from '../../datascience-ui/history-react/cell';
+import { MainPanel } from '../../datascience-ui/history-react/mainPanel';
 import { MockPythonExecutionService } from './executionServiceMock';
 import { waitForUpdate } from './reactHelpers';
 
