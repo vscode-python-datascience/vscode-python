@@ -33,7 +33,15 @@ export class JupyterProcess implements IDisposable {
     public static async exists(pythonService: IPythonExecutionService) : Promise<boolean> {
         // Spawn jupyter --version and see if it returns something
         try {
-            const result = await pythonService.execModule('jupyter', ['notebook', '--version'], { throwOnStdErr: true, encoding: 'utf8' });
+            //const result2 = await pythonService.exec(['-c', "import sys; import os; sys.path.append('TESTING');"], {});
+            let newEnv = process.env;
+            newEnv.PYTHONPATH = 'C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;';
+            if (newEnv.Path) {
+                //newEnv.Path = newEnv.Path.concat('C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;');
+                newEnv.Path = 'C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;'.concat(newEnv.Path);
+            }
+            const result = await pythonService.execModule('jupyter', ['notebook', '--version'], { throwOnStdErr: true, encoding: 'utf8', env: newEnv });
+            //const result = await pythonService.execModule('jupyter', ['notebook', '--version'], { throwOnStdErr: true, encoding: 'utf8' });
             return (!result.stderr);
         } catch {
             return false;
@@ -50,7 +58,12 @@ export class JupyterProcess implements IDisposable {
         this.startPromise = createDeferred<IConnectionInfo>();
 
         // Use the IPythonExecutionService to find Jupyter
-        this.startObservable = this.pythonService.execModuleObservable('jupyter', args, {throwOnStdErr: false, encoding: 'utf8'});
+        let newEnv = process.env;
+        newEnv.PYTHONPATH = 'C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;';
+        if (newEnv.Path) {
+            newEnv.Path = newEnv.Path.concat('C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;');
+        }
+        this.startObservable = this.pythonService.execModuleObservable('jupyter', args, {throwOnStdErr: false, encoding: 'utf8', env: newEnv});
 
         // Listen on stderr for its connection information
         this.startObservable.out.subscribe((output : Output<string>) => {
@@ -68,7 +81,12 @@ export class JupyterProcess implements IDisposable {
         const args: string [] = ['notebook', `--NotebookApp.file_to_run=${notebookFile}`];
 
         // Use the IPythonExecutionService to find Jupyter
-        return this.pythonService.execModule('jupyter', args, {throwOnStdErr: true, encoding: 'utf8'});
+        let newEnv = process.env;
+        newEnv.PYTHONPATH = 'C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;';
+        if (newEnv.Path) {
+            newEnv.Path = newEnv.Path.concat('C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;');
+        }
+        return this.pythonService.execModule('jupyter', args, {throwOnStdErr: true, encoding: 'utf8', env: newEnv});
     }
 
     public async getPythonVersionString() : Promise<string> {
