@@ -168,6 +168,10 @@ gulp.task('compile-webviews', (done) => {
     gulp.src('./src/**/*.{png,svg,css}')
         .pipe(gulp.dest('./out'));
 
+    // Then our theme json
+    gulp.src('./src/**/*theme*.json')
+        .pipe(gulp.dest('./out'));
+
     // Then run webpack on the output files
     gulp.src('./out/**/*react/index.js')
         .pipe(es.through(file => webify(file, false)));
@@ -657,7 +661,7 @@ function getModifiedFilesSync() {
             .split(/\r?\n/)
             .filter(l => !!l)
             .filter(l => l.length > 0)
-            .map(l => l.trim())
+            .map(l => l.trim().replace(/\//g, path.sep))
             .map(l => path.join(__dirname, l));
     } else {
         const out = cp.execSync('git status -u -s', { encoding: 'utf8' });
@@ -665,7 +669,7 @@ function getModifiedFilesSync() {
             .split(/\r?\n/)
             .filter(l => !!l)
             .filter(l => _.intersection(['M', 'A', 'R', 'C', 'U', '?'], l.substring(0, 2).trim().split('')).length > 0)
-            .map(l => path.join(__dirname, l.substring(2).trim()));
+            .map(l => path.join(__dirname, l.substring(2).trim().replace(/\//g, path.sep)));
     }
 }
 
