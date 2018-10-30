@@ -3,6 +3,8 @@
 'use strict';
 
 import { IServiceManager } from '../../ioc/types';
+import { IWebPanelProvider } from '../application/types';
+import { WebPanelProvider } from '../application/webPanelProvider';
 import { ProductType } from '../types';
 import { InstallationChannelManager } from './channelManager';
 import { CondaInstaller } from './condaInstaller';

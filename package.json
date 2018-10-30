@@ -403,10 +403,10 @@
                             "program": "^\"\\${workspaceFolder}/manage.py\"",
                             "args": [
                                 "runserver",
+                                "--noreload",
                                 "--nothreading"
                             ],
-                            "django": true,
-                            "subProcess": true
+                            "django": true
                         }
                     },
                     {
@@ -420,13 +420,14 @@
                             "env": {
                                 "FLASK_APP": "app.py",
                                 "FLASK_ENV": "development",
-                                "FLASK_DEBUG": "1"
+                                "FLASK_DEBUG": "0"
                             },
                             "args": [
-                                "run"
+                                "run",
+                                "--no-debugger",
+                                "--no-reload"
                             ],
-                            "jinja": true,
-                            "subProcess": true
+                            "jinja": true
                         }
                     },
                     {
@@ -745,10 +746,10 @@
                         "console": "integratedTerminal",
                         "args": [
                             "runserver",
+                            "--noreload",
                             "--nothreading"
                         ],
-                        "django": true,
-                        "subProcess": true
+                        "django": true
                     },
                     {
                         "name": "Python: Flask",
@@ -756,15 +757,14 @@
                         "request": "launch",
                         "module": "flask",
                         "env": {
-                            "FLASK_APP": "app.py",
-                            "FLASK_ENV": "development",
-                            "FLASK_DEBUG": "1"
+                            "FLASK_APP": "app.py"
                         },
                         "args": [
-                            "run"
+                            "run",
+                            "--no-debugger",
+                            "--no-reload"
                         ],
-                        "jinja": true,
-                        "subProcess": true
+                        "jinja": true
                     },
                     {
                         "name": "Python: Current File (External Terminal)",
@@ -1649,13 +1649,6 @@
     },
     "dependencies": {
         "@jupyterlab/services": "^3.1.4",
-        "@nteract/transform-dataresource": "^4.3.5",
-        "@nteract/transform-geojson": "^3.2.3",
-        "@nteract/transform-model-debug": "^3.2.3",
-        "@nteract/transform-plotly": "^3.2.3",
-        "@nteract/transforms": "^4.4.4",
-        "@types/prismjs": "^1.9.0",
-        "ansi-to-html": "^0.6.7",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
         "diff-match-patch": "^1.0.0",
@@ -1709,6 +1702,12 @@
         "@babel/core": "^7.1.0",
         "@babel/preset-env": "^7.1.0",
         "@babel/preset-react": "^7.0.0",
+        "@nteract/transform-dataresource": "^4.3.5",
+        "@nteract/transform-geojson": "^3.2.3",
+        "@nteract/transform-model-debug": "^3.2.3",
+        "@nteract/transform-plotly": "^3.2.3",
+        "@nteract/transforms": "^4.4.4",
+        "@types/prismjs": "^1.9.0",
         "@types/chai": "^4.1.2",
         "@types/chai-arrays": "^1.0.2",
         "@types/chai-as-promised": "^7.1.0",
@@ -1743,6 +1742,7 @@
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",
         "JSONStream": "^1.3.2",
+        "ansi-to-html": "^0.6.7",
         "babel-loader": "^8.0.3",
         "babel-plugin-inline-json-import": "^0.3.1",
         "babel-plugin-prismjs": "^1.0.2",
@@ -1782,15 +1782,18 @@
         "mocha": "^5.0.4",
         "mocha-junit-reporter": "^1.17.0",
         "node-has-native-dependencies": "^1.0.2",
+        "prismjs": "^1.15.0",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
         "react-dev-utils": "^5.0.2",
         "react-dom": "^16.5.2",
+        "react-json-tree": "^0.11.0",
         "relative": "^3.0.2",
         "remap-istanbul": "^0.10.1",
         "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
         "shortid": "^2.2.8",
         "sinon": "^4.4.5",
+        "styled-jsx": "^3.1.0",
         "style-loader": "^0.23.0",
         "svg-inline-loader": "^0.8.0",
         "ts-mockito": "^2.3.1",
@@ -1800,6 +1803,7 @@
         "typemoq": "^2.1.0",
         "typescript": "^3.1.3",
         "typescript-formatter": "^7.1.0",
+        "typed-react-markdown": "^0.1.0",
         "url-loader": "^1.1.1",
         "uuid": "^3.3.2",
         "vscode": "^1.1.21",

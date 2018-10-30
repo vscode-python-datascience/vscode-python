@@ -730,7 +730,7 @@ export interface IWebPanelMessageListener {
     onDisposed(): void;
 }
 
-export interface IWebPanelMessage {
+export type WebPanelMessage = {
     /**
      * Message type
      */
@@ -740,7 +740,7 @@ export interface IWebPanelMessage {
      * Payload
      */
     payload?: any;
-}
+};
 
 // Wraps the VS Code webview panel
 export const IWebPanel = Symbol('IWebPanel');
@@ -759,7 +759,7 @@ export interface IWebPanel {
     /**
      * Sends a message to the hosted html page
      */
-    postMessage(message: IWebPanelMessage);
+    postMessage(message: WebPanelMessage);
 }
 
 // Wraps the VS Code api for creating a web panel
