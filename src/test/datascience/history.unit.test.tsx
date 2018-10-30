@@ -5,27 +5,25 @@ import * as assert from 'assert';
 import { mount } from 'enzyme';
 import * as React from 'react';
 import * as TypeMoq from 'typemoq';
-import { Disposable, EventEmitter } from 'vscode';
+import { Disposable } from 'vscode';
 
 import {
     IWebPanel,
     IWebPanelMessageListener,
-    IWebPanelProvider,
-    WebPanelMessage
+    IWebPanelProvider
+    WebPanelMessage,
 } from '../../client/common/application/types';
-import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PlatformService } from '../../client/common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { IDisposableRegistry, ILogger } from '../../client/common/types';
-import { Cell } from '../../client/datascience/history-react/cell';
-import { MainPanel } from '../../client/datascience/history-react/MainPanel';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
-import { JupyterServerProvider } from '../../client/datascience/jupyterserverprovider';
-import { IVsCodeApi } from '../../client/datascience/react-common/postOffice';
+import { JupyterServerProvider } from '../../client/datascience/jupyterServerProvider';
 import { IHistoryProvider, IJupyterServerProvider } from '../../client/datascience/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
+import { IVsCodeApi } from '../../datascience-ui//react-common/postOffice';
+import { Cell } from '../../datascience-ui/history-react/cell';
+import { MainPanel } from '../../datascience-ui/history-react/mainPanel';
 import { MockPythonExecutionService } from './executionServiceMock';
 import { waitForUpdate } from './reactHelpers';
 
