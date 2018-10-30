@@ -2,6 +2,26 @@
 // Licensed under the MIT License.
 'use strict';
 
+// Custom module loader so we skip .css files that break non webpack wrapped compiles
+// tslint:disable-next-line:no-var-requires no-require-imports
+const Module = require('module');
+
+// tslint:disable-next-line:no-function-expression
+(function() {
+    const origRequire = Module.prototype.require;
+    const _require = (context, path) => {
+        return origRequire.call(context, path);
+    };
+
+    Module.prototype.require = function(path) {
+        if (path.endsWith('.css')) {
+            return '';
+        }
+        // tslint:disable-next-line:no-invalid-this
+        return _require(this, path);
+    };
+})();
+
 import * as assert from 'assert';
 import { mount } from 'enzyme';
 import * as React from 'react';
@@ -27,26 +47,6 @@ import { Cell } from '../../datascience-ui/history-react/cell';
 import { MainPanel } from '../../datascience-ui/history-react/mainPanel';
 import { MockPythonExecutionService } from './executionServiceMock';
 import { waitForUpdate } from './reactHelpers';
-
-// Custom module loader so we skip .css files that break non webpack wrapped compiles
-// tslint:disable-next-line:no-var-requires no-require-imports
-const Module = require('module');
-
-// tslint:disable-next-line:no-function-expression
-(function() {
-    const origRequire = Module.prototype.require;
-    const _require = (context, path) => {
-        return origRequire.call(context, path);
-    };
-
-    Module.prototype.require = function(path) {
-        if (path.endsWith('.css')) {
-            return '';
-        }
-        // tslint:disable-next-line:no-invalid-this
-        return _require(this, path);
-    };
-})();
 
 // tslint:disable-next-line:max-func-body-length
 suite('History output tests', () => {
