@@ -5,6 +5,7 @@ import '../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
 import * as uuid from 'uuid/v4';
