@@ -6,12 +6,12 @@ import './mainPanel.css';
 import { min } from 'lodash';
 import * as React from 'react';
 
-import { HistoryMessages } from '../constants';
+import { HistoryMessages } from '../../client/datascience/constants';
+import { CellState, ICell } from '../../client/datascience/types';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { RelativeImage } from '../react-common/relativeImage';
-import { CellState, ICell } from '../types';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
 import { createCellVM, generateTestState, IMainPanelState } from './mainPanelState';
@@ -311,7 +311,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 if (this.bottom) {
                     this.bottom.scrollIntoView({behavior: 'smooth', block : 'end', inline: 'end'});
                 }
-            }, 10);
+            }, 100);
         }
     }
 

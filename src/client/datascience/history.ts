@@ -13,6 +13,7 @@ import {
     IWebPanelMessageListener,
     IWebPanelProvider
 } from '../common/application/types';
+import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -286,7 +287,7 @@ export class History implements IWebPanelMessageListener {
         const provider = serviceContainer.get<IWebPanelProvider>(IWebPanelProvider);
 
         // Figure out the name of our main bundle. Should be in our output directory
-        const mainScriptPath = path.join(__dirname, 'history-react', 'index_bundle.js');
+        const mainScriptPath = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js');
 
         // Generate a css to put into the webpanel for viewing code
         const codeCssGenerator = new CodeCssGenerator(serviceContainer);
