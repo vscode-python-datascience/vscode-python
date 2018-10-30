@@ -106,7 +106,7 @@
             {
                 "command": "python.datascience.runcurrentcelladvance",
                 "key": "shift+enter",
-                "when": "editorFocus && python.datascience.hascodecells && python.datascience.enabledcontext"
+                "when": "editorFocus && python.datascience.hascodecells && python.datascience.featureenabled"
             }
         ],
         "commands": [
@@ -234,37 +234,37 @@
                 "command": "python.datascience.runcurrentcell",
                 "title": "%python.command.python.datascience.runcurrentcell.title%",
                 "category": "Python",
-                "when": "python.datascience.hascodecells && python.datascience.enabledcontext"
+                "when": "python.datascience.hascodecells && python.datascience.featureenabled"
             },
             {
                 "command": "python.datascience.runcurrentcelladvance",
                 "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
                 "category": "Python",
-                "when": "python.datascience.hascodecells && python.datascience.enabledcontext"
+                "when": "python.datascience.hascodecells && python.datascience.featureenabled"
             },
             {
                 "command": "python.datascience.showhistorypane",
                 "title": "%python.command.python.datascience.showhistorypane.title%",
                 "category": "Python",
-                "when": "python.datascience.enabledcontext"
+                "when": "python.datascience.featureenabled"
             },
             {
                 "command": "python.datascience.runallcells",
                 "title": "%python.command.python.datascience.runallcells.title%",
                 "category": "Python",
-                "when": "python.datascience.enabledcontext"
+                "when": "python.datascience.featureenabled"
             },
             {
                 "command": "python.datascience.runcell",
                 "title": "%python.command.python.datascience.runcell.title%",
                 "category": "Python",
-                "when": "python.datascience.enabledcontext"
+                "when": "python.datascience.featureenabled"
             },
             {
                 "command": "python.datascience.importnotebook",
                 "title": "%python.command.python.datascience.importnotebook.title%",
                 "category": "Python",
-                "when": "python.datascience.enabledcontext"
+                "when": "python.datascience.featureenabled"
             }
         ],
         "menus": {
@@ -308,17 +308,17 @@
                     "group": "Python"
                 },
                 {
-                    "when": "python.datascience.hascodecells && python.datascience.enabledcontext",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled",
                     "command": "python.datascience.runcurrentcell",
                     "group": "Python"
                 },
                 {
-                    "when": "python.datascience.hascodecells && python.datascience.enabledcontext",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled",
                     "command": "python.datascience.runcurrentcelladvance",
                     "group": "Python"
                 },
                 {
-                    "when": "resourceLangId == jupyter && python.datascience.enabledcontext",
+                    "when": "resourceLangId == jupyter && python.datascience.featureenabled",
                     "command": "python.datascience.importnotebook",
                     "group": "Python"
                 }
@@ -340,7 +340,7 @@
                     "group": "Python"
                 },
                 {
-                    "when": "resourceLangId == jupyter && python.datascience.enabledcontext",
+                    "when": "resourceLangId == jupyter && python.datascience.featureenabled",
                     "command": "python.datascience.importnotebook",
                     "group": "Python"
                 }
@@ -350,37 +350,37 @@
                     "command": "python.datascience.runcurrentcell",
                     "title": "%python.command.python.datascience.runcurrentcell.title%",
                     "category": "Python",
-                    "when": "python.datascience.hascodecells && python.datascience.enabledcontext"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.runcurrentcelladvance",
                     "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
                     "category": "Python",
-                    "when": "python.datascience.hascodecells && python.datascience.enabledcontext"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.showhistorypane",
                     "title": "%python.command.python.datascience.showhistorypane.title%",
                     "category": "Python",
-                    "when": "python.datascience.enabledcontext"
+                    "when": "python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.runallcells",
                     "title": "%python.command.python.datascience.runallcells.title%",
                     "category": "Python",
-                    "when": "python.datascience.enabledcontext"
+                    "when": "python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.runcell",
                     "title": "%python.command.python.datascience.runcell.title%",
                     "category": "Python",
-                    "when": "python.datascience.enabledcontext"
+                    "when": "python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.importnotebook",
                     "title": "%python.command.python.datascience.importnotebook.title%",
                     "category": "Python",
-                    "when": "python.datascience.enabledcontext"
+                    "when": "python.datascience.featureenabled"
                 }
             ]
         },
