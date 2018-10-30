@@ -5,17 +5,15 @@ import '../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
-import * as fssync from 'fs';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
-import * as temp from 'temp';
-import * as tp from 'typed-promisify';
 import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 
+import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionService } from '../common/process/types';
-import { ILogger } from '../common/types';
+import { IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { RegExpValues } from './constants';
@@ -26,37 +24,40 @@ import { CellState, ICell, IJupyterServer } from './types';
 // https://www.npmjs.com/package/@jupyterlab/services
 
 export class JupyterServer implements IJupyterServer {
-    private static trackingTemps: boolean = false;
     public isDisposed: boolean = false;
     private session: Session.ISession | undefined;
-    private tempFile: temp.OpenFile | undefined;
+    private tempFile: string | undefined;
     private process: JupyterProcess;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
     private logger: ILogger;
     private pythonService : IPythonExecutionService;
+    private disposableRegistry : IDisposableRegistry;
+    private fileSystem : IFileSystem;
 
-    constructor(logger: ILogger, pythonService: IPythonExecutionService) {
+    constructor(logger: ILogger, pythonService: IPythonExecutionService, fileSystem : IFileSystem, disposableRegistry : IDisposableRegistry) {
         this.logger = logger;
         this.pythonService = pythonService;
+        this.fileSystem = fileSystem;
+        this.disposableRegistry = disposableRegistry;
         this.process = new JupyterProcess(pythonService);
     }
 
-    public async start(notebookFile? : string) : Promise<boolean> {
+    public async start() : Promise<boolean> {
 
         if (await JupyterProcess.exists(this.pythonService)) {
 
             // First generate a temporary notebook. We need this as input to the session
-            this.tempFile = await this.generateTempFile(notebookFile);
+            this.tempFile = await this.generateTempFile();
 
             // start our process in the same directory as our ipynb file.
-            this.process.start(path.dirname(this.tempFile.path), this.logger);
+            this.process.start(path.dirname(this.tempFile), this.logger);
 
             // Wait for connection information. We'll stick that into the options
             const connInfo = await this.process.getConnectionInformation();
 
             // Create our session options using this temporary notebook and our connection info
             const options: Session.IOptions = {
-                path: this.tempFile.path,
+                path: this.tempFile,
                 kernelName: 'python',
                 serverSettings: ServerConnection.makeSettings(
                     {
@@ -149,7 +150,7 @@ export class JupyterServer implements IJupyterServer {
         });
     }
 
-    public async executeSilently(code: string) : Promise<void> {
+    public executeSilently(code: string) : Promise<void> {
         // If we have a session, execute the code now.
         if (this.session) {
                 const request = this.session.kernel.requestExecute(
@@ -163,9 +164,15 @@ export class JupyterServer implements IJupyterServer {
                     true
                 );
 
-                await this.generateExecuteObservable(code, 'file', -1, '0', request).toPromise();
-
-                return;
+                return new Promise((resolve, reject) => {
+                    // Just wait for our observable to finish
+                    const observable = this.generateExecuteObservable(code, 'file', 0, '0', request);
+                    // tslint:disable-next-line:no-empty
+                    observable.subscribe(() => {
+                        },
+                        reject,
+                        resolve);
+                });
         }
 
         return Promise.reject(localize.DataScience.sessionDisposed);
@@ -520,24 +527,13 @@ export class JupyterServer implements IJupyterServer {
         this.addToCellData(cell, output);
     }
 
-    private async generateTempFile(notebookFile?: string) : Promise<temp.OpenFile> {
-        // Make sure we cleanup these temp files.
-        if (!JupyterServer.trackingTemps) {
-            JupyterServer.trackingTemps = true;
-            temp.track();
-        }
-
+    private async generateTempFile() : Promise<string> {
         // Create a temp file on disk
-        const asyncOpen = tp.promisify(temp.open);
-        const file: temp.OpenFile = await asyncOpen({ suffix: '.ipynb'});
+        const file = await this.fileSystem.createTemporaryFile('.ipynb');
 
-        // Copy the notebook file into it if necessary
-        if (notebookFile && file) {
-            if (await fs.pathExists(notebookFile)) {
-                fssync.copyFileSync(notebookFile, file.path);
-            }
-        }
+        // Save in our list disposable
+        this.disposableRegistry.push(file);
 
-        return file;
+        return file.filePath;
     }
 }

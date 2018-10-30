@@ -13,8 +13,6 @@ import { PipInstaller } from './pipInstaller';
 import { CTagsProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from './productPath';
 import { ProductService } from './productService';
 import { IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService } from './types';
-import { IWebPanelProvider } from '../application/types';
-import { WebPanelProvider } from '../application/webPanelProvider';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
