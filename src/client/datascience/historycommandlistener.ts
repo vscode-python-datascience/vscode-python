@@ -11,7 +11,7 @@ import { IServiceContainer } from '../ioc/types';
 import { CommandSource } from '../unittests/common/constants';
 import { Commands } from './constants';
 import { JupyterImporter } from './jupyterImporter';
-import { IDataScienceCommandListener, IHistoryProvider } from './types';
+import { IDataScienceCommandListener, IHistoryProvider, INotebookImporter } from './types';
 
 @injectable()
 export class HistoryCommandListener implements IDataScienceCommandListener {
@@ -23,7 +23,13 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     private readonly configuration : IConfigurationService;
     private readonly logger : ILogger;
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer)
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
+        @inject(IServiceContainer) private historyProvider: IHistoryProvider,
+        @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer)
     {
         this.historyProvider = this.serviceContainer.get<IHistoryProvider>(IHistoryProvider);
         this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
