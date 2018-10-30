@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { ICommandManager } from '../common/application/types';
+import { PythonSettings } from '../common/configSettings';
 import { PYTHON } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../common/types';
@@ -14,6 +15,7 @@ import { Commands, EditorContexts } from './constants';
 import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
 @injectable()
 export class DataScience implements IDataScience {
+    public isDisposed: boolean = false;
     private readonly commandManager: ICommandManager;
     private readonly disposableRegistry: IDisposableRegistry;
     private readonly extensionContext: IExtensionContext;
@@ -33,17 +35,23 @@ export class DataScience implements IDataScience {
     public async activate(): Promise<void> {
         this.registerCommands();
 
-        // Check if data science is disabled, if so, turn off our editor context to hide commands
-        const settings = this.configuration.getSettings();
-        const enabled = settings.datascience.enabled;
-        const editorContext = new ContextKey(EditorContexts.DataScienceEnabled, this.commandManager);
-        editorContext.set(enabled).catch();
-
         this.extensionContext.subscriptions.push(
             vscode.languages.registerCodeLensProvider(
                 PYTHON, this.dataScienceCodeLensProvider
             )
         );
+
+        // Set our initial settings and sign up for changes
+        this.onSettingsChanged();
+        (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
+        this.disposableRegistry.push(this);
+    }
+
+    public async dispose() {
+        if (!this.isDisposed) {
+            this.isDisposed = true;
+            (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged);
+        }
     }
 
     public runAllCells(codeWatcher: ICodeWatcher): Promise<void> {
@@ -82,6 +90,13 @@ export class DataScience implements IDataScience {
         } else {
             return Promise.resolve();
         }
+    }
+
+    private onSettingsChanged = () => {
+        const settings = this.configuration.getSettings();
+        const enabled = settings.datascience.enabled;
+        const editorContext = new ContextKey(EditorContexts.DataScienceEnabled, this.commandManager);
+        editorContext.set(enabled).catch();
     }
 
     // Get our matching code watcher for the active document
