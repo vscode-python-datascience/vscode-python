@@ -7,7 +7,6 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 
 import { IWorkspaceService } from '../common/application/types';
-import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { ICurrentProcess, ILogger } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 
