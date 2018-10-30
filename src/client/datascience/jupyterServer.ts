@@ -166,7 +166,7 @@ export class JupyterServer implements IJupyterServer {
 
                 return new Promise((resolve, reject) => {
                     // Just wait for our observable to finish
-                    const observable = this.generateExecuteObservable(code, 'file', 0, '0', request);
+                    const observable = this.generateExecuteObservable(code, 'file', -1, '0', request);
                     // tslint:disable-next-line:no-empty
                     observable.subscribe(() => {
                         },
