@@ -26,6 +26,10 @@ export class JupyterProcess implements IDisposable {
     private startObservable: ObservableExecutionResult<string> | undefined;
     private logger: ILogger | undefined;
 
+    //private static condaPaths: string = 'C:\\Anaconda;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;';
+    private static condaPaths: string = 'C:\\Anaconda\\Scripts;';
+
+
     constructor(private pythonService: IPythonExecutionService) {
 
     }
@@ -33,12 +37,16 @@ export class JupyterProcess implements IDisposable {
     public static async exists(pythonService: IPythonExecutionService) : Promise<boolean> {
         // Spawn jupyter --version and see if it returns something
         try {
-            //const result2 = await pythonService.exec(['-c', "import sys; import os; sys.path.append('TESTING');"], {});
+            let isWindows = true; // IANHU just for testing change this after the refactor
+            let isConda = true;
             let newEnv = process.env;
-            newEnv.PYTHONPATH = 'C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;';
-            if (newEnv.Path) {
-                //newEnv.Path = newEnv.Path.concat('C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;');
-                newEnv.Path = 'C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;'.concat(newEnv.Path);
+            if(isWindows && isConda) {
+                let newEnv = process.env;
+                if (newEnv.Path) {
+                    //const condaPaths = 'C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;';
+                    //const condaPaths = 'C:\\Anaconda;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;';
+                    newEnv.Path = JupyterProcess.condaPaths.concat(newEnv.Path);
+                }
             }
             const result = await pythonService.execModule('jupyter', ['notebook', '--version'], { throwOnStdErr: true, encoding: 'utf8', env: newEnv });
             //const result = await pythonService.execModule('jupyter', ['notebook', '--version'], { throwOnStdErr: true, encoding: 'utf8' });
@@ -59,11 +67,13 @@ export class JupyterProcess implements IDisposable {
 
         // Use the IPythonExecutionService to find Jupyter
         let newEnv = process.env;
-        newEnv.PYTHONPATH = 'C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;';
         if (newEnv.Path) {
-            newEnv.Path = newEnv.Path.concat('C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;');
+                    //const condaPaths = 'C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;';
+                    //const condaPaths = 'C:\\Anaconda;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;';
+                    newEnv.Path = JupyterProcess.condaPaths.concat(newEnv.Path);
         }
         this.startObservable = this.pythonService.execModuleObservable('jupyter', args, {throwOnStdErr: false, encoding: 'utf8', env: newEnv});
+        //this.startObservable = this.pythonService.execModuleObservable('jupyter', args, {throwOnStdErr: false, encoding: 'utf8'});
 
         // Listen on stderr for its connection information
         this.startObservable.out.subscribe((output : Output<string>) => {
@@ -82,11 +92,13 @@ export class JupyterProcess implements IDisposable {
 
         // Use the IPythonExecutionService to find Jupyter
         let newEnv = process.env;
-        newEnv.PYTHONPATH = 'C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;';
         if (newEnv.Path) {
-            newEnv.Path = newEnv.Path.concat('C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;');
+                    //const condaPaths = 'C:\\Anaconda;C:\\Anaconda\\Library\\mingw-w64\\bin;C:\\Anaconda\\Library\\usr\\bin;C:\\Anaconda\\Library\\bin;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;';
+                    //const condaPaths = 'C:\\Anaconda;C:\\Anaconda\\Scripts;C:\\Anaconda\\bin;';
+                    newEnv.Path = JupyterProcess.condaPaths.concat(newEnv.Path);
         }
         return this.pythonService.execModule('jupyter', args, {throwOnStdErr: true, encoding: 'utf8', env: newEnv});
+        //return this.pythonService.execModule('jupyter', args, {throwOnStdErr: true, encoding: 'utf8'});
     }
 
     public async getPythonVersionString() : Promise<string> {
