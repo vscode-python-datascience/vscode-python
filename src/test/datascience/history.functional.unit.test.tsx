@@ -15,7 +15,7 @@ import {
 } from '../../client/common/application/types';
 import { IHistoryProvider, IJupyterAvailability } from '../../client/datascience/types';
 import { Cell } from '../../datascience-ui/history-react/cell';
-import { MainPanel } from '../../datascience-ui/history-react/mainPanel';
+import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { waitForUpdate } from './reactHelpers';

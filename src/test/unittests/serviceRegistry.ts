@@ -7,7 +7,7 @@ import { Uri } from 'vscode';
 import { IProcessServiceFactory } from '../../client/common/process/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { History } from '../../client/datascience/history';
-import { HistoryProvider } from '../../client/datascience/historyprovider';
+import { HistoryProvider } from '../../client/datascience/historyProvider';
 import { JupyterAvailability } from '../../client/datascience/jupyterAvailability';
 import { JupyterImporter } from '../../client/datascience/jupyterImporter';
 import { JupyterServer } from '../../client/datascience/jupyterServer';
